@@ -64,6 +64,8 @@ fn main() raises:
     print("Features enabled:", len(features))
 ```
 
+**Note for Python users:** Unlike Python's `tomli` where you access values directly (`config["app"]["name"]`), mojo-toml requires explicit type conversions (`.as_table()`, `.as_string()`, etc.) because Mojo is statically typed. This provides type safety and clear error messages at the cost of slightly more verbose code.
+
 ## Installation
 
 Choose the installation method that best fits your workflow:
