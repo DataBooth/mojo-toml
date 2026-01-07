@@ -42,7 +42,8 @@ struct TomlValue(Copyable, Movable):
     var int_value: Int
     var float_value: Float64
     var bool_value: Bool
-    # TODO: Add array and table support (need recursive types)
+    var array_value: List[TomlValue]
+    # TODO: Add table support (nested dict)
     
     fn __init__(out self, value: String):
         """Create string value."""
@@ -51,6 +52,7 @@ struct TomlValue(Copyable, Movable):
         self.int_value = 0
         self.float_value = 0.0
         self.bool_value = False
+        self.array_value = List[TomlValue]()
     
     fn __init__(out self, value: Int):
         """Create integer value."""
@@ -59,6 +61,7 @@ struct TomlValue(Copyable, Movable):
         self.int_value = value
         self.float_value = 0.0
         self.bool_value = False
+        self.array_value = List[TomlValue]()
     
     fn __init__(out self, value: Float64):
         """Create float value."""
@@ -67,6 +70,7 @@ struct TomlValue(Copyable, Movable):
         self.int_value = 0
         self.float_value = value
         self.bool_value = False
+        self.array_value = List[TomlValue]()
     
     fn __init__(out self, value: Bool):
         """Create boolean value."""
@@ -75,6 +79,16 @@ struct TomlValue(Copyable, Movable):
         self.int_value = 0
         self.float_value = 0.0
         self.bool_value = value
+        self.array_value = List[TomlValue]()
+    
+    fn __init__(out self, var value: List[TomlValue]):
+        """Create array value."""
+        self.value_type = 4  # ARRAY
+        self.string_value = ""
+        self.int_value = 0
+        self.float_value = 0.0
+        self.bool_value = False
+        self.array_value = value^
     
     fn is_string(self) -> Bool:
         return self.value_type == 0
@@ -87,6 +101,28 @@ struct TomlValue(Copyable, Movable):
     
     fn is_bool(self) -> Bool:
         return self.value_type == 3
+    
+    fn is_array(self) -> Bool:
+        return self.value_type == 4
+    
+    fn copy(self) -> Self:
+        """Create a copy of this value."""
+        if self.value_type == 0:  # STRING
+            return TomlValue(self.string_value)
+        elif self.value_type == 1:  # INTEGER
+            return TomlValue(self.int_value)
+        elif self.value_type == 2:  # FLOAT
+            return TomlValue(self.float_value)
+        elif self.value_type == 3:  # BOOLEAN
+            return TomlValue(self.bool_value)
+        elif self.value_type == 4:  # ARRAY
+            var arr_copy = List[TomlValue]()
+            for i in range(len(self.array_value)):
+                arr_copy.append(self.array_value[i].copy())
+            return TomlValue(arr_copy^)
+        else:
+            # Should not reach here
+            return TomlValue("")
     
     fn as_string(self) raises -> String:
         """Get string value (raises if not a string)."""
@@ -111,6 +147,16 @@ struct TomlValue(Copyable, Movable):
         if not self.is_bool():
             raise Error("Value is not a boolean")
         return self.bool_value
+    
+    fn as_array(self) raises -> List[TomlValue]:
+        """Get array value (raises if not an array)."""
+        if not self.is_array():
+            raise Error("Value is not an array")
+        # Return a copy since we can't return a reference
+        var result = List[TomlValue]()
+        for i in range(len(self.array_value)):
+            result.append(self.array_value[i].copy())
+        return result^
 
 
 struct Parser:
@@ -197,6 +243,67 @@ struct Parser:
             except:
                 break
     
+    fn skip_whitespace_and_newlines(mut self):
+        """Skip whitespace and newline tokens (used inside arrays/tables)."""
+        while self.pos < len(self.tokens):
+            try:
+                var token = self.current()
+                if token.kind == TokenKind.NEWLINE() or token.kind == TokenKind.COMMENT():
+                    self.pos += 1
+                else:
+                    break
+            except:
+                break
+    
+    fn parse_array(mut self) raises -> TomlValue:
+        """Parse a TOML array [1, 2, 3].
+        
+        Returns:
+            Array value.
+        """
+        # Consume opening bracket
+        self.expect(TokenKind.LEFT_BRACKET())
+        
+        var elements = List[TomlValue]()
+        
+        # Skip whitespace and newlines after opening bracket
+        self.skip_whitespace_and_newlines()
+        
+        # Check for empty array
+        var token = self.current()
+        if token.kind == TokenKind.RIGHT_BRACKET():
+            _ = self.advance()
+            return TomlValue(elements^)
+        
+        # Parse array elements
+        while True:
+            # Parse value
+            var value = self.parse_value()
+            elements.append(value^)
+            
+            # Skip whitespace and newlines
+            self.skip_whitespace_and_newlines()
+            
+            # Check what's next
+            token = self.current()
+            
+            if token.kind == TokenKind.COMMA():
+                _ = self.advance()
+                # Skip whitespace after comma
+                self.skip_whitespace_and_newlines()
+                # Check for trailing comma
+                token = self.current()
+                if token.kind == TokenKind.RIGHT_BRACKET():
+                    _ = self.advance()
+                    break
+            elif token.kind == TokenKind.RIGHT_BRACKET():
+                _ = self.advance()
+                break
+            else:
+                raise Error("Expected comma or closing bracket in array")
+        
+        return TomlValue(elements^)
+    
     fn parse_value(mut self) raises -> TomlValue:
         """Parse a TOML value (string, number, bool, array, or inline table).
         
@@ -205,8 +312,12 @@ struct Parser:
         """
         var token = self.current()
         
+        # Array
+        if token.kind == TokenKind.LEFT_BRACKET():
+            return self.parse_array()
+        
         # String
-        if token.kind == TokenKind.STRING():
+        elif token.kind == TokenKind.STRING():
             _ = self.advance()
             return TomlValue(token.value)
         
@@ -238,7 +349,7 @@ struct Parser:
             var value = (token.value == "true")
             return TomlValue(value)
         
-        # TODO: Arrays and inline tables
+        # TODO: Inline tables
         else:
             raise Error("Unexpected token in value position")
     
