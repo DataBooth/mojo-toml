@@ -13,3 +13,4 @@ Example:
 """
 
 from .lexer import Lexer, Token, TokenKind, Position
+from .parser import Parser, TomlValue, parse

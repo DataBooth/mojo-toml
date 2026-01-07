@@ -482,11 +482,17 @@ struct Lexer:
         
         # Numbers and special floats (inf, nan)
         if (c >= "0" and c <= "9") or c == "+" or c == "-" or c == "i" or c == "n":
-            # Check for special floats: inf, -inf, nan
+            # Check for special floats: inf, -inf, nan (must be standalone, not part of identifier)
             if c == "i" and self.peek(1) == "n" and self.peek(2) == "f":
-                return self.read_number()
+                # Check if followed by non-identifier char (space, newline, EOF, etc.)
+                var after = self.peek(3)
+                if after == "" or after == " " or after == "\t" or after == "\n" or after == "#" or after == "," or after == "]" or after == "}":
+                    return self.read_number()
             elif c == "n" and self.peek(1) == "a" and self.peek(2) == "n":
-                return self.read_number()
+                # Check if followed by non-identifier char
+                var after = self.peek(3)
+                if after == "" or after == " " or after == "\t" or after == "\n" or after == "#" or after == "," or after == "]" or after == "}":
+                    return self.read_number()
             elif c == "+" or c == "-":
                 var next_c = self.peek(1)
                 # Check for +inf, -inf, +nan, -nan
