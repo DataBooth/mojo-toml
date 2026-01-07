@@ -242,6 +242,28 @@ struct Parser:
         self.pos = 0
         self.current_table_path = List[String]()
     
+    fn reset(mut self, var tokens: List[Token]):
+        """Reset parser state for reuse with new token stream.
+        
+        Allows reusing the same Parser instance for multiple documents,
+        avoiding the overhead of creating new Parser objects.
+        
+        Args:
+            tokens: New list of tokens from lexer.
+            
+        Example:
+            ```mojo
+            var parser = Parser(tokens1^)
+            var data1 = parser.parse()
+            
+            parser.reset(tokens2^)
+            var data2 = parser.parse()
+            ```
+        """
+        self.tokens = tokens^
+        self.pos = 0
+        self.current_table_path = List[String]()
+    
     fn current(self) raises -> Token:
         """Get current token without advancing.
         
