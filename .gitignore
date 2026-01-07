@@ -1,0 +1,25 @@
+# Build artifacts
+*.mojopkg
+dist/
+__pycache__/
+.pytest_cache/
+
+# Compiled binaries
+parse_pixi
+example-*
+test-*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Pixi
+.pixi/
+pixi.lock
