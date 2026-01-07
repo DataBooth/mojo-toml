@@ -42,6 +42,17 @@ struct KeyValuePair(Movable, Copyable):
         return KeyValuePair(self.key, self.value.copy())
 
 
+# Type constants for TomlValue discrimination
+struct TomlValueType:
+    """Type discriminator constants for TomlValue."""
+    comptime STRING: Int = 0
+    comptime INTEGER: Int = 1
+    comptime FLOAT: Int = 2
+    comptime BOOLEAN: Int = 3
+    comptime ARRAY: Int = 4
+    comptime TABLE: Int = 5
+
+
 # TOML Value variant type - can hold any TOML value
 struct TomlValue(Copyable, Movable):
     """Represents any TOML value type.
@@ -50,7 +61,7 @@ struct TomlValue(Copyable, Movable):
     arrays, and tables (nested dicts).
     """
     
-    var value_type: Int  # 0=STRING, 1=INTEGER, 2=FLOAT, 3=BOOLEAN, 4=ARRAY, 5=TABLE
+    var value_type: Int
     var string_value: String
     var int_value: Int
     var float_value: Float64
@@ -60,7 +71,7 @@ struct TomlValue(Copyable, Movable):
     
     fn __init__(out self, value: String):
         """Create string value."""
-        self.value_type = 0  # STRING
+        self.value_type = TomlValueType.STRING
         self.string_value = value
         self.int_value = 0
         self.float_value = 0.0
@@ -70,7 +81,7 @@ struct TomlValue(Copyable, Movable):
     
     fn __init__(out self, value: Int):
         """Create integer value."""
-        self.value_type = 1  # INTEGER
+        self.value_type = TomlValueType.INTEGER
         self.string_value = ""
         self.int_value = value
         self.float_value = 0.0
@@ -80,7 +91,7 @@ struct TomlValue(Copyable, Movable):
     
     fn __init__(out self, value: Float64):
         """Create float value."""
-        self.value_type = 2  # FLOAT
+        self.value_type = TomlValueType.FLOAT
         self.string_value = ""
         self.int_value = 0
         self.float_value = value
@@ -90,7 +101,7 @@ struct TomlValue(Copyable, Movable):
     
     fn __init__(out self, value: Bool):
         """Create boolean value."""
-        self.value_type = 3  # BOOLEAN
+        self.value_type = TomlValueType.BOOLEAN
         self.string_value = ""
         self.int_value = 0
         self.float_value = 0.0
@@ -100,7 +111,7 @@ struct TomlValue(Copyable, Movable):
     
     fn __init__(out self, var value: List[TomlValue]):
         """Create array value."""
-        self.value_type = 4  # ARRAY
+        self.value_type = TomlValueType.ARRAY
         self.string_value = ""
         self.int_value = 0
         self.float_value = 0.0
@@ -110,7 +121,7 @@ struct TomlValue(Copyable, Movable):
     
     fn __init__(out self, var value: Dict[String, TomlValue]):
         """Create table (inline table) value."""
-        self.value_type = 5  # TABLE
+        self.value_type = TomlValueType.TABLE
         self.string_value = ""
         self.int_value = 0
         self.float_value = 0.0
@@ -119,39 +130,39 @@ struct TomlValue(Copyable, Movable):
         self.table_value = value^
     
     fn is_string(self) -> Bool:
-        return self.value_type == 0
+        return self.value_type == TomlValueType.STRING
     
     fn is_int(self) -> Bool:
-        return self.value_type == 1
+        return self.value_type == TomlValueType.INTEGER
     
     fn is_float(self) -> Bool:
-        return self.value_type == 2
+        return self.value_type == TomlValueType.FLOAT
     
     fn is_bool(self) -> Bool:
-        return self.value_type == 3
+        return self.value_type == TomlValueType.BOOLEAN
     
     fn is_array(self) -> Bool:
-        return self.value_type == 4
+        return self.value_type == TomlValueType.ARRAY
     
     fn is_table(self) -> Bool:
-        return self.value_type == 5
+        return self.value_type == TomlValueType.TABLE
     
     fn copy(self) -> Self:
         """Create a copy of this value."""
-        if self.value_type == 0:  # STRING
+        if self.value_type == TomlValueType.STRING:
             return TomlValue(self.string_value)
-        elif self.value_type == 1:  # INTEGER
+        elif self.value_type == TomlValueType.INTEGER:
             return TomlValue(self.int_value)
-        elif self.value_type == 2:  # FLOAT
+        elif self.value_type == TomlValueType.FLOAT:
             return TomlValue(self.float_value)
-        elif self.value_type == 3:  # BOOLEAN
+        elif self.value_type == TomlValueType.BOOLEAN:
             return TomlValue(self.bool_value)
-        elif self.value_type == 4:  # ARRAY
+        elif self.value_type == TomlValueType.ARRAY:
             var arr_copy = List[TomlValue]()
             for i in range(len(self.array_value)):
                 arr_copy.append(self.array_value[i].copy())
             return TomlValue(arr_copy^)
-        elif self.value_type == 5:  # TABLE
+        elif self.value_type == TomlValueType.TABLE:
             var table_copy = Dict[String, TomlValue]()
             for entry in self.table_value.items():
                 table_copy[entry.key] = entry.value.copy()
@@ -275,7 +286,7 @@ struct Parser:
         """
         var token = self.advance()
         if token.kind != kind:
-            raise Error("Expected token type but got different type")
+            raise Error(self.format_error("Expected specific token type but got different type", token.pos))
     
     fn skip_newlines(mut self):
         """Skip any newline tokens."""
@@ -323,7 +334,7 @@ struct Parser:
             # Parse key
             token = self.current()
             if token.kind != TokenKind.KEY() and token.kind != TokenKind.STRING():
-                raise Error("Expected key in inline table")
+                raise Error(self.format_error("Expected key in inline table", token.pos))
             
             var key = token.value
             _ = self.advance()
@@ -343,12 +354,12 @@ struct Parser:
                 # Check for trailing comma (not allowed in inline tables per TOML spec)
                 token = self.current()
                 if token.kind == TokenKind.RIGHT_BRACE():
-                    raise Error("Trailing comma not allowed in inline tables")
+                    raise Error(self.format_error("Trailing comma not allowed in inline tables", token.pos))
             elif token.kind == TokenKind.RIGHT_BRACE():
                 _ = self.advance()
                 break
             else:
-                raise Error("Expected comma or closing brace in inline table")
+                raise Error(self.format_error("Expected comma or closing brace in inline table", token.pos))
         
         return TomlValue(table^)
     
@@ -397,7 +408,7 @@ struct Parser:
                 _ = self.advance()
                 break
             else:
-                raise Error("Expected comma or closing bracket in array")
+                raise Error(self.format_error("Expected comma or closing bracket in array", token.pos))
         
         return TomlValue(elements^)
     
@@ -451,7 +462,19 @@ struct Parser:
             return TomlValue(value)
         
         else:
-            raise Error("Unexpected token in value position")
+            raise Error(self.format_error("Unexpected token in value position", token.pos))
+    
+    fn format_error(self, message: String, pos: Position) -> String:
+        """Format an error message with line and column information.
+        
+        Args:
+            message: The error message.
+            pos: Position in the source file.
+            
+        Returns:
+            Formatted error message.
+        """
+        return message + " at line " + String(pos.line) + ", column " + String(pos.column)
     
     fn parse_table_header(mut self) raises -> List[String]:
         """Parse a table header [section.name] and return the path.
@@ -470,7 +493,7 @@ struct Parser:
             path.append(token.value)
             _ = self.advance()
         else:
-            raise Error("Expected key in table header")
+            raise Error(self.format_error("Expected key in table header", token.pos))
         
         # Parse dotted path (e.g., [a.b.c])
         while self.pos < len(self.tokens):
@@ -482,12 +505,12 @@ struct Parser:
                     path.append(token.value)
                     _ = self.advance()
                 else:
-                    raise Error("Expected key after dot in table header")
+                    raise Error(self.format_error("Expected key after dot in table header", token.pos))
             elif token.kind == TokenKind.RIGHT_BRACKET():
                 _ = self.advance()
                 break
             else:
-                raise Error("Expected dot or closing bracket in table header")
+                raise Error(self.format_error("Expected dot or closing bracket in table header", token.pos))
         
         return path^
     
@@ -495,11 +518,11 @@ struct Parser:
         """Ensure a nested table path exists, creating tables as needed.
         
         Args:
-            result: Root dictionary
-            path: List of keys forming the path (e.g., ["database", "primary"])
+            result: Root dictionary.
+            path: List of keys forming the path (e.g., ["database", "primary"]).
             
         Returns:
-            New dictionary with path ensured
+            New dictionary with path ensured.
         """
         if len(path) == 0:
             # Copy and return
@@ -519,7 +542,7 @@ struct Parser:
             var new_table = Dict[String, TomlValue]()
             new_result[first_key] = TomlValue(new_table^)
         elif not new_result[first_key].is_table():
-            raise Error("Key exists but is not a table: " + first_key)
+            raise Error("Cannot redefine key as table - key exists but is not a table: " + first_key)
         
         # For paths longer than 1, recursively ensure nested tables
         if len(path) > 1:
@@ -533,30 +556,83 @@ struct Parser:
         
         return new_result^
     
-    fn set_in_table_path(mut self, result: Dict[String, TomlValue], path: List[String], key: String, var value: TomlValue) raises -> Dict[String, TomlValue]:
-        """Set a key-value pair at a specific table path.
+    fn merge_tables(self, existing: Dict[String, TomlValue], var new_table: TomlValue, key: String) raises -> Dict[String, TomlValue]:
+        """Merge a new table value into existing table, checking for conflicts.
         
         Args:
-            result: Root dictionary
-            path: Path to the target table
-            key: Key to set
-            value: Value to set
+            existing: Existing table.
+            new_table: New table to merge in.
+            key: The key being set (for error messages).
             
         Returns:
-            New dictionary with value set
+            Merged table.
+        """
+        if not new_table.is_table():
+            raise Error("Cannot merge non-table value into table for key: " + key)
+        
+        var result = Dict[String, TomlValue]()
+        # Copy existing entries
+        for entry in existing.items():
+            result[entry.key] = entry.value.copy()
+        
+        # Merge new entries
+        var new_entries = new_table.as_table()
+        for entry in new_entries.items():
+            if result.__contains__(entry.key):
+                # Key exists - check if both are tables for recursive merge
+                if result[entry.key].is_table() and entry.value.is_table():
+                    # Recursively merge nested tables
+                    var merged = self.merge_tables(result[entry.key].as_table(), entry.value.copy(), entry.key)
+                    result[entry.key] = TomlValue(merged^)
+                else:
+                    # Duplicate key error - not both tables
+                    raise Error("Duplicate key: " + entry.key)
+            else:
+                result[entry.key] = entry.value.copy()
+        
+        return result^
+    
+    fn set_in_table_path(mut self, result: Dict[String, TomlValue], path: List[String], key: String, var value: TomlValue) raises -> Dict[String, TomlValue]:
+        """Set a key-value pair at a specific table path with duplicate key detection.
+        
+        Args:
+            result: Root dictionary.
+            path: Path to the target table.
+            key: Key to set.
+            value: Value to set.
+            
+        Returns:
+            New dictionary with value set.
         """
         # Ensure the path exists first
         var new_result = self.ensure_table_path(result, path)
         
         if len(path) == 0:
-            # Set at root level
+            # Set at root level - check for duplicates
+            if new_result.__contains__(key):
+                # If both are tables, merge them (for dotted keys)
+                if new_result[key].is_table() and value.is_table():
+                    var merged = self.merge_tables(new_result[key].as_table(), value^, key)
+                    new_result[key] = TomlValue(merged^)
+                    return new_result^
+                else:
+                    raise Error("Duplicate key: " + key)
             new_result[key] = value^
             return new_result^
         else:
             # Navigate to target table and set
             var table = new_result[path[0]].as_table()
             if len(path) == 1:
-                table[key] = value^
+                # Check for duplicates at this level
+                if table.__contains__(key):
+                    # If both are tables, merge them (for dotted keys)
+                    if table[key].is_table() and value.is_table():
+                        var merged = self.merge_tables(table[key].as_table(), value^, key)
+                        table[key] = TomlValue(merged^)
+                    else:
+                        raise Error("Duplicate key: " + key)
+                else:
+                    table[key] = value^
                 new_result[path[0]] = TomlValue(table^)
             else:
                 # Recurse for deeper paths
@@ -567,13 +643,36 @@ struct Parser:
                 new_result[path[0]] = TomlValue(table^)
             return new_result^
     
+    fn create_nested_value_from_dotted_key(self, key_parts: List[String], var value: TomlValue) raises -> TomlValue:
+        """Convert dotted key into nested table structure.
+        
+        For example: a.b.c = value becomes {a: {b: {c: value}}}
+        
+        Args:
+            key_parts: List of key components from dotted key.
+            value: The final value to set.
+            
+        Returns:
+            TomlValue representing nested table structure.
+        """
+        if len(key_parts) == 1:
+            return value^
+        
+        # Build from the innermost level outward
+        var result = value^
+        for i in range(len(key_parts) - 1, 0, -1):
+            var table = Dict[String, TomlValue]()
+            table[key_parts[i]] = result^
+            result = TomlValue(table^)
+        
+        return result^
+    
     fn parse_key_value_pair(mut self) raises -> KeyValuePair:
         """Parse a key = value pair and return the key and value.
         
         Returns:
             KeyValuePair containing the parsed key and value.
         """
-        # Note: Returns struct to avoid Dict iteration issues
         # Parse key (can be dotted: a.b.c)
         var key_parts = List[String]()
         
@@ -583,7 +682,7 @@ struct Parser:
             key_parts.append(token.value)
             _ = self.advance()
         else:
-            raise Error("Expected key")
+            raise Error(self.format_error("Expected key", token.pos))
         
         # Handle dotted keys (a.b.c)
         while self.pos < len(self.tokens):
@@ -596,7 +695,7 @@ struct Parser:
                         key_parts.append(token.value)
                         _ = self.advance()
                     else:
-                        raise Error("Expected key after dot")
+                        raise Error(self.format_error("Expected key after dot", token.pos))
                 else:
                     break
             except:
@@ -612,9 +711,10 @@ struct Parser:
         if len(key_parts) == 1:
             return KeyValuePair(key_parts[0], value^)
         else:
-            # TODO: Handle dotted keys by creating nested dicts
-            # For now, just use the last part
-            return KeyValuePair(key_parts[len(key_parts) - 1], value^)
+            # Create nested table structure for dotted keys
+            # a.b.c = value becomes: return ("a", {b: {c: value}})
+            var nested_value = self.create_nested_value_from_dotted_key(key_parts, value^)
+            return KeyValuePair(key_parts[0], nested_value^)
     
     fn parse(mut self) raises -> Dict[String, TomlValue]:
         """Parse the entire TOML document.
@@ -648,8 +748,9 @@ struct Parser:
                 try:
                     var next_token = self.peek()
                     if next_token.kind == TokenKind.LEFT_BRACKET():
-                        # TODO: Array of tables [[array]]
-                        raise Error("Array of tables not yet supported")
+                        # Array of tables [[array]]
+                        var token = self.current()
+                        raise Error(self.format_error("Array of tables [[...]] not yet supported", token.pos))
                 except:
                     pass
                 
@@ -684,7 +785,8 @@ struct Parser:
                 self.skip_newlines()
             
             else:
-                raise Error("Unexpected token at top level")
+                var token = self.current()
+                raise Error(self.format_error("Unexpected token at top level", token.pos))
         
         return result^
 
@@ -701,8 +803,10 @@ fn parse(content: String) raises -> Dict[String, TomlValue]:
         Dictionary containing parsed TOML data.
         
     Example:
+        ```mojo
         var data = parse('[package]\\nname = "mojo-toml"')
         print(data["name"].as_string())  # Prints: mojo-toml
+        ```
     """
     var lexer = Lexer(content)
     var tokens = lexer.tokenize()

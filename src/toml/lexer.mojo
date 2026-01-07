@@ -119,37 +119,37 @@ struct TokenKind:
     # Punctuation (structural elements)
     @staticmethod
     fn EQUALS() -> TokenKind:
-        """Assignment operator: ="""
+        """Assignment operator: =."""
         return TokenKind(30)
     
     @staticmethod
     fn DOT() -> TokenKind:
-        """Dotted key separator: a.b.c"""
+        """Dotted key separator: a.b.c."""
         return TokenKind(31)
     
     @staticmethod
     fn COMMA() -> TokenKind:
-        """Array/inline table separator: ,"""
+        """Array/inline table separator: ,."""
         return TokenKind(32)
     
     @staticmethod
     fn LEFT_BRACKET() -> TokenKind:
-        """Array start or table header: ["""
+        """Array start or table header: [."""
         return TokenKind(33)
     
     @staticmethod
     fn RIGHT_BRACKET() -> TokenKind:
-        """Array end or table header close: ]"""
+        """Array end or table header close: ]."""
         return TokenKind(34)
     
     @staticmethod
     fn LEFT_BRACE() -> TokenKind:
-        """Inline table start: {"""
+        """Inline table start: {."""
         return TokenKind(35)
     
     @staticmethod
     fn RIGHT_BRACE() -> TokenKind:
-        """Inline table end: }"""
+        """Inline table end: }."""
         return TokenKind(36)
     
     fn __eq__(self, other: TokenKind) -> Bool:
@@ -220,7 +220,7 @@ struct Lexer:
     fn peek(self, offset: Int = 1) -> String:
         """Look ahead at character without consuming it.
         
-        Used for lookahead decisions, e.g. detecting triple quotes \"\"\"
+        Used for lookahead decisions, e.g. detecting triple quotes.
         
         Args:
             offset: Number of characters to look ahead (default: 1).
