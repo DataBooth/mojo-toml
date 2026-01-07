@@ -1,17 +1,17 @@
-"""Simple example: Parse and report pixi.toml configuration.
+"""Comprehensive example: Parse and report pixi.toml configuration.
 
-This example demonstrates basic usage of the mojo-toml parser by reading
-the project's own pixi.toml file and displaying key configuration values.
+This example demonstrates advanced usage of the mojo-toml parser by reading
+the project's own pixi.toml file and generating a detailed report of its contents.
 """
 
 from toml import parse
 
 
 fn main():
-    """Parse pixi.toml and display project information."""
+    """Parse pixi.toml and generate comprehensive report."""
     
-    print("🔥 mojo-toml - Parse pixi.toml Example")
-    print("=" * 50)
+    print("🔥 mojo-toml - Pixi Configuration Report")
+    print("=" * 60)
     print()
     
     # Try to parse pixi.toml
@@ -22,31 +22,81 @@ fn main():
         
         var config = parse(file_content)
         
-        print("📋 Project Configuration")
-        print("-" * 50)
-        print("Found", config.__len__(), "top-level keys")
+        print("📊 Configuration Summary")
+        print("-" * 60)
+        print("Top-level sections:", config.__len__())
         print()
         
-        # Access workspace table
+        # Workspace section
         if config.__contains__("workspace"):
             var workspace = config["workspace"].as_table()
-            print("Project Name:", workspace["name"].as_string())
-            print("Version:", workspace["version"].as_string())
+            print("📦 Workspace Information:")
+            print("  Name:", workspace["name"].as_string())
+            print("  Version:", workspace["version"].as_string())
             var platforms = workspace["platforms"].as_array()
-            print("Platforms:", len(platforms), "items")
+            print("  Platforms:", len(platforms), "configured")
+            var channels = workspace["channels"].as_array()
+            print("  Channels:", len(channels), "configured")
+            print()
         
+        # Dependencies section
+        if config.__contains__("dependencies"):
+            var deps = config["dependencies"].as_table()
+            var dep_count = 0
+            for _ in deps.items():
+                dep_count += 1
+            print("📚 Dependencies:")
+            print("  Total packages:", dep_count)
+            print()
+        
+        # Tasks section
+        if config.__contains__("tasks"):
+            var tasks = config["tasks"].as_table()
+            var task_count = 0
+            var test_count = 0
+            var build_count = 0
+            var example_count = 0
+            for entry in tasks.items():
+                task_count += 1
+                if entry.key.startswith("test-"):
+                    test_count += 1
+                elif entry.key.startswith("build-"):
+                    build_count += 1
+                elif entry.key.startswith("example-"):
+                    example_count += 1
+            print("🛠️  Tasks:")
+            print("  Total tasks:", task_count)
+            print("  Test tasks:", test_count)
+            print("  Build tasks:", build_count)
+            print("  Example tasks:", example_count)
+            print()
+        
+        # Activation section
+        if config.__contains__("activation"):
+            var activation = config["activation"].as_table()
+            if activation.__contains__("env"):
+                var env = activation["env"].as_table()
+                var env_count = 0
+                for _ in env.items():
+                    env_count += 1
+                print("⚙️  Activation:")
+                print("  Environment variables:", env_count)
+                print()
+        
+        print("-" * 60)
+        print("✅ Successfully parsed and analyzed pixi.toml!")
         print()
-        print("✅ Successfully parsed pixi.toml!")
-        print()
-        print("Note: Values accessed using nested table structure:")
-        print("  var workspace = config[\"workspace\"].as_table()")
-        print("  var name = workspace[\"name\"].as_string()")
+        print("💡 API usage demonstrated:")
+        print("  • config[\"workspace\"].as_table()  # Access nested tables")
+        print("  • workspace[\"name\"].as_string()  # Get string values")
+        print("  • workspace[\"platforms\"].as_array()  # Get arrays")
+        print("  • for entry in table.items()  # Iterate table entries")
         
     except e:
         print("❌ Error parsing pixi.toml:", e)
     
     print()
-    print("More examples:")
-    print("  • Full demo: pixi run example-simple")
-    print("  • Test suite: pixi run test-all")
-    print("  • Check fixtures/ directory")
+    print("📖 More resources:")
+    print("  • Basic demo: pixi run example-simple")
+    print("  • Run tests: pixi run test-all")
+    print("  • See fixtures/ for more TOML examples")
