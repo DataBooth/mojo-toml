@@ -464,6 +464,22 @@ struct Parser:
         else:
             raise Error(self.format_error("Unexpected token in value position", token.pos))
     
+    fn copy_path(self, path: List[String]) -> List[String]:
+        """Create a copy of a path list.
+        
+        Mojo List does not support implicit copying, so we must manually copy.
+        
+        Args:
+            path: Path list to copy.
+            
+        Returns:
+            Copied path list.
+        """
+        var result = List[String]()
+        for i in range(len(path)):
+            result.append(path[i])
+        return result^
+    
     fn format_error(self, message: String, pos: Position) -> String:
         """Format an error message with line and column information.
         
@@ -756,10 +772,8 @@ struct Parser:
                 
                 # Parse table header and update current path
                 self.current_table_path = self.parse_table_header()
-                # Copy path to avoid aliasing issues
-                var path_copy = List[String]()
-                for i in range(len(self.current_table_path)):
-                    path_copy.append(self.current_table_path[i])
+                # Copy path (Mojo List doesn't support implicit copy)
+                var path_copy = self.copy_path(self.current_table_path)
                 # Ensure the table path exists in result
                 var updated_result = self.ensure_table_path(result, path_copy)
                 result = updated_result^
@@ -770,14 +784,14 @@ struct Parser:
                 # Parse the key-value pair
                 var pair = self.parse_key_value_pair()
                 
-                # Copy values to avoid partial destruction issues
-                var parsed_key = String(pair.key)
+                # Must copy key and value to avoid partial destruction.
+                # Mojo's ownership system prevents consuming pair.value while pair.key is still needed.
+                # The copy allows us to safely extract both fields from the struct.
+                var parsed_key = pair.key
                 var parsed_value = pair.value.copy()
                 
-                # Copy path to avoid aliasing issues
-                var path_copy = List[String]()
-                for i in range(len(self.current_table_path)):
-                    path_copy.append(self.current_table_path[i])
+                # Copy path (Mojo List doesn't support implicit copy)
+                var path_copy = self.copy_path(self.current_table_path)
                 # Set the value at the current table path
                 var updated_result = self.set_in_table_path(result, path_copy, parsed_key, parsed_value^)
                 result = updated_result^
