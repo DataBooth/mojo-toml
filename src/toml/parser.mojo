@@ -43,7 +43,7 @@ struct TomlValue(Copyable, Movable):
     var float_value: Float64
     var bool_value: Bool
     var array_value: List[TomlValue]
-    # TODO: Add table support (nested dict)
+    var table_value: Dict[String, TomlValue]
     
     fn __init__(out self, value: String):
         """Create string value."""
@@ -53,6 +53,7 @@ struct TomlValue(Copyable, Movable):
         self.float_value = 0.0
         self.bool_value = False
         self.array_value = List[TomlValue]()
+        self.table_value = Dict[String, TomlValue]()
     
     fn __init__(out self, value: Int):
         """Create integer value."""
@@ -62,6 +63,7 @@ struct TomlValue(Copyable, Movable):
         self.float_value = 0.0
         self.bool_value = False
         self.array_value = List[TomlValue]()
+        self.table_value = Dict[String, TomlValue]()
     
     fn __init__(out self, value: Float64):
         """Create float value."""
@@ -71,6 +73,7 @@ struct TomlValue(Copyable, Movable):
         self.float_value = value
         self.bool_value = False
         self.array_value = List[TomlValue]()
+        self.table_value = Dict[String, TomlValue]()
     
     fn __init__(out self, value: Bool):
         """Create boolean value."""
@@ -80,6 +83,7 @@ struct TomlValue(Copyable, Movable):
         self.float_value = 0.0
         self.bool_value = value
         self.array_value = List[TomlValue]()
+        self.table_value = Dict[String, TomlValue]()
     
     fn __init__(out self, var value: List[TomlValue]):
         """Create array value."""
@@ -89,6 +93,17 @@ struct TomlValue(Copyable, Movable):
         self.float_value = 0.0
         self.bool_value = False
         self.array_value = value^
+        self.table_value = Dict[String, TomlValue]()
+    
+    fn __init__(out self, var value: Dict[String, TomlValue]):
+        """Create table (inline table) value."""
+        self.value_type = 5  # TABLE
+        self.string_value = ""
+        self.int_value = 0
+        self.float_value = 0.0
+        self.bool_value = False
+        self.array_value = List[TomlValue]()
+        self.table_value = value^
     
     fn is_string(self) -> Bool:
         return self.value_type == 0
@@ -105,6 +120,9 @@ struct TomlValue(Copyable, Movable):
     fn is_array(self) -> Bool:
         return self.value_type == 4
     
+    fn is_table(self) -> Bool:
+        return self.value_type == 5
+    
     fn copy(self) -> Self:
         """Create a copy of this value."""
         if self.value_type == 0:  # STRING
@@ -120,6 +138,9 @@ struct TomlValue(Copyable, Movable):
             for i in range(len(self.array_value)):
                 arr_copy.append(self.array_value[i].copy())
             return TomlValue(arr_copy^)
+        elif self.value_type == 5:  # TABLE
+            var table_copy = self.table_value.copy()
+            return TomlValue(table_copy^)
         else:
             # Should not reach here
             return TomlValue("")
@@ -157,6 +178,13 @@ struct TomlValue(Copyable, Movable):
         for i in range(len(self.array_value)):
             result.append(self.array_value[i].copy())
         return result^
+    
+    fn as_table(self) raises -> Dict[String, TomlValue]:
+        """Get table value (raises if not a table)."""
+        if not self.is_table():
+            raise Error("Value is not a table")
+        # Return a copy of the table
+        return self.table_value.copy()
 
 
 struct Parser:
@@ -255,6 +283,57 @@ struct Parser:
             except:
                 break
     
+    fn parse_inline_table(mut self) raises -> TomlValue:
+        """Parse a TOML inline table {name = "value", port = 8080}.
+        
+        Returns:
+            Table value.
+        """
+        # Consume opening brace
+        self.expect(TokenKind.LEFT_BRACE())
+        
+        var table = Dict[String, TomlValue]()
+        
+        # Check for empty table
+        var token = self.current()
+        if token.kind == TokenKind.RIGHT_BRACE():
+            _ = self.advance()
+            return TomlValue(table^)
+        
+        # Parse key-value pairs
+        while True:
+            # Parse key
+            token = self.current()
+            if token.kind != TokenKind.KEY() and token.kind != TokenKind.STRING():
+                raise Error("Expected key in inline table")
+            
+            var key = token.value
+            _ = self.advance()
+            
+            # Expect equals
+            self.expect(TokenKind.EQUALS())
+            
+            # Parse value
+            var value = self.parse_value()
+            table[key] = value^
+            
+            # Check what's next
+            token = self.current()
+            
+            if token.kind == TokenKind.COMMA():
+                _ = self.advance()
+                # Check for trailing comma (not allowed in inline tables per TOML spec)
+                token = self.current()
+                if token.kind == TokenKind.RIGHT_BRACE():
+                    raise Error("Trailing comma not allowed in inline tables")
+            elif token.kind == TokenKind.RIGHT_BRACE():
+                _ = self.advance()
+                break
+            else:
+                raise Error("Expected comma or closing brace in inline table")
+        
+        return TomlValue(table^)
+    
     fn parse_array(mut self) raises -> TomlValue:
         """Parse a TOML array [1, 2, 3].
         
@@ -312,8 +391,12 @@ struct Parser:
         """
         var token = self.current()
         
+        # Inline table
+        if token.kind == TokenKind.LEFT_BRACE():
+            return self.parse_inline_table()
+        
         # Array
-        if token.kind == TokenKind.LEFT_BRACKET():
+        elif token.kind == TokenKind.LEFT_BRACKET():
             return self.parse_array()
         
         # String
@@ -349,7 +432,6 @@ struct Parser:
             var value = (token.value == "true")
             return TomlValue(value)
         
-        # TODO: Inline tables
         else:
             raise Error("Unexpected token in value position")
     
