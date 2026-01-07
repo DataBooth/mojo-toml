@@ -1,0 +1,48 @@
+name: Build Package
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  build-mojopkg:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Pixi
+        uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          pixi-version: latest
+      
+      - name: Build .mojopkg
+        run: |
+          pixi run build-package
+          
+      - name: Get Mojo version
+        id: mojo-version
+        run: |
+          MOJO_VERSION=$(pixi run mojo-version)
+          echo "version=$MOJO_VERSION" >> $GITHUB_OUTPUT
+          
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: toml-mojopkg-${{ github.ref_name }}
+          path: dist/toml.mojopkg
+          
+      - name: Attach to release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/toml.mojopkg
+          body: |
+            ## Package Files
+            
+            `toml.mojopkg` - Compiled with ${{ steps.mojo-version.outputs.version }}
+            
+            ⚠️ **Compatibility Note**: This `.mojopkg` file is compiled with the Mojo version shown above. It may not work with different Mojo versions. For maximum compatibility, use source installation (git submodule or direct copy).
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

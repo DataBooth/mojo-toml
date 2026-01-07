@@ -32,25 +32,28 @@ test-all = """bash -c '
 set -e
 echo "=== Running All Tests ==="
 echo ""
-echo "[1/6] Lexer Tests (25 tests)"
+echo "[1/7] Lexer Tests (25 tests)"
 mojo -I src tests/test_basic.mojo
 echo ""
-echo "[2/6] Parser Tests (10 tests)"
+echo "[2/7] Parser Tests (10 tests)"
 mojo -I src tests/test_parser.mojo
 echo ""
-echo "[3/6] Real-World Tests (4 tests)"
+echo "[3/7] Real-World Tests (4 tests)"
 mojo -I src tests/test_real_world.mojo
 echo ""
-echo "[4/6] Fixture Tests (5 tests)"
+echo "[4/7] Fixture Tests (5 tests)"
 mojo -I src tests/test_fixtures.mojo
 echo ""
-echo "[5/6] Array Tests (14 tests)"
+echo "[5/7] Array Tests (14 tests)"
 mojo -I src tests/test_arrays.mojo
 echo ""
-echo "[6/6] Inline Table Tests (13 tests)"
+echo "[6/7] Inline Table Tests (13 tests)"
 mojo -I src tests/test_inline.mojo
 echo ""
-echo "=== All 71 Tests Complete! ==="
+echo "[7/7] Table Header Tests (8 tests)"
+mojo -I src tests/test_tables.mojo
+echo ""
+echo "=== All 79 Tests Complete! ==="
 '"""
 
 # Build tasks
