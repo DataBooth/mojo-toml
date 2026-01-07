@@ -36,7 +36,7 @@ raw characters, making TOML syntax rules easier to implement.
 from collections import List
 
 
-@value
+@register_passable("trivial")
 struct Position:
     """Position in the source file (line and column).
     
@@ -45,9 +45,13 @@ struct Position:
     """
     var line: Int
     var column: Int
+    
+    fn __init__(out self, line: Int, column: Int):
+        self.line = line
+        self.column = column
 
 
-@value
+@register_passable("trivial")
 struct TokenKind:
     """Token types for TOML lexer.
     
@@ -55,6 +59,9 @@ struct TokenKind:
     Static methods replace deprecated `alias` keyword.
     """
     var _value: Int
+    
+    fn __init__(out self, value: Int):
+        self._value = value
     
     # Special tokens
     @staticmethod
@@ -152,8 +159,7 @@ struct TokenKind:
         return self._value != other._value
 
 
-@value
-struct Token:
+struct Token(Copyable, Movable):
     """A token in the TOML input stream.
     
     Represents a single meaningful unit of TOML syntax with its type, 
@@ -162,6 +168,11 @@ struct Token:
     var kind: TokenKind
     var value: String  # The actual text content
     var pos: Position  # Where it appears in the file
+    
+    fn __init__(out self, kind: TokenKind, value: String, pos: Position):
+        self.kind = kind
+        self.value = value
+        self.pos = pos
 
 
 struct Lexer:
@@ -185,7 +196,7 @@ struct Lexer:
     var line: Int     # Current line number (1-indexed)
     var column: Int   # Current column number (1-indexed)
     
-    fn __init__(inout self, input: String):
+    fn __init__(out self, input: String):
         """Initialise lexer with TOML input.
         
         Args:
@@ -222,7 +233,7 @@ struct Lexer:
             return ""
         return String(self.input[peek_pos])
     
-    fn advance(inout self) -> String:
+    fn advance(mut self) -> String:
         """Consume and return current character.
         
         Advances position and updates line/column tracking for error messages.
@@ -244,7 +255,7 @@ struct Lexer:
         
         return c
     
-    fn skip_whitespace(inout self):
+    fn skip_whitespace(mut self):
         """Skip whitespace characters (space, tab) but not newlines.
         
         Newlines are significant in TOML for separating key-value pairs,
@@ -257,7 +268,7 @@ struct Lexer:
             else:
                 break
     
-    fn read_comment(inout self) raises -> Token:
+    fn read_comment(mut self) raises -> Token:
         """Read a comment starting with #.
         
         Comments run from # to end of line. They can appear after values:
@@ -278,7 +289,7 @@ struct Lexer:
         
         return Token(TokenKind.COMMENT(), comment, start_pos)
     
-    fn read_string(inout self) raises -> Token:
+    fn read_string(mut self) raises -> Token:
         """Read a quoted string (basic or literal).
         
         TOML supports two string types:
@@ -348,7 +359,7 @@ struct Lexer:
         
         return Token(TokenKind.STRING(), value, start_pos)
     
-    fn read_number(inout self) raises -> Token:
+    fn read_number(mut self) raises -> Token:
         """Read a number (integer or float).
         
         TOML supports rich number formats:
@@ -408,7 +419,7 @@ struct Lexer:
         else:
             return Token(TokenKind.INTEGER(), value, start_pos)
     
-    fn read_key(inout self) raises -> Token:
+    fn read_key(mut self) raises -> Token:
         """Read an unquoted key or boolean/datetime value.
         
         Unquoted keys can contain: a-z, A-Z, 0-9, _, -
@@ -439,7 +450,7 @@ struct Lexer:
         
         return Token(TokenKind.KEY(), value, start_pos)
     
-    fn next_token(inout self) raises -> Token:
+    fn next_token(mut self) raises -> Token:
         """Get the next token from the input.
         
         This is the main lexer logic that dispatches to specific readers
@@ -469,13 +480,19 @@ struct Lexer:
         if c == '"' or c == "'":
             return self.read_string()
         
-        # Numbers (with lookahead to distinguish from keys with +/-)
-        if (c >= "0" and c <= "9") or c == "+" or c == "-":
-            if c == "+" or c == "-":
+        # Numbers and special floats (inf, nan)
+        if (c >= "0" and c <= "9") or c == "+" or c == "-" or c == "i" or c == "n":
+            # Check for special floats: inf, -inf, nan
+            if c == "i" and self.peek(1) == "n" and self.peek(2) == "f":
+                return self.read_number()
+            elif c == "n" and self.peek(1) == "a" and self.peek(2) == "n":
+                return self.read_number()
+            elif c == "+" or c == "-":
                 var next_c = self.peek(1)
-                if next_c >= "0" and next_c <= "9":
+                # Check for +inf, -inf, +nan, -nan
+                if next_c >= "0" and next_c <= "9" or next_c == "i" or next_c == "n":
                     return self.read_number()
-            else:
+            elif c >= "0" and c <= "9":
                 return self.read_number()
         
         # Single-character punctuation
@@ -504,7 +521,7 @@ struct Lexer:
         # Unquoted key or boolean
         return self.read_key()
     
-    fn tokenize(inout self) raises -> List[Token]:
+    fn tokenize(mut self) raises -> List[Token]:
         """Tokenise entire input into list of tokens.
         
         This is the main public API for the lexer. It produces a complete
@@ -517,9 +534,10 @@ struct Lexer:
         
         while True:
             var token = self.next_token()
-            tokens.append(token)
+            var is_eof = token.kind == TokenKind.EOF()
+            tokens.append(token^)
             
-            if token.kind == TokenKind.EOF():
+            if is_eof:
                 break
         
-        return tokens
+        return tokens^

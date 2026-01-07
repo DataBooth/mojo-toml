@@ -2,7 +2,7 @@
 authors = ["Michael Booth <michael@databooth.com.au>"]
 channels = ["conda-forge", "https://conda.modular.com/max-nightly"]
 name = "mojo-toml"
-platforms = ["osx-arm64", "linux-64", "win-64"]
+platforms = ["osx-arm64", "linux-64"]
 version = "0.1.0"
 
 [activation]
@@ -45,5 +45,5 @@ example-simple = "mojo -I src examples/simple.mojo"
 example-pixi = "mojo -I src examples/parse_pixi.mojo"
 
 [dependencies]
-mojo = ">=0.26.1.0.dev2026010405,<0.27"
+mojo = "*"
 tomli = ">=2.2.1,<3"
