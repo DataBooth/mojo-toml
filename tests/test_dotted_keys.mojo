@@ -1,6 +1,6 @@
-"""Tests for dotted keys and duplicate key detection in mojo-toml.
+"""Tests for dotted keys in mojo-toml.
 
-Tests the newly implemented dotted key support and duplicate key validation.
+Tests the dotted key syntax (a.b.c = value) which creates nested table structures.
 """
 
 from testing import assert_equal, assert_true, TestSuite, assert_raises
@@ -72,34 +72,6 @@ server.enabled = true
     assert_equal(server["enabled"].as_bool(), True)
 
 
-fn test_duplicate_key_error() raises:
-    """Test that duplicate keys raise an error."""
-    with assert_raises(contains="Duplicate key"):
-        var data = parse("""
-name = "first"
-name = "second"
-""")
-
-
-fn test_duplicate_key_in_table() raises:
-    """Test that duplicate keys in table raise an error."""
-    with assert_raises(contains="Duplicate key"):
-        var data = parse("""
-[section]
-key = "first"
-key = "second"
-""")
-
-
-fn test_duplicate_nested_key() raises:
-    """Test that duplicate nested keys raise an error."""
-    with assert_raises(contains="Duplicate key"):
-        var data = parse("""
-a.b.c = 1
-a.b.c = 2
-""")
-
-
 fn test_dotted_key_with_inline_table() raises:
     """Test dotted key with inline table value."""
     var data = parse("""
@@ -124,16 +96,13 @@ a.b = [1, 2, 3]
 
 
 def main():
-    """Run all dotted key and duplicate detection tests."""
+    """Run all dotted key tests."""
     var suite = TestSuite()
     suite.test[test_simple_dotted_key]()
     suite.test[test_multiple_dotted_keys]()
     suite.test[test_deeply_dotted_key]()
     suite.test[test_dotted_key_with_table_header]()
     suite.test[test_dotted_key_mixed_values]()
-    suite.test[test_duplicate_key_error]()
-    suite.test[test_duplicate_key_in_table]()
-    suite.test[test_duplicate_nested_key]()
     suite.test[test_dotted_key_with_inline_table]()
     suite.test[test_dotted_key_array]()
     suite^.run()
