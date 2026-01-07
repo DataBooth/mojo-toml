@@ -13,7 +13,7 @@ env = { MOJO_PATH = "$PIXI_PROJECT_ROOT/src" }
 mojo-version = "mojo --version"
 
 # Individual tests (for quick iteration during development)
-test-basic = "mojo -I src tests/test_basic.mojo"
+test-lexer = "mojo -I src tests/test_lexer.mojo"
 test-parser = "mojo -I src tests/test_parser.mojo"
 test-real-world = "mojo -I src tests/test_real_world.mojo"
 test-fixtures = "mojo -I src tests/test_fixtures.mojo"
@@ -30,7 +30,7 @@ set -e
 echo "=== Running All Tests ==="
 echo ""
 echo "[1/10] Lexer Tests (25 tests)"
-mojo -I src tests/test_basic.mojo
+mojo -I src tests/test_lexer.mojo
 echo ""
 echo "[2/10] Parser Tests (10 tests)"
 mojo -I src tests/test_parser.mojo

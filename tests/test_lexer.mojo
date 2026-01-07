@@ -1,6 +1,7 @@
-"""Basic lexer tests for mojo-toml.
+"""Lexer tests for mojo-toml.
 
-Tests the tokenisation of TOML input into token streams.
+Comprehensive tests for the tokenisation of TOML input into token streams.
+Covers all token types, syntax elements, and lexer functionality.
 """
 
 from testing import assert_equal, assert_true, TestSuite

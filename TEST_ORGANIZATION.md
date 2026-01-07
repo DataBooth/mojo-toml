@@ -5,7 +5,7 @@ This document describes how tests are organized in the mojo-toml project.
 ## Test Files and Their Purpose
 
 ### Lexer Tests
-- **test_basic.mojo** (25 tests) - Lexer/tokenization tests
+- **test_lexer.mojo** (25 tests) - Lexer/tokenization tests
   - Tests token generation from TOML syntax
   - Covers strings, numbers, booleans, comments, punctuation
   - Tests basic syntax recognition (not full parsing)
@@ -75,7 +75,7 @@ Tests are grouped by the TOML feature they test:
 - ✅ Dotted keys together
 
 ### 2. Separation of Concerns
-- **Lexer tests** (test_basic.mojo) focus on tokenization
+- **Lexer tests** (test_lexer.mojo) focus on tokenization
 - **Parser tests** (test_parser.mojo) focus on parsing logic
 - **Structure tests** focus on specific TOML constructs
 - **Validation tests** focus on error detection
@@ -99,7 +99,7 @@ pixi run test-all
 
 ### Run Individual Test Suites
 ```bash
-pixi run test-basic          # Lexer tests
+pixi run test-lexer          # Lexer tests
 pixi run test-parser         # Parser tests
 pixi run test-arrays         # Array tests
 pixi run test-tables         # Table header tests
@@ -115,7 +115,7 @@ pixi run test-parser-reset   # Parser reset tests
 
 | Category | File | Tests |
 |----------|------|-------|
-| Lexer | test_basic.mojo | 25 |
+| Lexer | test_lexer.mojo | 25 |
 | Parser | test_parser.mojo | 10 |
 | Real-World | test_real_world.mojo | 4 |
 | Fixtures | test_fixtures.mojo | 5 |
