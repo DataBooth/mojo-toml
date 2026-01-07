@@ -1,0 +1,35 @@
+# Machine Learning Model Configuration
+
+model_name = "customer-churn-predictor"
+version = "1.2.3"
+created_date = "2026-01-07"
+
+# Model hyperparameters
+learning_rate = 0.001
+batch_size = 32
+num_epochs = 100
+dropout_rate = 0.2
+weight_decay = 0.0001
+
+# Architecture
+num_layers = 5
+hidden_size = 256
+activation = "relu"
+use_batch_norm = true
+
+# Training settings
+early_stopping = true
+patience = 10
+min_delta = 0.0001
+validation_split = 0.2
+
+# Performance metrics
+target_accuracy = 0.95
+target_precision = 0.90
+target_recall = 0.85
+target_f1 = 0.875
+
+# Data preprocessing
+normalize_features = true
+handle_missing = "mean"
+scale_method = "standard"

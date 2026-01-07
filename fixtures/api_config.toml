@@ -1,0 +1,35 @@
+# REST API Configuration
+
+# Service metadata
+service_name = "analytics-api"
+version = "3.0.0"
+environment = "production"
+region = "us-west-2"
+
+# Network settings
+bind_address = "127.0.0.1"
+bind_port = 9000
+use_https = true
+cert_path = "/etc/ssl/cert.pem"
+
+# Rate limiting
+rate_limit_enabled = true
+requests_per_second = 100.0
+burst_size = 150
+
+# Timeouts (in seconds)
+connection_timeout = 5.0
+read_timeout = 30.0
+write_timeout = 30.0
+idle_timeout = 120.0
+
+# Monitoring
+enable_metrics = true
+metrics_port = 9090
+health_check_interval = 10.0
+
+# Security
+cors_enabled = true
+max_request_size = 10485760
+require_auth = true
+session_timeout = 3600.0

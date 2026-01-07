@@ -1,0 +1,30 @@
+# Simple application configuration
+# Generated: 2026-01-07
+
+app_name = "DataProcessor"
+version = "2.1.0"
+author = "DataBooth"
+license = "MIT"
+
+# Server configuration
+host = "0.0.0.0"
+port = 8080
+debug = false
+log_level = "INFO"
+
+# Database settings
+db_host = "localhost"
+db_port = 5432
+db_name = "analytics"
+db_timeout = 30.0
+
+# Feature flags
+enable_cache = true
+enable_metrics = true
+enable_profiling = false
+
+# Performance tuning
+max_connections = 100
+worker_threads = 4
+request_timeout = 60.0
+cache_size = 1024

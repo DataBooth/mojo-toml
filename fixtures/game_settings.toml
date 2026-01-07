@@ -1,0 +1,40 @@
+# Game Engine Settings
+
+title = "Epic Adventure"
+version = "1.0.0-beta"
+developer = "Indie Studio"
+
+# Graphics settings
+resolution_width = 1920
+resolution_height = 1080
+fullscreen = false
+vsync = true
+fps_limit = 60
+anti_aliasing = 4
+
+# Audio settings
+master_volume = 0.8
+music_volume = 0.6
+sfx_volume = 0.7
+voice_volume = 0.9
+mute_on_focus_loss = true
+
+# Gameplay settings
+difficulty = "normal"
+autosave_enabled = true
+autosave_interval = 300.0
+show_tutorials = true
+invert_y_axis = false
+
+# Physics
+gravity = -9.81
+time_scale = 1.0
+fixed_timestep = 0.016666667
+max_physics_steps = 10
+
+# Network (multiplayer)
+enable_multiplayer = false
+server_address = "game.example.com"
+server_port = 27015
+network_timeout = 10.0
+max_players = 16
