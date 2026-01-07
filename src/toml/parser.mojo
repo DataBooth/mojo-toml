@@ -29,6 +29,19 @@ from collections import Dict, List
 from .lexer import Token, TokenKind, Lexer
 
 
+struct KeyValuePair(Movable, Copyable):
+    """Simple struct to hold a key-value pair."""
+    var key: String
+    var value: TomlValue
+    
+    fn __init__(out self, key: String, var value: TomlValue):
+        self.key = key
+        self.value = value^
+    
+    fn copy(self) -> Self:
+        return KeyValuePair(self.key, self.value.copy())
+
+
 # TOML Value variant type - can hold any TOML value
 struct TomlValue(Copyable, Movable):
     """Represents any TOML value type.
@@ -139,7 +152,9 @@ struct TomlValue(Copyable, Movable):
                 arr_copy.append(self.array_value[i].copy())
             return TomlValue(arr_copy^)
         elif self.value_type == 5:  # TABLE
-            var table_copy = self.table_value.copy()
+            var table_copy = Dict[String, TomlValue]()
+            for entry in self.table_value.items():
+                table_copy[entry.key] = entry.value.copy()
             return TomlValue(table_copy^)
         else:
             # Should not reach here
@@ -184,7 +199,10 @@ struct TomlValue(Copyable, Movable):
         if not self.is_table():
             raise Error("Value is not a table")
         # Return a copy of the table
-        return self.table_value.copy()
+        var result = Dict[String, TomlValue]()
+        for entry in self.table_value.items():
+            result[entry.key] = entry.value.copy()
+        return result^
 
 
 struct Parser:
@@ -201,7 +219,7 @@ struct Parser:
     
     var tokens: List[Token]
     var pos: Int
-    var current_table: List[String]  # Track current table path like ["database", "primary"]
+    var current_table_path: List[String]  # Track current table path for flat key storage
     
     fn __init__(out self, var tokens: List[Token]):
         """Initialise parser with token stream.
@@ -211,7 +229,7 @@ struct Parser:
         """
         self.tokens = tokens^
         self.pos = 0
-        self.current_table = List[String]()
+        self.current_table_path = List[String]()
     
     fn current(self) raises -> Token:
         """Get current token without advancing.
@@ -236,8 +254,8 @@ struct Parser:
         var peek_pos = self.pos + offset
         if peek_pos >= len(self.tokens):
             raise Error("Unexpected end of input")
-        var tok = self.tokens[peek_pos]
-        return Token(tok.kind, tok.value, tok.pos)
+        # Must copy token explicitly
+        return Token(self.tokens[peek_pos].kind, self.tokens[peek_pos].value, self.tokens[peek_pos].pos)
     
     fn advance(mut self) raises -> Token:
         """Consume and return current token.
@@ -435,12 +453,127 @@ struct Parser:
         else:
             raise Error("Unexpected token in value position")
     
-    fn parse_key_value(mut self, mut result: Dict[String, TomlValue]) raises:
-        """Parse a key = value pair and add to result dict.
+    fn parse_table_header(mut self) raises -> List[String]:
+        """Parse a table header [section.name] and return the path.
+        
+        Returns:
+            List of strings representing the table path.
+        """
+        # Consume opening bracket
+        self.expect(TokenKind.LEFT_BRACKET())
+        
+        var path = List[String]()
+        
+        # Parse first key
+        var token = self.current()
+        if token.kind == TokenKind.KEY() or token.kind == TokenKind.STRING():
+            path.append(token.value)
+            _ = self.advance()
+        else:
+            raise Error("Expected key in table header")
+        
+        # Parse dotted path (e.g., [a.b.c])
+        while self.pos < len(self.tokens):
+            token = self.current()
+            if token.kind == TokenKind.DOT():
+                _ = self.advance()
+                token = self.current()
+                if token.kind == TokenKind.KEY() or token.kind == TokenKind.STRING():
+                    path.append(token.value)
+                    _ = self.advance()
+                else:
+                    raise Error("Expected key after dot in table header")
+            elif token.kind == TokenKind.RIGHT_BRACKET():
+                _ = self.advance()
+                break
+            else:
+                raise Error("Expected dot or closing bracket in table header")
+        
+        return path^
+    
+    fn ensure_table_path(mut self, result: Dict[String, TomlValue], path: List[String]) raises -> Dict[String, TomlValue]:
+        """Ensure a nested table path exists, creating tables as needed.
         
         Args:
-            result: Dictionary to add the key-value pair to.
+            result: Root dictionary
+            path: List of keys forming the path (e.g., ["database", "primary"])
+            
+        Returns:
+            New dictionary with path ensured
         """
+        if len(path) == 0:
+            # Copy and return
+            var copy = Dict[String, TomlValue]()
+            for entry in result.items():
+                copy[entry.key] = entry.value.copy()
+            return copy^
+        
+        # Copy result
+        var new_result = Dict[String, TomlValue]()
+        for entry in result.items():
+            new_result[entry.key] = entry.value.copy()
+        
+        # Check/create first level
+        var first_key = path[0]
+        if not new_result.__contains__(first_key):
+            var new_table = Dict[String, TomlValue]()
+            new_result[first_key] = TomlValue(new_table^)
+        elif not new_result[first_key].is_table():
+            raise Error("Key exists but is not a table: " + first_key)
+        
+        # For paths longer than 1, recursively ensure nested tables
+        if len(path) > 1:
+            # Get the current table, modify it, put it back
+            var current_table = new_result[first_key].as_table()
+            var remaining_path = List[String]()
+            for i in range(1, len(path)):
+                remaining_path.append(path[i])
+            current_table = self.ensure_table_path(current_table^, remaining_path)
+            new_result[first_key] = TomlValue(current_table^)
+        
+        return new_result^
+    
+    fn set_in_table_path(mut self, result: Dict[String, TomlValue], path: List[String], key: String, var value: TomlValue) raises -> Dict[String, TomlValue]:
+        """Set a key-value pair at a specific table path.
+        
+        Args:
+            result: Root dictionary
+            path: Path to the target table
+            key: Key to set
+            value: Value to set
+            
+        Returns:
+            New dictionary with value set
+        """
+        # Ensure the path exists first
+        var new_result = self.ensure_table_path(result, path)
+        
+        if len(path) == 0:
+            # Set at root level
+            new_result[key] = value^
+            return new_result^
+        else:
+            # Navigate to target table and set
+            var table = new_result[path[0]].as_table()
+            if len(path) == 1:
+                table[key] = value^
+                new_result[path[0]] = TomlValue(table^)
+            else:
+                # Recurse for deeper paths
+                var remaining_path = List[String]()
+                for i in range(1, len(path)):
+                    remaining_path.append(path[i])
+                table = self.set_in_table_path(table^, remaining_path, key, value^)
+                new_result[path[0]] = TomlValue(table^)
+            return new_result^
+    
+    fn parse_key_value_pair(mut self) raises -> KeyValuePair:
+        """Parse a key = value pair and return the key and value.
+        
+        Returns:
+            KeyValuePair containing the parsed key and value.
+        """
+        # Note: Returns struct to avoid Dict iteration issues
         # Parse key (can be dotted: a.b.c)
         var key_parts = List[String]()
         
@@ -475,19 +608,19 @@ struct Parser:
         # Parse value
         var value = self.parse_value()
         
-        # For simple key (not dotted), just add to result
+        # For simple key (not dotted), return it
         if len(key_parts) == 1:
-            result[key_parts[0]] = value^
+            return KeyValuePair(key_parts[0], value^)
         else:
             # TODO: Handle dotted keys by creating nested dicts
             # For now, just use the last part
-            result[key_parts[len(key_parts) - 1]] = value^
+            return KeyValuePair(key_parts[len(key_parts) - 1], value^)
     
     fn parse(mut self) raises -> Dict[String, TomlValue]:
         """Parse the entire TOML document.
         
         Returns:
-            Dictionary containing all TOML data.
+            Dictionary containing all TOML data with nested table structures.
         """
         var result = Dict[String, TomlValue]()
         
@@ -509,13 +642,46 @@ struct Parser:
             elif token.kind == TokenKind.NEWLINE():
                 self.skip_newlines()
             
-            # Key-value pair
-            elif token.kind == TokenKind.KEY() or token.kind == TokenKind.STRING():
-                self.parse_key_value(result)
+            # Table header [section]
+            elif token.kind == TokenKind.LEFT_BRACKET():
+                # Check if it's an array of tables [[ ]]
+                try:
+                    var next_token = self.peek()
+                    if next_token.kind == TokenKind.LEFT_BRACKET():
+                        # TODO: Array of tables [[array]]
+                        raise Error("Array of tables not yet supported")
+                except:
+                    pass
+                
+                # Parse table header and update current path
+                self.current_table_path = self.parse_table_header()
+                # Copy path to avoid aliasing issues
+                var path_copy = List[String]()
+                for i in range(len(self.current_table_path)):
+                    path_copy.append(self.current_table_path[i])
+                # Ensure the table path exists in result
+                var updated_result = self.ensure_table_path(result, path_copy)
+                result = updated_result^
                 self.skip_newlines()
             
-            # TODO: Table headers [section]
-            # TODO: Array of tables [[array]]
+            # Key-value pair
+            elif token.kind == TokenKind.KEY() or token.kind == TokenKind.STRING():
+                # Parse the key-value pair
+                var pair = self.parse_key_value_pair()
+                
+                # Copy values to avoid partial destruction issues
+                var parsed_key = String(pair.key)
+                var parsed_value = pair.value.copy()
+                
+                # Copy path to avoid aliasing issues
+                var path_copy = List[String]()
+                for i in range(len(self.current_table_path)):
+                    path_copy.append(self.current_table_path[i])
+                # Set the value at the current table path
+                var updated_result = self.set_in_table_path(result, path_copy, parsed_key, parsed_value^)
+                result = updated_result^
+                
+                self.skip_newlines()
             
             else:
                 raise Error("Unexpected token at top level")
