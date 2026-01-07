@@ -22,8 +22,8 @@ This document outlines the steps to submit mojo-toml to the modular-community ch
 
 3. Copy files from mojo-toml repo:
    ```bash
-   cp /path/to/mojo-toml/recipe.yaml recipes/mojo-toml/
-   cp /path/to/mojo-toml/test_package.mojo recipes/mojo-toml/
+   cp /path/to/mojo-toml/packaging/recipe.yaml recipes/mojo-toml/
+   cp /path/to/mojo-toml/packaging/test_package.mojo recipes/mojo-toml/
    ```
 
 4. Commit and push:
@@ -94,11 +94,11 @@ Use the content from `FORUM_ANNOUNCEMENT.md`:
 
 The following files have been created in your mojo-toml repository:
 
-1. **recipe.yaml** - Rattler-build recipe for conda packaging
+1. **packaging/recipe.yaml** - Rattler-build recipe for conda packaging
    - Defines package metadata, dependencies, build steps
    - Includes comprehensive description and links
    
-2. **test_package.mojo** - Installation verification tests
+2. **packaging/test_package.mojo** - Installation verification tests
    - Tests basic parsing functionality
    - Validates arrays, tables, and dotted keys
    - Ensures package is properly installed
