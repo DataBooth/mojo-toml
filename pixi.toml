@@ -1,0 +1,49 @@
+[workspace]
+authors = ["Michael Booth <michael@databooth.com.au>"]
+channels = ["conda-forge", "https://conda.modular.com/max-nightly"]
+name = "mojo-toml"
+platforms = ["osx-arm64", "linux-64", "win-64"]
+version = "0.1.0"
+
+[activation]
+env = { MOJO_PATH = "$PIXI_PROJECT_ROOT/src" }
+
+[tasks]
+# Development tasks
+mojo-version = "mojo --version"
+
+# Individual tests (for quick iteration during development)
+test-basic = "mojo -I src tests/test_basic.mojo"
+test-strings = "mojo -I src tests/test_strings.mojo"
+test-numbers = "mojo -I src tests/test_numbers.mojo"
+test-arrays = "mojo -I src tests/test_arrays.mojo"
+test-tables = "mojo -I src tests/test_tables.mojo"
+test-inline = "mojo -I src tests/test_inline.mojo"
+test-datetime = "mojo -I src tests/test_datetime.mojo"
+test-errors = "mojo -I src tests/test_errors.mojo"
+test-tomli-compat = "mojo -I src tests/test_tomli_compat.mojo"
+test-spec = "mojo -I src tests/test_spec.mojo"
+
+# Run all tests
+test-all = """bash -c '
+set -e
+echo "=== Running All Tests ==="
+for test_file in tests/test_*.mojo; do
+  echo ""
+  mojo -I src "$test_file"
+done
+echo ""
+echo "=== All Tests Complete! ==="
+'"""
+
+# Build tasks
+build-package = "mkdir -p dist && mojo package src/toml -o dist/toml.mojopkg"
+clean = "rm -rf dist __pycache__ .pytest_cache toml.mojopkg"
+
+# Example tasks
+example-simple = "mojo -I src examples/simple.mojo"
+example-pixi = "mojo -I src examples/parse_pixi.mojo"
+
+[dependencies]
+mojo = ">=0.26.1.0.dev2026010405,<0.27"
+tomli = ">=2.2.1,<3"

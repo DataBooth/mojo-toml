@@ -1,0 +1,525 @@
+"""Lexer for TOML 1.0 files.
+
+# Why: Purpose of the Lexer
+The lexer (tokeniser) is the first stage of TOML parsing. It converts raw text into 
+a stream of meaningful tokens, making it easier for the parser to understand structure.
+
+Example transformation:
+    Input:  'name = "mojo-toml"  # A TOML parser'
+    Output: [KEY("name"), EQUALS, STRING("mojo-toml"), COMMENT("A TOML parser")]
+
+# What: Responsibilities
+- Break TOML text into atomic units (tokens)
+- Identify token types (strings, numbers, punctuation, etc.)
+- Handle string escape sequences (\\n, \\t, etc.)
+- Track line/column positions for error messages
+- Support multiline strings and comments
+
+# How: Lexer Design
+The lexer uses a character-by-character scanner with lookahead:
+1. Read current character
+2. Determine token type (string? number? punctuation?)
+3. Consume characters until token complete
+4. Emit token with type, value, and position
+5. Repeat until EOF
+
+This design keeps the parser simple—it works with high-level tokens rather than 
+raw characters, making TOML syntax rules easier to implement.
+
+# TOML-Specific Handling
+- Multiline strings: Triple quotes \"\"\" or '''
+- Number formats: 1_000 (underscores), 1e10 (scientific), inf/nan (special floats)
+- String types: Basic "text" (with escapes) vs Literal 'raw' (no escapes)
+- Comments: # to end of line (not inside strings)
+"""
+
+from collections import List
+
+
+@value
+struct Position:
+    """Position in the source file (line and column).
+    
+    Used for error messages to show users exactly where parsing failed.
+    Example: "Error at line 5, column 12: unexpected character"
+    """
+    var line: Int
+    var column: Int
+
+
+@value
+struct TokenKind:
+    """Token types for TOML lexer.
+    
+    Each token represents a meaningful unit in TOML syntax.
+    Static methods replace deprecated `alias` keyword.
+    """
+    var _value: Int
+    
+    # Special tokens
+    @staticmethod
+    fn EOF() -> TokenKind:
+        """End of file marker."""
+        return TokenKind(0)
+    
+    @staticmethod
+    fn NEWLINE() -> TokenKind:
+        """Line break (significant in TOML for separating key-value pairs)."""
+        return TokenKind(1)
+    
+    @staticmethod
+    fn WHITESPACE() -> TokenKind:
+        """Spaces and tabs (usually skipped)."""
+        return TokenKind(2)
+    
+    @staticmethod
+    fn COMMENT() -> TokenKind:
+        """Comment text after # symbol."""
+        return TokenKind(3)
+    
+    # Literal values
+    @staticmethod
+    fn STRING() -> TokenKind:
+        """String literal: "basic" or 'literal'."""
+        return TokenKind(10)
+    
+    @staticmethod
+    fn INTEGER() -> TokenKind:
+        """Integer: 42, +17, -5, 1_000."""
+        return TokenKind(11)
+    
+    @staticmethod
+    fn FLOAT() -> TokenKind:
+        """Float: 3.14, 1e10, inf, nan."""
+        return TokenKind(12)
+    
+    @staticmethod
+    fn BOOLEAN() -> TokenKind:
+        """Boolean: true or false."""
+        return TokenKind(13)
+    
+    @staticmethod
+    fn DATETIME() -> TokenKind:
+        """ISO 8601 datetime (parsed as string in v0.1.0)."""
+        return TokenKind(14)
+    
+    # Identifiers
+    @staticmethod
+    fn KEY() -> TokenKind:
+        """Unquoted key name."""
+        return TokenKind(20)
+    
+    # Punctuation (structural elements)
+    @staticmethod
+    fn EQUALS() -> TokenKind:
+        """Assignment operator: ="""
+        return TokenKind(30)
+    
+    @staticmethod
+    fn DOT() -> TokenKind:
+        """Dotted key separator: a.b.c"""
+        return TokenKind(31)
+    
+    @staticmethod
+    fn COMMA() -> TokenKind:
+        """Array/inline table separator: ,"""
+        return TokenKind(32)
+    
+    @staticmethod
+    fn LEFT_BRACKET() -> TokenKind:
+        """Array start or table header: ["""
+        return TokenKind(33)
+    
+    @staticmethod
+    fn RIGHT_BRACKET() -> TokenKind:
+        """Array end or table header close: ]"""
+        return TokenKind(34)
+    
+    @staticmethod
+    fn LEFT_BRACE() -> TokenKind:
+        """Inline table start: {"""
+        return TokenKind(35)
+    
+    @staticmethod
+    fn RIGHT_BRACE() -> TokenKind:
+        """Inline table end: }"""
+        return TokenKind(36)
+    
+    fn __eq__(self, other: TokenKind) -> Bool:
+        return self._value == other._value
+    
+    fn __ne__(self, other: TokenKind) -> Bool:
+        return self._value != other._value
+
+
+@value
+struct Token:
+    """A token in the TOML input stream.
+    
+    Represents a single meaningful unit of TOML syntax with its type, 
+    content, and location in the source file.
+    """
+    var kind: TokenKind
+    var value: String  # The actual text content
+    var pos: Position  # Where it appears in the file
+
+
+struct Lexer:
+    """Tokeniser for TOML input.
+    
+    The lexer scans TOML text character-by-character and produces a stream 
+    of tokens. It handles:
+    - String parsing (with escape sequences)
+    - Number formats (integers, floats, scientific notation)
+    - Comments (# to end of line)
+    - Whitespace management
+    - Position tracking for error messages
+    
+    Usage:
+        var lexer = Lexer("name = 'value'")
+        var tokens = lexer.tokenize()  # Returns List[Token]
+    """
+    
+    var input: String
+    var pos: Int      # Current position in input
+    var line: Int     # Current line number (1-indexed)
+    var column: Int   # Current column number (1-indexed)
+    
+    fn __init__(inout self, input: String):
+        """Initialise lexer with TOML input.
+        
+        Args:
+            input: TOML content to tokenise.
+        """
+        self.input = input
+        self.pos = 0
+        self.line = 1
+        self.column = 1
+    
+    fn current(self) -> String:
+        """Get current character without advancing.
+        
+        Returns:
+            Current character or empty string if at EOF.
+        """
+        if self.pos >= len(self.input):
+            return ""
+        return String(self.input[self.pos])
+    
+    fn peek(self, offset: Int = 1) -> String:
+        """Look ahead at character without consuming it.
+        
+        Used for lookahead decisions, e.g. detecting triple quotes \"\"\"
+        
+        Args:
+            offset: Number of characters to look ahead (default: 1).
+            
+        Returns:
+            Character at pos + offset or empty string if out of bounds.
+        """
+        var peek_pos = self.pos + offset
+        if peek_pos >= len(self.input):
+            return ""
+        return String(self.input[peek_pos])
+    
+    fn advance(inout self) -> String:
+        """Consume and return current character.
+        
+        Advances position and updates line/column tracking for error messages.
+        
+        Returns:
+            Current character or empty string if at EOF.
+        """
+        if self.pos >= len(self.input):
+            return ""
+        
+        var c = String(self.input[self.pos])
+        self.pos += 1
+        
+        if c == "\n":
+            self.line += 1
+            self.column = 1
+        else:
+            self.column += 1
+        
+        return c
+    
+    fn skip_whitespace(inout self):
+        """Skip whitespace characters (space, tab) but not newlines.
+        
+        Newlines are significant in TOML for separating key-value pairs,
+        so we preserve them as NEWLINE tokens.
+        """
+        while self.pos < len(self.input):
+            var c = self.current()
+            if c == " " or c == "\t":
+                _ = self.advance()
+            else:
+                break
+    
+    fn read_comment(inout self) raises -> Token:
+        """Read a comment starting with #.
+        
+        Comments run from # to end of line. They can appear after values:
+            name = "value"  # This is a comment
+        
+        Returns:
+            Comment token (excluding the # character).
+        """
+        var start_pos = Position(self.line, self.column)
+        _ = self.advance()  # Skip #
+        
+        var comment = String("")
+        while self.pos < len(self.input):
+            var c = self.current()
+            if c == "\n":
+                break
+            comment += self.advance()
+        
+        return Token(TokenKind.COMMENT(), comment, start_pos)
+    
+    fn read_string(inout self) raises -> Token:
+        """Read a quoted string (basic or literal).
+        
+        TOML supports two string types:
+        1. Basic strings: "text" - supports escape sequences (\\n, \\t, etc.)
+        2. Literal strings: 'raw' - no escape processing
+        
+        Both support multiline variants with triple quotes:
+        - \"\"\"multiline basic\"\"\"
+        - '''multiline literal'''
+        
+        Returns:
+            String token with processed content (escapes handled).
+        """
+        var start_pos = Position(self.line, self.column)
+        var quote_char = self.current()
+        _ = self.advance()  # Skip opening quote
+        
+        # Check for multiline (triple quotes)
+        var is_multiline = False
+        if self.current() == quote_char and self.peek(1) == quote_char:
+            is_multiline = True
+            _ = self.advance()  # Skip second quote
+            _ = self.advance()  # Skip third quote
+        
+        var value = String("")
+        var is_literal = (quote_char == "'")
+        
+        while self.pos < len(self.input):
+            var c = self.current()
+            
+            # Check for closing quotes
+            if is_multiline:
+                if c == quote_char and self.peek(1) == quote_char and self.peek(2) == quote_char:
+                    _ = self.advance()  # Skip first quote
+                    _ = self.advance()  # Skip second quote
+                    _ = self.advance()  # Skip third quote
+                    break
+            else:
+                if c == quote_char:
+                    _ = self.advance()  # Skip closing quote
+                    break
+            
+            # Handle escape sequences in basic strings only
+            if not is_literal and c == "\\":
+                _ = self.advance()
+                var next_c = self.current()
+                if next_c == "n":
+                    value += "\n"
+                    _ = self.advance()
+                elif next_c == "t":
+                    value += "\t"
+                    _ = self.advance()
+                elif next_c == "\\":
+                    value += "\\\\"
+                    _ = self.advance()
+                elif next_c == '"':
+                    value += '"'
+                    _ = self.advance()
+                elif next_c == "'":
+                    value += "'"
+                    _ = self.advance()
+                else:
+                    # Invalid escape - keep backslash
+                    value += "\\"
+            else:
+                value += self.advance()
+        
+        return Token(TokenKind.STRING(), value, start_pos)
+    
+    fn read_number(inout self) raises -> Token:
+        """Read a number (integer or float).
+        
+        TOML supports rich number formats:
+        - Integers: 42, +17, -5
+        - Underscores: 1_000, 5_349_221
+        - Floats: 3.14, 1e10, 6.022e23
+        - Special: inf, -inf, nan
+        
+        Returns:
+            INTEGER or FLOAT token.
+        """
+        var start_pos = Position(self.line, self.column)
+        var value = String("")
+        var is_float = False
+        
+        # Handle sign
+        var c = self.current()
+        if c == "+" or c == "-":
+            value += self.advance()
+        
+        # Handle special float values (inf, nan)
+        if self.current() == "i" and self.peek(1) == "n" and self.peek(2) == "f":
+            value += self.advance()  # i
+            value += self.advance()  # n
+            value += self.advance()  # f
+            return Token(TokenKind.FLOAT(), value, start_pos)
+        elif self.current() == "n" and self.peek(1) == "a" and self.peek(2) == "n":
+            value += self.advance()  # n
+            value += self.advance()  # a
+            value += self.advance()  # n
+            return Token(TokenKind.FLOAT(), value, start_pos)
+        
+        # Read digits and separators
+        while self.pos < len(self.input):
+            c = self.current()
+            
+            if c >= "0" and c <= "9":
+                value += self.advance()
+            elif c == "_":
+                # Underscores for readability: 1_000_000
+                _ = self.advance()
+            elif c == ".":
+                is_float = True
+                value += self.advance()
+            elif c == "e" or c == "E":
+                # Scientific notation: 1e10, 6.022e23
+                is_float = True
+                value += self.advance()
+                # Handle exponent sign
+                if self.current() == "+" or self.current() == "-":
+                    value += self.advance()
+            else:
+                break
+        
+        if is_float:
+            return Token(TokenKind.FLOAT(), value, start_pos)
+        else:
+            return Token(TokenKind.INTEGER(), value, start_pos)
+    
+    fn read_key(inout self) raises -> Token:
+        """Read an unquoted key or boolean/datetime value.
+        
+        Unquoted keys can contain: a-z, A-Z, 0-9, _, -
+        Examples: name, snake_case, kebab-case, CamelCase
+        
+        Also handles boolean keywords (true/false).
+        
+        Returns:
+            KEY, BOOLEAN, or DATETIME token.
+        """
+        var start_pos = Position(self.line, self.column)
+        var value = String("")
+        
+        while self.pos < len(self.input):
+            var c = self.current()
+            if (c >= "a" and c <= "z") or (c >= "A" and c <= "Z") or \
+               (c >= "0" and c <= "9") or c == "_" or c == "-":
+                value += self.advance()
+            else:
+                break
+        
+        # Check for boolean values
+        if value == "true" or value == "false":
+            return Token(TokenKind.BOOLEAN(), value, start_pos)
+        
+        # TODO: Detect datetime patterns (ISO 8601 with colons/dashes)
+        # For now, treat as key and let parser handle datetime validation
+        
+        return Token(TokenKind.KEY(), value, start_pos)
+    
+    fn next_token(inout self) raises -> Token:
+        """Get the next token from the input.
+        
+        This is the main lexer logic that dispatches to specific readers
+        based on the current character.
+        
+        Returns:
+            Next token in the stream.
+        """
+        self.skip_whitespace()
+        
+        if self.pos >= len(self.input):
+            return Token(TokenKind.EOF(), "", Position(self.line, self.column))
+        
+        var c = self.current()
+        var pos = Position(self.line, self.column)
+        
+        # Newline (significant in TOML)
+        if c == "\n":
+            _ = self.advance()
+            return Token(TokenKind.NEWLINE(), "\n", pos)
+        
+        # Comment
+        if c == "#":
+            return self.read_comment()
+        
+        # Strings (basic or literal)
+        if c == '"' or c == "'":
+            return self.read_string()
+        
+        # Numbers (with lookahead to distinguish from keys with +/-)
+        if (c >= "0" and c <= "9") or c == "+" or c == "-":
+            if c == "+" or c == "-":
+                var next_c = self.peek(1)
+                if next_c >= "0" and next_c <= "9":
+                    return self.read_number()
+            else:
+                return self.read_number()
+        
+        # Single-character punctuation
+        if c == "=":
+            _ = self.advance()
+            return Token(TokenKind.EQUALS(), "=", pos)
+        if c == ".":
+            _ = self.advance()
+            return Token(TokenKind.DOT(), ".", pos)
+        if c == ",":
+            _ = self.advance()
+            return Token(TokenKind.COMMA(), ",", pos)
+        if c == "[":
+            _ = self.advance()
+            return Token(TokenKind.LEFT_BRACKET(), "[", pos)
+        if c == "]":
+            _ = self.advance()
+            return Token(TokenKind.RIGHT_BRACKET(), "]", pos)
+        if c == "{":
+            _ = self.advance()
+            return Token(TokenKind.LEFT_BRACE(), "{", pos)
+        if c == "}":
+            _ = self.advance()
+            return Token(TokenKind.RIGHT_BRACE(), "}", pos)
+        
+        # Unquoted key or boolean
+        return self.read_key()
+    
+    fn tokenize(inout self) raises -> List[Token]:
+        """Tokenise entire input into list of tokens.
+        
+        This is the main public API for the lexer. It produces a complete
+        list of tokens that can be consumed by the parser.
+        
+        Returns:
+            List of all tokens in the input, ending with EOF.
+        """
+        var tokens = List[Token]()
+        
+        while True:
+            var token = self.next_token()
+            tokens.append(token)
+            
+            if token.kind == TokenKind.EOF():
+                break
+        
+        return tokens
