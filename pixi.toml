@@ -3,7 +3,7 @@ authors = ["Michael Booth <michael@databooth.com.au>"]
 channels = ["conda-forge", "https://conda.modular.com/max-nightly"]
 name = "mojo-toml"
 platforms = ["osx-arm64", "linux-64"]
-version = "0.1.0"
+version = "0.3.0"
 
 [activation]
 env = { MOJO_PATH = "$PIXI_PROJECT_ROOT/src" }

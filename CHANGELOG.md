@@ -7,22 +7,123 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Planned for v0.3.0 - TOML 1.0 Compliance
+### Planned for v0.4.0 - TOML 1.0 Compliance
 - Array of tables: `[[array]]`
-- Duplicate key detection
 - Hex/Octal/Binary integers: `0xDEADBEEF`, `0o755`, `0b11010110`
-- Dotted keys in key-value pairs: `a.b.c = "value"`
 - Native datetime parsing (parse to datetime types vs strings)
-- Enhanced error messages with context
 
-### Planned for v0.4.0 - Writer
+### Planned for v0.5.0 - Writer
 - Serialise `Dict` to TOML string
 - Pretty printing options
 - Round-trip fidelity
 
-### Planned for v0.5.0 - Performance
+### Planned for v0.6.0 - Performance
 - SIMD optimisations
 - Performance benchmarks vs Python tomli
+
+## [0.3.0] - 2026-01-07
+
+### Overview
+
+**Quality and performance release** with critical bug fixes, comprehensive testing improvements, performance documentation, and enhanced examples. All 96 tests passing! 🎉
+
+### Added ✅
+
+**Critical Fixes:**
+- Proper dotted key support (`a.b.c = "value"` now creates nested structures)
+- Duplicate key detection (raises errors on duplicate keys)
+- Error messages with line and column context
+- Named constants for TomlValue types (replaced magic numbers with `TomlValueType` struct)
+
+**Parser Improvements:**
+- `Parser.reset()` method for parser instance reusability
+- `copy_path()` helper method to eliminate code duplication
+- Enhanced comments explaining Mojo's ownership model and copying behaviour
+
+**Performance & Benchmarking:**
+- Comprehensive benchmark suite (`benchmarks/benchmark_parser.mojo`)
+- Performance documentation (`docs/PERFORMANCE.md`)
+- Measured parsing performance: 26μs for simple documents, 2ms for real pixi.toml
+- Table access overhead documented as negligible (10μs)
+
+**Testing:**
+- Reorganized tests into 10 logical groupings (was 7 files)
+- Renamed `test_basic.mojo` → `test_lexer.mojo` for clarity
+- Created `test_validation.mojo` for error detection tests
+- Created `test_dotted_keys.mojo` for dotted key functionality
+- Created `test_parser_reset.mojo` for Parser API tests
+- Added `TEST_ORGANIZATION.md` documenting test structure
+- Total: **96 tests** (up from 79)
+
+**Examples:**
+- Enhanced `parse_pixi.mojo` with comprehensive configuration reporting
+- Shows workspace, dependencies, tasks, and activation analysis
+- Demonstrates advanced API usage patterns
+
+**Documentation:**
+- `PERFORMANCE.md` - Performance characteristics and copying behaviour
+- `PERFORMANCE_IMPROVEMENTS_SUMMARY.md` - Branch work summary
+- `TEST_ORGANIZATION.md` - Test structure and guidelines
+
+### Changed
+
+**Test Organization:**
+1. test_lexer.mojo (25) - Lexer/tokenization (renamed from test_basic.mojo)
+2. test_parser.mojo (10) - Parser core
+3. test_real_world.mojo (4) - Real files
+4. test_fixtures.mojo (5) - Complex examples
+5. test_arrays.mojo (14) - Array parsing
+6. test_inline.mojo (13) - Inline tables
+7. test_tables.mojo (8) - Table headers
+8. test_dotted_keys.mojo (7) - Dotted keys [NEW]
+9. test_validation.mojo (7) - Error detection [NEW]
+10. test_parser_reset.mojo (3) - Parser API [NEW]
+
+**Parser Internals:**
+- Magic numbers (0-5) replaced with `TomlValueType.STRING`, `.INTEGER`, etc.
+- Using `comptime` constants for type discrimination
+- Better error formatting throughout parser
+
+### Technical Details
+
+**Dotted Key Implementation:**
+```mojo
+# Now properly creates nested structure:
+a.b.c = "value"  
+# Results in: {a: {b: {c: "value"}}}
+```
+
+**Duplicate Key Detection:**
+```mojo
+key = "value1"
+key = "value2"  # Error: "Duplicate key: key"
+```
+
+**Error Context:**
+```
+Error: Unexpected token at line 5, column 12
+```
+
+**Performance Benchmarks:**
+- Simple parse: 37,000 parses/sec (26 μs)
+- Nested tables: 4,370 parses/sec (228 μs)  
+- Large documents: 290 parses/sec (3 ms)
+- Real pixi.toml: 446 parses/sec (2 ms)
+- Table access: 91,000 accesses/sec (10 μs) - negligible overhead
+
+**Copying Behaviour:**
+- Documented why copying is necessary in Mojo's ownership model
+- String copies required to prevent partial destruction errors
+- Dict/List copies required due to lack of borrowed method returns
+- Performance impact measured and documented as acceptable
+
+### Migration Guide
+
+No breaking API changes. All enhancements are backward compatible.
+
+### Acknowledgements
+
+Co-Authored-By: Warp <agent@warp.dev>
 
 ## [0.2.0] - 2026-01-07
 
