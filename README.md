@@ -23,7 +23,7 @@ Create a TOML file (`config.toml`):
 ```toml
 # Application configuration
 [app]
-name = "MyApp"
+name = "QuickStart"
 version = "1.0.0"
 debug = false
 
@@ -65,6 +65,11 @@ fn main() raises:
 ```
 
 **Note for Python users:** Unlike Python's `tomli` where you access values directly (`config["app"]["name"]`), mojo-toml requires explicit type conversions (`.as_table()`, `.as_string()`, etc.) because Mojo is statically typed. This provides type safety and clear error messages at the cost of slightly more verbose code.
+
+**Try it yourself:** This example is available as `examples/quickstart.mojo`. Run it with:
+```bash
+pixi run example-quickstart
+```
 
 ## Installation
 

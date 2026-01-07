@@ -67,6 +67,7 @@ build-package = "mkdir -p dist && mojo package src/toml -o dist/toml.mojopkg"
 clean = "rm -rf dist __pycache__ .pytest_cache toml.mojopkg"
 
 # Example tasks
+example-quickstart = "mojo -I src examples/quickstart.mojo"
 example-simple = "mojo -I src examples/simple.mojo"
 example-pixi = "mojo -I src examples/parse_pixi.mojo"
 
