@@ -1,0 +1,33 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+      fail-fast: false
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup pixi
+      uses: prefix-dev/setup-pixi@v0.8.1
+      with:
+        cache: true
+    
+    - name: Check Mojo version
+      run: pixi run mojo-version
+    
+    - name: Run lexer tests
+      run: pixi run test-basic
+    
+    - name: Test summary
+      if: always()
+      run: echo "Tests completed"
