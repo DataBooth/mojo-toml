@@ -54,10 +54,8 @@ struct Writer:
         - Carriage return: \\r -> \\\\r
         - Escape char: ESC (U+001B) -> \\e (TOML 1.1)
         - Control chars: <32 -> \\xHH (TOML 1.1)
-        
         Args:
             s: String to escape.
-            
         Returns:
             Escaped string safe for TOML.
         """
@@ -95,7 +93,6 @@ struct Writer:
         
         Args:
             s: String value.
-            
         Returns:
             Quoted and escaped string: "value"
         """
@@ -106,7 +103,6 @@ struct Writer:
         
         Args:
             n: Integer value.
-            
         Returns:
             String representation: 42
         """
@@ -116,10 +112,8 @@ struct Writer:
         """Format a float value for TOML output.
         
         Handles special values: inf, -inf, nan
-        
         Args:
             f: Float value.
-            
         Returns:
             String representation: 3.14, inf, nan
         """
@@ -143,7 +137,6 @@ struct Writer:
         
         Args:
             b: Boolean value.
-            
         Returns:
             String representation: true or false
         """
@@ -154,7 +147,6 @@ struct Writer:
         
         Args:
             arr: Array of TomlValue items.
-            
         Returns:
             TOML array: [1, 2, 3]
         """
@@ -175,7 +167,6 @@ struct Writer:
         
         Args:
             table: Dictionary to format as inline table.
-            
         Returns:
             TOML inline table: { key = "value", port = 8080 }
         """
@@ -202,7 +193,6 @@ struct Writer:
         
         Args:
             value: Value to format.
-            
         Returns:
             Formatted TOML value.
         """
@@ -233,7 +223,6 @@ struct Writer:
         
         Args:
             table: Dictionary to evaluate.
-            
         Returns:
             True if should use inline format, False for [section] format.
         """
@@ -267,7 +256,7 @@ struct Writer:
         
         Args:
             path: List of keys forming the table path.
-            
+        
         Example:
             path = ["database", "primary"] -> [database.primary]
         """
@@ -344,8 +333,6 @@ struct Writer:
             Complete TOML document.
         """
         return self.buffer
-
-
 fn to_toml(config: Dict[String, TomlValue]) raises -> String:
     """Convert a Dict[String, TomlValue] structure to TOML format string.
     
@@ -354,7 +341,6 @@ fn to_toml(config: Dict[String, TomlValue]) raises -> String:
     
     Args:
         config: Configuration dictionary to serialise.
-        
     Returns:
         TOML format string.
         

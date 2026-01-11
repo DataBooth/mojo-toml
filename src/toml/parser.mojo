@@ -252,7 +252,7 @@ struct Parser:
         
         Args:
             tokens: New list of tokens from lexer.
-            
+        
         Example:
             ```mojo
             var parser = Parser(tokens1^)
@@ -283,7 +283,6 @@ struct Parser:
         
         Args:
             offset: Number of tokens to look ahead.
-            
         Returns:
             Token at pos + offset (copied).
         """
@@ -497,10 +496,8 @@ struct Parser:
         - Hexadecimal: 0xDEAD, 0xdead_beef
         - Octal: 0o755, 0o0755
         - Binary: 0b1101, 0b1111_0000
-        
         Args:
             value_str: String representation of the integer.
-            
         Returns:
             Parsed integer value.
         """
@@ -527,7 +524,6 @@ struct Parser:
         
         Args:
             hex_str: Hexadecimal string (e.g., "0xDEAD" or "0xdead_beef").
-            
         Returns:
             Parsed integer value.
         """
@@ -557,7 +553,6 @@ struct Parser:
         
         Args:
             octal_str: Octal string (e.g., "0o755").
-            
         Returns:
             Parsed integer value.
         """
@@ -581,7 +576,6 @@ struct Parser:
         
         Args:
             binary_str: Binary string (e.g., "0b1101").
-            
         Returns:
             Parsed integer value.
         """
@@ -607,7 +601,6 @@ struct Parser:
         
         Args:
             path: Path list to copy.
-            
         Returns:
             Copied path list.
         """
@@ -622,7 +615,6 @@ struct Parser:
         Args:
             message: The error message.
             pos: Position in the source file.
-            
         Returns:
             Formatted error message.
         """
@@ -717,7 +709,6 @@ struct Parser:
         Args:
             result: Root dictionary.
             path: List of keys forming the path (e.g., ["database", "primary"]).
-            
         Returns:
             New dictionary with path ensured.
         """
@@ -762,7 +753,6 @@ struct Parser:
         Args:
             result: Root dictionary.
             path: List of keys forming the path (e.g., ["fruit", "variety"]).
-            
         Returns:
             New dictionary with array element appended.
         """
@@ -885,7 +875,6 @@ struct Parser:
             result: Root dictionary.
             path: Path to where the table should be set.
             table: The table to set.
-            
         Returns:
             New dictionary with table set at path.
         """
@@ -916,7 +905,6 @@ struct Parser:
             existing: Existing table.
             new_table: New table to merge in.
             key: The key being set (for error messages).
-            
         Returns:
             Merged table.
         """
@@ -953,7 +941,6 @@ struct Parser:
             path: Path to the target table.
             key: Key to set.
             value: Value to set.
-            
         Returns:
             New dictionary with value set.
         """
@@ -1004,7 +991,6 @@ struct Parser:
             path: Path to the array of tables.
             key: Key to set in the last array element.
             value: Value to set.
-            
         Returns:
             New dictionary with value set in the last array element.
         """
@@ -1139,11 +1125,9 @@ struct Parser:
         """Convert dotted key into nested table structure.
         
         For example: a.b.c = value becomes {a: {b: {c: value}}}
-        
         Args:
             key_parts: List of key components from dotted key.
             value: The final value to set.
-            
         Returns:
             TomlValue representing nested table structure.
         """
@@ -1295,8 +1279,6 @@ struct Parser:
                 raise Error(self.format_error("Unexpected token at top level", token.pos))
         
         return result^
-
-
 fn parse(content: String) raises -> Dict[String, TomlValue]:
     """Parse TOML content from a string.
     
@@ -1304,7 +1286,6 @@ fn parse(content: String) raises -> Dict[String, TomlValue]:
     
     Args:
         content: TOML content as a string.
-        
     Returns:
         Dictionary containing parsed TOML data.
         

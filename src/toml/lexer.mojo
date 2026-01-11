@@ -224,7 +224,7 @@ struct Lexer:
         
         Args:
             offset: Number of characters to look ahead (default: 1).
-            
+        
         Returns:
             Character at pos + offset or empty string if out of bounds.
         """
@@ -606,7 +606,7 @@ struct Lexer:
         
         Args:
             c: Character to check.
-            
+        
         Returns:
             True if c is a hex digit.
         """
@@ -617,7 +617,7 @@ struct Lexer:
         
         Args:
             hex_str: Two hex digits (e.g. "1F", "a0").
-            
+        
         Returns:
             Integer value (0-255).
         """
