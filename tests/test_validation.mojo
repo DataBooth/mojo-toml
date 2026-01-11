@@ -64,20 +64,6 @@ port = 5432
 """)
 
 
-fn test_array_of_tables_not_supported() raises:
-    """Test that array of tables syntax raises appropriate error."""
-    with assert_raises(contains="Expected key in table header"):
-        var data = parse("""
-[[products]]
-name = "Hammer"
-sku = 738594937
-
-[[products]]
-name = "Nail"
-sku = 284758393
-""")
-
-
 fn test_trailing_comma_in_inline_table() raises:
     """Test that trailing comma in inline table raises error."""
     with assert_raises(contains="Trailing comma"):
@@ -94,6 +80,5 @@ def main():
     suite.test[test_duplicate_nested_key]()
     suite.test[test_duplicate_key_different_tables]()
     suite.test[test_redefining_table_as_value]()
-    suite.test[test_array_of_tables_not_supported]()
     suite.test[test_trailing_comma_in_inline_table]()
     suite^.run()

@@ -4,6 +4,9 @@ dist/
 __pycache__/
 .pytest_cache/
 
+# Benchmark reports (machine-specific)
+benchmarks/reports/
+
 # Compiled binaries
 parse_pixi
 example-*

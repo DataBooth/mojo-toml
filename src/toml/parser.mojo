@@ -231,6 +231,7 @@ struct Parser:
     var tokens: List[Token]
     var pos: Int
     var current_table_path: List[String]  # Track current table path for flat key storage
+    var is_array_of_tables: Bool  # True if current path is an array of tables [[...]]
     
     fn __init__(out self, var tokens: List[Token]):
         """Initialise parser with token stream.
@@ -241,6 +242,7 @@ struct Parser:
         self.tokens = tokens^
         self.pos = 0
         self.current_table_path = List[String]()
+        self.is_array_of_tables = False
     
     fn reset(mut self, var tokens: List[Token]):
         """Reset parser state for reuse with new token stream.
@@ -263,6 +265,7 @@ struct Parser:
         self.tokens = tokens^
         self.pos = 0
         self.current_table_path = List[String]()
+        self.is_array_of_tables = False
     
     fn current(self) raises -> Token:
         """Get current token without advancing.
@@ -663,6 +666,51 @@ struct Parser:
         
         return path^
     
+    fn parse_array_of_tables_header(mut self) raises -> List[String]:
+        """Parse an array of tables header [[section.name]] and return the path.
+        
+        Returns:
+            List of strings representing the array of tables path.
+        """
+        # Consume opening brackets
+        self.expect(TokenKind.LEFT_BRACKET())
+        self.expect(TokenKind.LEFT_BRACKET())
+        
+        var path = List[String]()
+        
+        # Parse first key
+        var token = self.current()
+        if token.kind == TokenKind.KEY() or token.kind == TokenKind.STRING():
+            path.append(token.value)
+            _ = self.advance()
+        else:
+            raise Error(self.format_error("Expected key in array of tables header", token.pos))
+        
+        # Parse dotted path (e.g., [[fruit.variety]])
+        while self.pos < len(self.tokens):
+            token = self.current()
+            if token.kind == TokenKind.DOT():
+                _ = self.advance()
+                token = self.current()
+                if token.kind == TokenKind.KEY() or token.kind == TokenKind.STRING():
+                    path.append(token.value)
+                    _ = self.advance()
+                else:
+                    raise Error(self.format_error("Expected key after dot in array of tables header", token.pos))
+            elif token.kind == TokenKind.RIGHT_BRACKET():
+                _ = self.advance()
+                # Expect second closing bracket
+                token = self.current()
+                if token.kind == TokenKind.RIGHT_BRACKET():
+                    _ = self.advance()
+                    break
+                else:
+                    raise Error(self.format_error("Expected closing ]] for array of tables", token.pos))
+            else:
+                raise Error(self.format_error("Expected dot or closing bracket in array of tables header", token.pos))
+        
+        return path^
+    
     fn ensure_table_path(mut self, result: Dict[String, TomlValue], path: List[String]) raises -> Dict[String, TomlValue]:
         """Ensure a nested table path exists, creating tables as needed.
         
@@ -704,6 +752,162 @@ struct Parser:
             new_result[first_key] = TomlValue(current_table^)
         
         return new_result^
+    
+    fn ensure_array_of_tables_path(mut self, result: Dict[String, TomlValue], path: List[String]) raises -> Dict[String, TomlValue]:
+        """Ensure an array of tables path exists, creating or appending as needed.
+        
+        For [[products]], this creates or appends to the 'products' array.
+        For [[fruit.variety]], this creates nested tables and appends to the 'variety' array.
+        
+        Args:
+            result: Root dictionary.
+            path: List of keys forming the path (e.g., ["fruit", "variety"]).
+            
+        Returns:
+            New dictionary with array element appended.
+        """
+        if len(path) == 0:
+            raise Error("Array of tables path cannot be empty")
+        
+        # Copy result
+        var new_result = Dict[String, TomlValue]()
+        for entry in result.items():
+            new_result[entry.key] = entry.value.copy()
+        
+        # Handle simple case: [[products]]
+        if len(path) == 1:
+            var key = path[0]
+            if not new_result.__contains__(key):
+                # Create new array with empty table
+                var new_array = List[TomlValue]()
+                var empty_table = Dict[String, TomlValue]()
+                new_array.append(TomlValue(empty_table^))
+                new_result[key] = TomlValue(new_array^)
+            elif new_result[key].is_array():
+                # Append new empty table to existing array
+                var arr = new_result[key].as_array()
+                var empty_table = Dict[String, TomlValue]()
+                arr.append(TomlValue(empty_table^))
+                new_result[key] = TomlValue(arr^)
+            else:
+                raise Error("Cannot redefine key as array of tables - key exists but is not an array: " + key)
+            return new_result^
+        
+        # Handle nested case: [[fruit.variety]]
+        # The first key might be an array (e.g., fruit in [[fruit.variety]])
+        # We need to operate on the LAST element of that array
+        var first_key = path[0]
+        
+        if len(path) == 2:
+            # Two-level path: [[parent.array]]
+            # Check if first_key is an array or table
+            if not new_result.__contains__(first_key):
+                # Doesn't exist - create as table
+                var new_table = Dict[String, TomlValue]()
+                new_result[first_key] = TomlValue(new_table^)
+            
+            var array_key = path[1]
+            
+            if new_result[first_key].is_table():
+                # Normal case: [[parent.array]] where parent is a table
+                var parent_table = new_result[first_key].as_table()
+                
+                if not parent_table.__contains__(array_key):
+                    # Create new array with empty table
+                    var new_array = List[TomlValue]()
+                    var empty_table = Dict[String, TomlValue]()
+                    new_array.append(TomlValue(empty_table^))
+                    parent_table[array_key] = TomlValue(new_array^)
+                elif parent_table[array_key].is_array():
+                    # Append new empty table to existing array
+                    var arr = parent_table[array_key].as_array()
+                    var empty_table = Dict[String, TomlValue]()
+                    arr.append(TomlValue(empty_table^))
+                    parent_table[array_key] = TomlValue(arr^)
+                else:
+                    raise Error("Cannot redefine key as array of tables - key exists but is not an array: " + array_key)
+                
+                new_result[first_key] = TomlValue(parent_table^)
+            elif new_result[first_key].is_array():
+                # Special case: [[fruit.variety]] where fruit is already an array
+                # We need to add variety array to the LAST element of fruit array
+                var parent_array = new_result[first_key].as_array()
+                if len(parent_array) == 0:
+                    raise Error("Cannot add nested array to empty array: " + first_key)
+                
+                # Get last element of parent array (should be a table)
+                var last_element = parent_array[len(parent_array) - 1].as_table()
+                
+                if not last_element.__contains__(array_key):
+                    # Create new array with empty table
+                    var new_array = List[TomlValue]()
+                    var empty_table = Dict[String, TomlValue]()
+                    new_array.append(TomlValue(empty_table^))
+                    last_element[array_key] = TomlValue(new_array^)
+                elif last_element[array_key].is_array():
+                    # Append new empty table to existing array
+                    var arr = last_element[array_key].as_array()
+                    var empty_table = Dict[String, TomlValue]()
+                    arr.append(TomlValue(empty_table^))
+                    last_element[array_key] = TomlValue(arr^)
+                else:
+                    raise Error("Cannot redefine key as array of tables - key exists but is not an array: " + array_key)
+                
+                # Update the last element in parent array
+                parent_array[len(parent_array) - 1] = TomlValue(last_element^)
+                new_result[first_key] = TomlValue(parent_array^)
+            else:
+                raise Error("Cannot use non-table/non-array as parent for array of tables: " + first_key)
+            
+            return new_result^
+        else:
+            # More than 2 levels deep - use recursive approach
+            # Ensure first level exists as table
+            if not new_result.__contains__(first_key):
+                var new_table = Dict[String, TomlValue]()
+                new_result[first_key] = TomlValue(new_table^)
+            elif not new_result[first_key].is_table():
+                raise Error("Cannot redefine key as table - key exists but is not a table: " + first_key)
+            
+            # Get the nested table and recurse
+            var nested_table = new_result[first_key].as_table()
+            var remaining_path = List[String]()
+            for i in range(1, len(path)):
+                remaining_path.append(path[i])
+            nested_table = self.ensure_array_of_tables_path(nested_table^, remaining_path)
+            new_result[first_key] = TomlValue(nested_table^)
+            return new_result^
+    
+    fn set_table_at_path(mut self, result: Dict[String, TomlValue], path: List[String], var table: Dict[String, TomlValue]) raises -> Dict[String, TomlValue]:
+        """Set a table at a specific path (helper for array of tables).
+        
+        Args:
+            result: Root dictionary.
+            path: Path to where the table should be set.
+            table: The table to set.
+            
+        Returns:
+            New dictionary with table set at path.
+        """
+        if len(path) == 0:
+            return table^
+        
+        var new_result = Dict[String, TomlValue]()
+        for entry in result.items():
+            new_result[entry.key] = entry.value.copy()
+        
+        if len(path) == 1:
+            new_result[path[0]] = TomlValue(table^)
+            return new_result^
+        else:
+            var first_key = path[0]
+            var nested_table = new_result[first_key].as_table()
+            var remaining_path = List[String]()
+            for i in range(1, len(path)):
+                remaining_path.append(path[i])
+            nested_table = self.set_table_at_path(nested_table^, remaining_path, table^)
+            new_result[first_key] = TomlValue(nested_table^)
+            return new_result^
     
     fn merge_tables(self, existing: Dict[String, TomlValue], var new_table: TomlValue, key: String) raises -> Dict[String, TomlValue]:
         """Merge a new table value into existing table, checking for conflicts.
@@ -791,6 +995,145 @@ struct Parser:
                 table = self.set_in_table_path(table^, remaining_path, key, value^)
                 new_result[path[0]] = TomlValue(table^)
             return new_result^
+    
+    fn set_in_array_of_tables_path(mut self, result: Dict[String, TomlValue], path: List[String], key: String, var value: TomlValue) raises -> Dict[String, TomlValue]:
+        """Set a key-value pair in the last element of an array of tables.
+        
+        Args:
+            result: Root dictionary.
+            path: Path to the array of tables.
+            key: Key to set in the last array element.
+            value: Value to set.
+            
+        Returns:
+            New dictionary with value set in the last array element.
+        """
+        if len(path) == 0:
+            raise Error("Array of tables path cannot be empty")
+        
+        var new_result = Dict[String, TomlValue]()
+        for entry in result.items():
+            new_result[entry.key] = entry.value.copy()
+        
+        # Navigate to the array location
+        if len(path) == 1:
+            # Simple case: [[products]]
+            var array_key = path[0]
+            if not new_result.__contains__(array_key) or not new_result[array_key].is_array():
+                raise Error("Expected array of tables at: " + array_key)
+            
+            var arr = new_result[array_key].as_array()
+            if len(arr) == 0:
+                raise Error("Array of tables is empty")
+            
+            # Get last element (the current table being filled)
+            var last_table = arr[len(arr) - 1].as_table()
+            
+            # Check for duplicates
+            if last_table.__contains__(key):
+                # If both are tables, merge them (for dotted keys)
+                if last_table[key].is_table() and value.is_table():
+                    var merged = self.merge_tables(last_table[key].as_table(), value^, key)
+                    last_table[key] = TomlValue(merged^)
+                else:
+                    raise Error("Duplicate key: " + key)
+            else:
+                last_table[key] = value^
+            
+            # Update array with modified table
+            arr[len(arr) - 1] = TomlValue(last_table^)
+            new_result[array_key] = TomlValue(arr^)
+            return new_result^
+        else:
+            # Nested case: [[fruit.variety]] - use recursion
+            var first_key = path[0]
+            
+            if len(path) == 2:
+                # Two-level path: [[parent.array]]
+                if not new_result.__contains__(first_key):
+                    raise Error("Key does not exist: " + first_key)
+                
+                var array_key = path[1]
+                
+                if new_result[first_key].is_table():
+                    # Normal case: parent is a table
+                    var parent_table = new_result[first_key].as_table()
+                    
+                    if not parent_table.__contains__(array_key) or not parent_table[array_key].is_array():
+                        raise Error("Expected array of tables at: " + array_key)
+                    
+                    var arr = parent_table[array_key].as_array()
+                    if len(arr) == 0:
+                        raise Error("Array of tables is empty")
+                    
+                    # Get last element and set the key
+                    var last_table = arr[len(arr) - 1].as_table()
+                    
+                    # Check for duplicates
+                    if last_table.__contains__(key):
+                        if last_table[key].is_table() and value.is_table():
+                            var merged = self.merge_tables(last_table[key].as_table(), value^, key)
+                            last_table[key] = TomlValue(merged^)
+                        else:
+                            raise Error("Duplicate key: " + key)
+                    else:
+                        last_table[key] = value^
+                    
+                    # Update array with modified table
+                    arr[len(arr) - 1] = TomlValue(last_table^)
+                    parent_table[array_key] = TomlValue(arr^)
+                    new_result[first_key] = TomlValue(parent_table^)
+                elif new_result[first_key].is_array():
+                    # Special case: [[fruit.variety]] where fruit is an array
+                    # We need to set in the last element of fruit's variety array
+                    var parent_array = new_result[first_key].as_array()
+                    if len(parent_array) == 0:
+                        raise Error("Array is empty: " + first_key)
+                    
+                    # Get last element of parent array
+                    var last_parent_element = parent_array[len(parent_array) - 1].as_table()
+                    
+                    if not last_parent_element.__contains__(array_key) or not last_parent_element[array_key].is_array():
+                        raise Error("Expected array of tables at: " + array_key)
+                    
+                    var arr = last_parent_element[array_key].as_array()
+                    if len(arr) == 0:
+                        raise Error("Array of tables is empty")
+                    
+                    # Get last element of the nested array and set the key
+                    var last_table = arr[len(arr) - 1].as_table()
+                    
+                    # Check for duplicates
+                    if last_table.__contains__(key):
+                        if last_table[key].is_table() and value.is_table():
+                            var merged = self.merge_tables(last_table[key].as_table(), value^, key)
+                            last_table[key] = TomlValue(merged^)
+                        else:
+                            raise Error("Duplicate key: " + key)
+                    else:
+                        last_table[key] = value^
+                    
+                    # Update nested structures
+                    arr[len(arr) - 1] = TomlValue(last_table^)
+                    last_parent_element[array_key] = TomlValue(arr^)
+                    parent_array[len(parent_array) - 1] = TomlValue(last_parent_element^)
+                    new_result[first_key] = TomlValue(parent_array^)
+                else:
+                    raise Error("Expected table or array at: " + first_key)
+                
+                return new_result^
+            else:
+                # More than 2 levels deep - use recursion
+                if not new_result.__contains__(first_key) or not new_result[first_key].is_table():
+                    raise Error("Expected table at: " + first_key)
+                
+                var nested_table = new_result[first_key].as_table()
+                var remaining_path = List[String]()
+                for i in range(1, len(path)):
+                    remaining_path.append(path[i])
+                nested_table = self.set_in_array_of_tables_path(nested_table^, remaining_path, key, value^)
+                new_result[first_key] = TomlValue(nested_table^)
+                return new_result^
     
     fn create_nested_value_from_dotted_key(self, key_parts: List[String], var value: TomlValue) raises -> TomlValue:
         """Convert dotted key into nested table structure.
@@ -891,25 +1234,36 @@ struct Parser:
             elif token.kind == TokenKind.NEWLINE():
                 self.skip_newlines()
             
-            # Table header [section]
+            # Table header [section] or array of tables [[section]]
             elif token.kind == TokenKind.LEFT_BRACKET():
                 # Check if it's an array of tables [[ ]]
+                var is_array = False
                 try:
                     var next_token = self.peek()
                     if next_token.kind == TokenKind.LEFT_BRACKET():
-                        # Array of tables [[array]]
-                        var token = self.current()
-                        raise Error(self.format_error("Array of tables [[...]] not yet supported", token.pos))
+                        is_array = True
                 except:
                     pass
                 
-                # Parse table header and update current path
-                self.current_table_path = self.parse_table_header()
-                # Copy path (Mojo List doesn't support implicit copy)
-                var path_copy = self.copy_path(self.current_table_path)
-                # Ensure the table path exists in result
-                var updated_result = self.ensure_table_path(result, path_copy)
-                result = updated_result^
+                if is_array:
+                    # Parse array of tables header [[array]]
+                    self.current_table_path = self.parse_array_of_tables_header()
+                    self.is_array_of_tables = True
+                    # Copy path (Mojo List doesn't support implicit copy)
+                    var path_copy = self.copy_path(self.current_table_path)
+                    # Append new element to the array
+                    var updated_result = self.ensure_array_of_tables_path(result, path_copy)
+                    result = updated_result^
+                else:
+                    # Parse regular table header and update current path
+                    self.current_table_path = self.parse_table_header()
+                    self.is_array_of_tables = False
+                    # Copy path (Mojo List doesn't support implicit copy)
+                    var path_copy = self.copy_path(self.current_table_path)
+                    # Ensure the table path exists in result
+                    var updated_result = self.ensure_table_path(result, path_copy)
+                    result = updated_result^
+                
                 self.skip_newlines()
             
             # Key-value pair
@@ -925,8 +1279,13 @@ struct Parser:
                 
                 # Copy path (Mojo List doesn't support implicit copy)
                 var path_copy = self.copy_path(self.current_table_path)
-                # Set the value at the current table path
-                var updated_result = self.set_in_table_path(result, path_copy, parsed_key, parsed_value^)
+                
+                # Set the value - use array method if we're in an array of tables
+                var updated_result: Dict[String, TomlValue]
+                if self.is_array_of_tables:
+                    updated_result = self.set_in_array_of_tables_path(result, path_copy, parsed_key, parsed_value^)
+                else:
+                    updated_result = self.set_in_table_path(result, path_copy, parsed_key, parsed_value^)
                 result = updated_result^
                 
                 self.skip_newlines()

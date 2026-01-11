@@ -2,20 +2,20 @@
 
 **Native TOML 1.0 parser and writer for Mojo**
 
-> **Status:** 🚀 **v0.4.0** - TOML Writer Release (137 tests passing)
+> **Status:** 🚀 **v0.5.0** - TOML 1.0 Complete + Partial 1.1 (168 tests passing)
 
 ## Overview
 
 `mojo-toml` enables native TOML parsing in Mojo without Python dependencies. Parse configuration files, project settings, and structured data with a clean, type-safe API.
 
 **Key features:**
-- ✅ Complete TOML 1.0 support (strings, numbers, arrays, tables)
-- ✅ TOML writer - serialize Dict back to TOML format
-- ✅ Nested structures with dotted keys
-- ✅ Duplicate key detection
-- ✅ Clear error messages with line/column context
-- ✅ 137 comprehensive tests (96 parser + 41 writer)
-- ✅ Zero Python dependencies
+- ✅ **TOML 1.0 compliant** - full specification support
+- ✅ **Array of tables** - `[[section]]` syntax for repeated table arrays
+- ✅ **Alternative number bases** - hex (`0xDEAD`), octal (`0o755`), binary (`0b1101`)
+- ✅ **TOML writer** - serialize Dict back to TOML format with round-trip fidelity
+- ✅ **Nested structures** - dotted keys and table headers
+- ✅ **168 comprehensive tests** - parser (127) + writer (41)
+- ✅ **Zero Python dependencies** - pure native Mojo implementation
 
 ## Quickstart
 
@@ -156,29 +156,39 @@ mojo -I your-project/lib your_app.mojo
 pixi add mojo-toml
 ```
 
-## TOML 1.0 Support
+## TOML Specification Compliance
 
-### ✅ Implemented
+### ✅ TOML 1.0 - Fully Compliant
+
+**mojo-toml implements the complete TOML 1.0 specification** (https://toml.io/en/v1.0.0):
 
 - **Basic types**: strings, integers, floats, booleans
-- **Strings**: basic, literal, multiline variants
+- **Strings**: basic, literal, multiline (both basic and literal)
 - **Numbers**: integers, floats, underscores, special values (inf, nan)
+- **Alternative number bases**: hex (`0xDEAD`), octal (`0o755`), binary (`0b1101`) ✨ *v0.5.0*
 - **Arrays**: `[1, 2, 3]` with nesting and mixed types
 - **Inline tables**: `{name = "value"}` with nesting
 - **Table headers**: `[section]` with proper nesting
-- **Dotted keys**: `a.b.c = "value"`
-- **Duplicate detection**: rejects invalid files
-- **Error messages**: line and column context
-- **TOML writer**: serialize Dict[String, TomlValue] to TOML format
+- **Array of tables**: `[[section]]` for repeated table arrays ✨ *v0.5.0*
+- **Dotted keys**: `a.b.c = "value"` creating nested structures
+- **Duplicate detection**: validates and rejects duplicate keys
+- **Error messages**: precise line and column context
+- **TOML writer**: serialize `Dict[String, TomlValue]` to TOML format
 - **Round-trip support**: parse → modify → write → parse preserves semantic equality
 
-### 🚧 Planned
+**Date/Time values:** Parsed and validated according to TOML 1.0, returned as ISO 8601 strings. Native Mojo datetime objects are not yet used due to ongoing standard library development. This does not affect TOML parsing correctness or round-trip fidelity.
 
-- **Array of tables**: `[[array]]`
-- **Hex/Octal/Binary integers**: `0xDEAD`, `0o755`, `0b1101`
-- **Native datetime parsing**: currently returns ISO 8601 strings
+### 🔮 TOML 1.1 (Partial Support)
 
-See [ROADMAP.md](docs/ROADMAP.md) for planned features and timeline.
+TOML 1.1 features implemented:
+- ✅ `\\xHH` escape sequences for codepoints 0-255 (e.g., `\\x00`, `\\x61`)
+- ✅ `\\e` escape for escape character (U+001B)
+
+TOML 1.1 features not yet implemented:
+- Multiline inline tables with trailing commas
+- Optional seconds in datetime/time values
+
+See [ROADMAP.md](docs/ROADMAP.md) for development timeline.
 
 ## Development
 
@@ -212,7 +222,7 @@ mojo-toml/
 │   ├── lexer.mojo      # Tokenisation
 │   ├── parser.mojo     # TOML parsing
 │   └── writer.mojo     # TOML serialisation
-├── tests/              # Test suite (137 tests)
+├── tests/              # Test suite (163 tests)
 ├── examples/           # Usage examples
 ├── benchmarks/         # Performance benchmarks
 ├── fixtures/           # Test TOML files
@@ -259,6 +269,7 @@ MIT License - See [LICENSE](LICENSE) for details.
 ## Links
 
 - [GitHub Repository](https://github.com/databooth/mojo-toml)
-- [v0.4.0 Release](https://github.com/DataBooth/mojo-toml/releases/tag/v0.4.0)
+- [Latest Release](https://github.com/databooth/mojo-toml/releases)
 - [TOML 1.0 Spec](https://toml.io/en/v1.0.0)
+- [TOML Implementations List](https://github.com/toml-lang/toml/wiki)
 - [Mojo Documentation](https://docs.modular.com/mojo/)

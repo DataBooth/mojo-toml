@@ -1,0 +1,9 @@
+[app]
+name = "QuickStart"
+version = "2.0.0"
+debug = true
+[database]
+host = "localhost"
+port = 5432
+timeout = 30.5
+features = { enabled = ["auth", "logging", "metrics"] }

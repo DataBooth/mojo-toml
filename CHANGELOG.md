@@ -6,16 +6,224 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
-### Planned for v0.5.0 - TOML 1.0 Completion
-- Array of tables: `[[array]]`
-- Hex/Octal/Binary integers: `0xDEADBEEF`, `0o755`, `0b11010110`
-- Native datetime parsing (parse to datetime types vs strings)
-
-### Planned for v0.6.0 - Performance & Benchmarking
+### Planned for v0.6.0 - TOML 1.1 Support
+- Multiline inline tables with trailing commas
+- `\xHH` escape sequences for low codepoints
+- `\e` escape for escape character  
+- Optional seconds in datetime/tim### Planned for v0.7.0 - Performance & Benchmarking
 - Comparative benchmarks vs Python's `tomli`/`tomllib`
 - Memory profiling and allocation analysis
 - SIMD optimisations for string scanning (likely unnecessary for typical config files)
 - Large file handling optimisations (if needed)
+
+## [0.5.0] - 2026-01-11
+
+### Overview
+
+**TOML 1.0 Complete!** 🎉 mojo-toml now implements the full TOML 1.0 specification with array-of-tables support and alternative number bases. This release brings the library to full TOML 1.0 compliance (with datetime values returned as ISO 8601 strings due to Mojo standard library development).
+
+### Added ✅
+
+**Alternative Number Bases:**
+- Hexadecimal integers: `0xDEAD`, `0xdeadbeef`, `0xdead_beef`
+- Octal integers: `0o755`, `0o01234567`  
+- Binary integers: `0b11010110`, `0b1101_0110`
+- Full support for underscores in alternative bases
+- 14 comprehensive tests in `tests/test_number_bases.mojo`
+
+**Array of Tables (`[[section]]`):**
+- Complete implementation of TOML 1.0 array-of-tables syntax
+- Simple arrays: `[[products]]` creates array of product tables
+- Nested arrays: `[[fruit.variety]]` creates arrays within parent arrays
+- Mixed tables and arrays in same document
+- Dotted keys, inline tables, and arrays within array-of-tables elements
+- Full conflict detection (array/table redefinition errors)
+- 12 comprehensive tests in `tests/test_array_of_tables.mojo`
+
+**Parser Enhancements:**
+- Added `is_array_of_tables` state tracking to Parser struct
+- Created `parse_array_of_tables_header()` for `[[...]]` syntax
+- Implemented `ensure_array_of_tables_path()` for array creation/appending
+- Implemented `set_in_array_of_tables_path()` for setting values in array elements
+- Special handling for nested arrays where parent is an array
+- Recursive approach handles arbitrary nesting depth
+
+**Testing:**
+- **163 total tests** (up from 137)
+- Parser tests: 122 (up from 96)
+- Writer tests: 41 (unchanged)
+- Removed 1 obsolete test (`test_array_of_tables_not_supported`)
+- Updated `pixi run test-all` to include new test suites
+
+**Documentation:**
+- Updated README with TOML 1.0 compliance statement
+- Added TOML 1.1 roadmap section
+- Documented datetime handling (ISO 8601 strings due to Mojo limitations)
+- Added mojo-toml to official TOML implementations wiki
+
+### Changed
+
+**Lexer (`src/toml/lexer.mojo`):**
+- Enhanced `read_number()` to detect `0x`, `0o`, `0b` prefixes
+- Added digit validators: `is_hex_digit()`, `is_octal_digit()`, `is_binary_digit()`
+- Proper tokenisation of alternative number base formats
+
+**Parser (`src/toml/parser.mojo`):**
+- Added integer parsing helpers: `parse_hex()`, `parse_octal()`, `parse_binary()`
+- Modified `parse_integer()` to dispatch based on prefix detection
+- Added array-of-tables detection in main parse loop
+- Enhanced table/array conflict validation
+
+**Test Organization:**
+```
+Parser Tests (122 total):
+1. test_lexer.mojo (25 tests)
+2. test_parser.mojo (10 tests)
+3. test_real_world.mojo (4 tests)
+4. test_fixtures.mojo (5 tests)
+5. test_arrays.mojo (14 tests)
+6. test_inline.mojo (13 tests)
+7. test_tables.mojo (8 tests)
+8. test_dotted_keys.mojo (7 tests)
+9. test_validation.mojo (6 tests)  # Reduced by 1
+10. test_parser_reset.mojo (3 tests)
+11. test_number_bases.mojo (14 tests)  # NEW
+12. test_array_of_tables.mojo (12 tests)  # NEW
+
+Writer Tests (41 total):
+13. test_writer_basic.mojo (20 tests)
+14. test_writer_tables.mojo (11 tests)
+15. test_writer_roundtrip.mojo (10 tests)
+```
+
+**Project Structure:**
+```
+mojo-toml/
+├── src/toml/           # Source code
+│   ├── __init__.mojo   # Public API
+│   ├── lexer.mojo      # Tokenisation + alt number bases
+│   ├── parser.mojo     # Parsing + array-of-tables
+│   └── writer.mojo     # TOML serialisation
+├── tests/              # Test suite (163 tests)
+```
+
+### Technical Details
+
+**Alternative Number Bases Implementation:**
+
+Lexer detects prefixes and tokenizes digits:
+```mojo
+# In read_number():
+if self.peek() == 'x': # Hexadecimal
+    self.advance()  # Skip 'x'
+    # Tokenize hex digits with underscores
+elif self.peek() == 'o': # Octal
+    # Tokenize octal digits
+elif self.peek() == 'b': # Binary
+    # Tokenize binary digits
+```
+
+Parser converts strings to integers:
+```mojo
+fn parse_hex(value: String) -> Int:
+    # Strip underscores, convert base-16 to Int
+    
+fn parse_octal(value: String) -> Int:
+    # Strip underscores, convert base-8 to Int
+    
+fn parse_binary(value: String) -> Int:
+    # Strip underscores, convert base-2 to Int
+```
+
+**Array-of-Tables Implementation:**
+
+Detection:
+```mojo
+if token.kind == TokenKind.LEFT_BRACKET():
+    if peek().kind == TokenKind.LEFT_BRACKET():
+        # Array of tables [[...]]
+        self.is_array_of_tables = True
+        self.current_table_path = self.parse_array_of_tables_header()
+```
+
+Array creation:
+```mojo
+fn ensure_array_of_tables_path(result, path):
+    # For [[products]]: create/append to products array
+    # For [[fruit.variety]]: handle nested arrays
+    # Special handling when parent is array vs table
+```
+
+Value setting:
+```mojo
+fn set_in_array_of_tables_path(result, path, key, value):
+    # Set key in last element of array at path
+    # Handle nested arrays: [[fruit.variety]]
+```
+
+**Nested Array Example:**
+```toml
+[[fruit]]
+name = "apple"
+
+  [[fruit.variety]]
+  name = "red delicious"
+
+[[fruit]]
+name = "banana"
+```
+
+Results in:
+```json
+{
+  "fruit": [
+    {
+      "name": "apple",
+      "variety": [
+        {"name": "red delicious"}
+      ]
+    },
+    {"name": "banana"}
+  ]
+}
+```
+
+### TOML 1.0 Compliance
+
+mojo-toml now implements the complete TOML 1.0 specification:
+
+✅ Basic types, strings, numbers, arrays, tables  
+✅ Alternative number bases (hex/octal/binary)  
+✅ Array of tables `[[section]]`  
+✅ Nested structures, dotted keys  
+✅ Duplicate detection, error messages  
+✅ TOML writer with round-trip fidelity  
+
+**Datetime values:** Parsed and validated per TOML 1.0, returned as ISO 8601 strings. Native Mojo datetime objects not yet used due to standard library development. This does not affect parsing correctness or round-trip fidelity.
+
+### Migration Guide
+
+No breaking API changes. All enhancements are backward compatible.
+
+**Array-of-tables access:**
+```mojo
+from toml import parse
+
+var config = parse(toml_content)
+var products = config["products"].as_array()  # Get array
+var first = products[0].as_table()  # Get first element
+var name = first["name"].as_string()  # Access fields
+```
+
+**Alternative number bases:**
+```mojo
+# Automatically parsed - no API changes
+var hex_val = config["value"].as_int()  # 0xDEAD → 57005
+```
+
+### Acknowledgements
+
+Co-Authored-By: Warp <agent@warp.dev>
 
 ## [0.4.0] - 2026-01-11
 

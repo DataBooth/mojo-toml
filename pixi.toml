@@ -32,54 +32,14 @@ test-writer-roundtrip = "mojo -I src tests/test_writer_roundtrip.mojo"
 # Number base tests
 test-number-bases = "mojo -I src tests/test_number_bases.mojo"
 
-# Run all tests
-test-all = """bash -c '
-set -e
-echo "=== Running All Tests ==="
-echo ""
-echo "Parser Tests (96 total):"
-echo "[1/13] Lexer Tests (25 tests)"
-mojo -I src tests/test_lexer.mojo
-echo ""
-echo "[2/13] Parser Tests (10 tests)"
-mojo -I src tests/test_parser.mojo
-echo ""
-echo "[3/13] Real-World Tests (4 tests)"
-mojo -I src tests/test_real_world.mojo
-echo ""
-echo "[4/13] Fixture Tests (5 tests)"
-mojo -I src tests/test_fixtures.mojo
-echo ""
-echo "[5/13] Array Tests (14 tests)"
-mojo -I src tests/test_arrays.mojo
-echo ""
-echo "[6/13] Inline Table Tests (13 tests)"
-mojo -I src tests/test_inline.mojo
-echo ""
-echo "[7/13] Table Header Tests (8 tests)"
-mojo -I src tests/test_tables.mojo
-echo ""
-echo "[8/13] Dotted Key Tests (7 tests)"
-mojo -I src tests/test_dotted_keys.mojo
-echo ""
-echo "[9/13] Validation Tests (7 tests)"
-mojo -I src tests/test_validation.mojo
-echo ""
-echo "[10/13] Parser Reset Tests (3 tests)"
-mojo -I src tests/test_parser_reset.mojo
-echo ""
-echo "Writer Tests (41 total):"
-echo "[11/13] Writer Basic Tests (20 tests)"
-mojo -I src tests/test_writer_basic.mojo
-echo ""
-echo "[12/13] Writer Table Tests (11 tests)"
-mojo -I src tests/test_writer_tables.mojo
-echo ""
-echo "[13/13] Writer Round-Trip Tests (10 tests)"
-mojo -I src tests/test_writer_roundtrip.mojo
-echo ""
-echo "=== All 137 Tests Complete! ==="
-'"""
+# Array of tables tests
+test-array-of-tables = "mojo -I src tests/test_array_of_tables.mojo"
+
+# TOML 1.1 escape sequences
+test-toml11-escapes = "mojo -I src tests/test_toml11_escapes.mojo"
+
+# Run all tests (auto-discovers test_*.mojo files)
+test-all = "python scripts/run_tests.py"
 
 # Build tasks
 build-package = "mkdir -p dist && mojo package src/toml -o dist/toml.mojopkg"
@@ -91,6 +51,10 @@ example-simple = "mojo -I src examples/simple.mojo"
 example-pixi = "mojo -I src examples/parse_pixi.mojo"
 example-roundtrip = "mojo -I src examples/roundtrip.mojo"
 
+# Benchmark tasks
+benchmark-mojo = "python benchmarks/run_mojo_benchmark.py"
+benchmark-python = "python benchmarks/compare_python.py"
+
 [dependencies]
 mojo = "*"
-tomli = ">=2.2.1,<3"
+tomli-w = ">=1.0.0,<2"  # For write benchmarks (tomllib is read-only)

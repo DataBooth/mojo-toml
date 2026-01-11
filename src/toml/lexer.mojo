@@ -342,6 +342,9 @@ struct Lexer:
                 elif next_c == "t":
                     value += "\t"
                     _ = self.advance()
+                elif next_c == "r":
+                    value += "\r"
+                    _ = self.advance()
                 elif next_c == "\\":
                     value += "\\\\"
                     _ = self.advance()
@@ -351,6 +354,25 @@ struct Lexer:
                 elif next_c == "'":
                     value += "'"
                     _ = self.advance()
+                elif next_c == "e":
+                    # TOML 1.1: \e for escape character (U+001B)
+                    value += String(chr(0x1B))
+                    _ = self.advance()
+                elif next_c == "x":
+                    # TOML 1.1: \xHH for codepoints <255
+                    _ = self.advance()  # Skip 'x'
+                    var hex1 = self.current()
+                    if not self.is_hex_digit(hex1):
+                        raise Error("Invalid \\x escape: expected hex digit")
+                    _ = self.advance()
+                    var hex2 = self.current()
+                    if not self.is_hex_digit(hex2):
+                        raise Error("Invalid \\x escape: expected two hex digits")
+                    _ = self.advance()
+                    # Convert hex to integer
+                    var hex_str = hex1 + hex2
+                    var codepoint = self.hex_to_int(hex_str)
+                    value += String(chr(codepoint))
                 else:
                     # Invalid escape - keep backslash
                     value += "\\"
@@ -578,6 +600,41 @@ struct Lexer:
         
         # Unquoted key or boolean
         return self.read_key()
+    
+    fn is_hex_digit(self, c: String) -> Bool:
+        """Check if character is a hexadecimal digit (0-9, a-f, A-F).
+        
+        Args:
+            c: Character to check.
+            
+        Returns:
+            True if c is a hex digit.
+        """
+        return (c >= "0" and c <= "9") or (c >= "a" and c <= "f") or (c >= "A" and c <= "F")
+    
+    fn hex_to_int(self, hex_str: String) -> Int:
+        """Convert a 2-character hex string to integer.
+        
+        Args:
+            hex_str: Two hex digits (e.g. "1F", "a0").
+            
+        Returns:
+            Integer value (0-255).
+        """
+        var result = 0
+        for i in range(len(hex_str)):
+            var c = String(hex_str[i])
+            var digit_value: Int
+            if c >= "0" and c <= "9":
+                digit_value = ord(c) - ord("0")
+            elif c >= "a" and c <= "f":
+                digit_value = ord(c) - ord("a") + 10
+            elif c >= "A" and c <= "F":
+                digit_value = ord(c) - ord("A") + 10
+            else:
+                digit_value = 0
+            result = result * 16 + digit_value
+        return result
     
     fn tokenize(mut self) raises -> List[Token]:
         """Tokenise entire input into list of tokens.

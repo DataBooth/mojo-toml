@@ -51,6 +51,9 @@ struct Writer:
         - Quote: " -> \\"
         - Newline: \\n -> \\\\n
         - Tab: \\t -> \\\\t
+        - Carriage return: \\r -> \\\\r
+        - Escape char: ESC (U+001B) -> \\e (TOML 1.1)
+        - Control chars: <32 -> \\xHH (TOML 1.1)
         
         Args:
             s: String to escape.
@@ -62,6 +65,7 @@ struct Writer:
         
         for i in range(len(s)):
             var c = s[i]
+            var code = ord(c)
             
             if c == "\\":
                 result += "\\\\"
@@ -73,6 +77,14 @@ struct Writer:
                 result += "\\t"
             elif c == "\r":
                 result += "\\r"
+            elif code == 0x1B:  # ESC character (TOML 1.1)
+                result += "\\e"
+            elif code < 32 or code == 127:  # Other control chars (TOML 1.1)
+                # Use \xHH for control characters
+                var hex_digits = "0123456789abcdef"
+                result += "\\x"
+                result += hex_digits[code // 16]
+                result += hex_digits[code % 16]
             else:
                 result += c
         
