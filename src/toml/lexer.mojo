@@ -364,6 +364,9 @@ struct Lexer:
         
         TOML supports rich number formats:
         - Integers: 42, +17, -5
+        - Hex: 0xDEAD, 0xdead_beef
+        - Octal: 0o755, 0o0755
+        - Binary: 0b1101, 0b1111_0000
         - Underscores: 1_000, 5_349_221
         - Floats: 3.14, 1e10, 6.022e23
         - Special: inf, -inf, nan
@@ -392,7 +395,56 @@ struct Lexer:
             value += self.advance()  # n
             return Token(TokenKind.FLOAT(), value, start_pos)
         
-        # Read digits and separators
+        # Check for alternative number bases (hex, octal, binary)
+        if self.current() == "0":
+            var next_char = self.peek(1)
+            
+            # Hexadecimal: 0x or 0X
+            if next_char == "x" or next_char == "X":
+                value += self.advance()  # 0
+                value += self.advance()  # x
+                # Read hex digits and underscores
+                while self.pos < len(self.input):
+                    c = self.current()
+                    if (c >= "0" and c <= "9") or (c >= "a" and c <= "f") or (c >= "A" and c <= "F"):
+                        value += self.advance()
+                    elif c == "_":
+                        _ = self.advance()  # Skip underscores
+                    else:
+                        break
+                return Token(TokenKind.INTEGER(), value, start_pos)
+            
+            # Octal: 0o or 0O
+            elif next_char == "o" or next_char == "O":
+                value += self.advance()  # 0
+                value += self.advance()  # o
+                # Read octal digits and underscores
+                while self.pos < len(self.input):
+                    c = self.current()
+                    if c >= "0" and c <= "7":
+                        value += self.advance()
+                    elif c == "_":
+                        _ = self.advance()  # Skip underscores
+                    else:
+                        break
+                return Token(TokenKind.INTEGER(), value, start_pos)
+            
+            # Binary: 0b or 0B
+            elif next_char == "b" or next_char == "B":
+                value += self.advance()  # 0
+                value += self.advance()  # b
+                # Read binary digits and underscores
+                while self.pos < len(self.input):
+                    c = self.current()
+                    if c == "0" or c == "1":
+                        value += self.advance()
+                    elif c == "_":
+                        _ = self.advance()  # Skip underscores
+                    else:
+                        break
+                return Token(TokenKind.INTEGER(), value, start_pos)
+        
+        # Read decimal digits and separators
         while self.pos < len(self.input):
             c = self.current()
             

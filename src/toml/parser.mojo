@@ -458,8 +458,8 @@ struct Parser:
         # Integer
         elif token.kind == TokenKind.INTEGER():
             _ = self.advance()
-            # Parse string to int
-            var value = atol(token.value)
+            # Parse string to int, handling alternative bases
+            var value = self.parse_integer(token.value)
             return TomlValue(value)
         
         # Float
@@ -485,6 +485,117 @@ struct Parser:
         
         else:
             raise Error(self.format_error("Unexpected token in value position", token.pos))
+    
+    fn parse_integer(self, value_str: String) raises -> Int:
+        """Parse integer string, handling alternative bases.
+        
+        Supports:
+        - Decimal: 42, 1_000
+        - Hexadecimal: 0xDEAD, 0xdead_beef
+        - Octal: 0o755, 0o0755
+        - Binary: 0b1101, 0b1111_0000
+        
+        Args:
+            value_str: String representation of the integer.
+            
+        Returns:
+            Parsed integer value.
+        """
+        var clean_value = value_str
+        
+        # Check for hex prefix (0x or 0X)
+        if len(clean_value) > 2 and clean_value[0] == "0" and (clean_value[1] == "x" or clean_value[1] == "X"):
+            return self.parse_hex(clean_value)
+        
+        # Check for octal prefix (0o or 0O)
+        elif len(clean_value) > 2 and clean_value[0] == "0" and (clean_value[1] == "o" or clean_value[1] == "O"):
+            return self.parse_octal(clean_value)
+        
+        # Check for binary prefix (0b or 0B)
+        elif len(clean_value) > 2 and clean_value[0] == "0" and (clean_value[1] == "b" or clean_value[1] == "B"):
+            return self.parse_binary(clean_value)
+        
+        # Decimal (default)
+        else:
+            return atol(clean_value)
+    
+    fn parse_hex(self, hex_str: String) raises -> Int:
+        """Parse hexadecimal string to integer.
+        
+        Args:
+            hex_str: Hexadecimal string (e.g., "0xDEAD" or "0xdead_beef").
+            
+        Returns:
+            Parsed integer value.
+        """
+        # Skip "0x" or "0X" prefix
+        var result = 0
+        for i in range(2, len(hex_str)):
+            var c = hex_str[i]
+            
+            if c >= "0" and c <= "9":
+                var digit = ord(c) - ord("0")
+                result = result * 16 + digit
+            elif c >= "a" and c <= "f":
+                var digit = ord(c) - ord("a") + 10
+                result = result * 16 + digit
+            elif c >= "A" and c <= "F":
+                var digit = ord(c) - ord("A") + 10
+                result = result * 16 + digit
+            elif c == "_":
+                continue  # Skip underscores
+            else:
+                raise Error("Invalid hexadecimal digit: " + c)
+        
+        return result
+    
+    fn parse_octal(self, octal_str: String) raises -> Int:
+        """Parse octal string to integer.
+        
+        Args:
+            octal_str: Octal string (e.g., "0o755").
+            
+        Returns:
+            Parsed integer value.
+        """
+        # Skip "0o" or "0O" prefix
+        var result = 0
+        for i in range(2, len(octal_str)):
+            var c = octal_str[i]
+            
+            if c >= "0" and c <= "7":
+                var digit = ord(c) - ord("0")
+                result = result * 8 + digit
+            elif c == "_":
+                continue  # Skip underscores
+            else:
+                raise Error("Invalid octal digit: " + c)
+        
+        return result
+    
+    fn parse_binary(self, binary_str: String) raises -> Int:
+        """Parse binary string to integer.
+        
+        Args:
+            binary_str: Binary string (e.g., "0b1101").
+            
+        Returns:
+            Parsed integer value.
+        """
+        # Skip "0b" or "0B" prefix
+        var result = 0
+        for i in range(2, len(binary_str)):
+            var c = binary_str[i]
+            
+            if c == "0" or c == "1":
+                var digit = ord(c) - ord("0")
+                result = result * 2 + digit
+            elif c == "_":
+                continue  # Skip underscores
+            else:
+                raise Error("Invalid binary digit: " + c)
+        
+        return result
     
     fn copy_path(self, path: List[String]) -> List[String]:
         """Create a copy of a path list.

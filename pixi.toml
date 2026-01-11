@@ -29,6 +29,9 @@ test-writer-basic = "mojo -I src tests/test_writer_basic.mojo"
 test-writer-tables = "mojo -I src tests/test_writer_tables.mojo"
 test-writer-roundtrip = "mojo -I src tests/test_writer_roundtrip.mojo"
 
+# Number base tests
+test-number-bases = "mojo -I src tests/test_number_bases.mojo"
+
 # Run all tests
 test-all = """bash -c '
 set -e
