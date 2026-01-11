@@ -1,8 +1,8 @@
 # mojo-toml 🔥
 
-**Native TOML 1.0 parser for Mojo**
+**Native TOML 1.0 parser and writer for Mojo**
 
-> **Status:** 🚀 **v0.3.0** - Quality and performance release (96 tests passing)
+> **Status:** 🚀 **v0.4.0** - TOML Writer Release (137 tests passing)
 
 ## Overview
 
@@ -10,15 +10,16 @@
 
 **Key features:**
 - ✅ Complete TOML 1.0 support (strings, numbers, arrays, tables)
+- ✅ TOML writer - serialize Dict back to TOML format
 - ✅ Nested structures with dotted keys
 - ✅ Duplicate key detection
 - ✅ Clear error messages with line/column context
-- ✅ 96 comprehensive tests
+- ✅ 137 comprehensive tests (96 parser + 41 writer)
 - ✅ Zero Python dependencies
 
 ## Quickstart
 
-Create a TOML file (`config.toml`):
+Create a TOML file (e.g `examples/quickstart.toml`):
 
 ```toml
 # Application configuration
@@ -36,6 +37,8 @@ timeout = 30.5
 enabled = ["auth", "logging", "metrics"]
 ```
 
+### Reading TOML
+
 Parse it with mojo-toml:
 
 ```mojo
@@ -44,7 +47,7 @@ from toml import parse
 fn main() raises:
     # Read TOML file
     var content: String
-    with open("config.toml", "r") as f:
+    with open("examples/quickstart.toml", "r") as f:
         content = f.read()
     
     # Parse and access values
@@ -62,6 +65,48 @@ fn main() raises:
     # Access arrays
     var features = config["features"].as_table()["enabled"].as_array()
     print("Features enabled:", len(features))
+```
+
+### Writing TOML
+
+Create configuration programmatically and write to TOML:
+
+```mojo
+from toml import to_toml, TomlValue
+
+fn main() raises:
+    # Build configuration using Dict and TomlValue
+    var config = Dict[String, TomlValue]()
+    
+    # Create app section
+    var app = Dict[String, TomlValue]()
+    app["name"] = TomlValue("QuickStart")
+    app["version"] = TomlValue("2.0.0")
+    app["debug"] = TomlValue(True)
+    config["app"] = TomlValue(app^)
+    
+    # Create database section
+    var db = Dict[String, TomlValue]()
+    db["host"] = TomlValue("localhost")
+    db["port"] = TomlValue(5432)
+    db["timeout"] = TomlValue(30.5)
+    config["database"] = TomlValue(db^)
+    
+    # Create features array
+    var enabled = List[TomlValue]()
+    enabled.append(TomlValue("auth"))
+    enabled.append(TomlValue("logging"))
+    enabled.append(TomlValue("metrics"))
+    var features = Dict[String, TomlValue]()
+    features["enabled"] = TomlValue(enabled^)
+    config["features"] = TomlValue(features^)
+    
+    # Convert to TOML and write to file
+    var toml_str = to_toml(config)
+    with open("output.toml", "w") as f:
+        f.write(toml_str)
+    
+    print("Configuration written to output.toml")
 ```
 
 **Note for Python users:** Unlike Python's `tomli` where you access values directly (`config["app"]["name"]`), mojo-toml requires explicit type conversions (`.as_table()`, `.as_string()`, etc.) because Mojo is statically typed. This provides type safety and clear error messages at the cost of slightly more verbose code.
@@ -124,13 +169,14 @@ pixi add mojo-toml
 - **Dotted keys**: `a.b.c = "value"`
 - **Duplicate detection**: rejects invalid files
 - **Error messages**: line and column context
+- **TOML writer**: serialize Dict[String, TomlValue] to TOML format
+- **Round-trip support**: parse → modify → write → parse preserves semantic equality
 
 ### 🚧 Planned
 
 - **Array of tables**: `[[array]]`
 - **Hex/Octal/Binary integers**: `0xDEAD`, `0o755`, `0b1101`
 - **Native datetime parsing**: currently returns ISO 8601 strings
-- **TOML writer**: serialize Dict back to TOML
 
 See [ROADMAP.md](docs/ROADMAP.md) for planned features and timeline.
 
@@ -162,10 +208,11 @@ pixi run example-pixi
 ```
 mojo-toml/
 ├── src/toml/           # Source code
-│   ├── __init__.mojo   # Public API
-│   ├── lexer.mojo      # Tokenization
-│   └── parser.mojo     # TOML parsing
-├── tests/              # Test suite (96 tests)
+│   ├── __init__.mojo   # Public API: parse(), to_toml()
+│   ├── lexer.mojo      # Tokenisation
+│   ├── parser.mojo     # TOML parsing
+│   └── writer.mojo     # TOML serialisation
+├── tests/              # Test suite (137 tests)
 ├── examples/           # Usage examples
 ├── benchmarks/         # Performance benchmarks
 ├── fixtures/           # Test TOML files

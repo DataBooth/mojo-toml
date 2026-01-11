@@ -65,6 +65,25 @@ This document describes how tests are organized in the mojo-toml project.
   - Complex document reset
   - Multiple resets
 
+### Writer Tests
+- **test_writer_basic.mojo** (20 tests) - Basic type serialisation
+  - Primitive types: strings, integers, floats, booleans
+  - String escaping: backslash, quotes, newlines, tabs
+  - Arrays: empty, simple, nested, mixed types
+  - Inline tables: empty, single key, multiple keys
+
+- **test_writer_tables.mojo** (11 tests) - Table structures
+  - Table headers: simple, nested, multiple sections
+  - Inline table heuristic (0-1 keys)
+  - Nested table serialisation
+  - Mixed inline and section headers
+
+- **test_writer_roundtrip.mojo** (10 tests) - Round-trip fidelity
+  - Parse → write → parse preserves semantic equality
+  - Complex nested structures
+  - Real-world file round-trip (pixi.toml)
+  - Empty and edge cases
+
 ## Test Organization Principles
 
 ### 1. Grouping by Feature
@@ -99,6 +118,7 @@ pixi run test-all
 
 ### Run Individual Test Suites
 ```bash
+# Parser tests (96 total)
 pixi run test-lexer          # Lexer tests
 pixi run test-parser         # Parser tests
 pixi run test-arrays         # Array tests
@@ -109,12 +129,18 @@ pixi run test-validation     # Validation/error tests
 pixi run test-real-world     # Real file tests
 pixi run test-fixtures       # Complex example tests
 pixi run test-parser-reset   # Parser reset tests
+
+# Writer tests (41 total)
+pixi run test-writer-basic      # Basic type serialisation
+pixi run test-writer-tables     # Table structures
+pixi run test-writer-roundtrip  # Round-trip fidelity
 ```
 
 ## Test Count Summary
 
 | Category | File | Tests |
 |----------|------|-------|
+| **Parser Tests** | | **96** |
 | Lexer | test_lexer.mojo | 25 |
 | Parser | test_parser.mojo | 10 |
 | Real-World | test_real_world.mojo | 4 |
@@ -125,7 +151,11 @@ pixi run test-parser-reset   # Parser reset tests
 | Dotted Keys | test_dotted_keys.mojo | 7 |
 | Validation | test_validation.mojo | 7 |
 | Parser API | test_parser_reset.mojo | 3 |
-| **Total** | **10 files** | **96 tests** |
+| **Writer Tests** | | **41** |
+| Basic Types | test_writer_basic.mojo | 20 |
+| Table Structures | test_writer_tables.mojo | 11 |
+| Round-Trip | test_writer_roundtrip.mojo | 10 |
+| **Total** | **13 files** | **137 tests** |
 
 ## Adding New Tests
 

@@ -4,18 +4,170 @@ All notable changes to mojo-toml will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
 ## [Unreleased]
 
-### Planned for v0.4.0 - TOML 1.0 Compliance
+### Planned for v0.5.0 - Extended Format Support
 - Array of tables: `[[array]]`
 - Hex/Octal/Binary integers: `0xDEADBEEF`, `0o755`, `0b11010110`
 - Native datetime parsing (parse to datetime types vs strings)
+- INI file parser and writer (read/write .ini configuration files)
 
-### Planned for v0.5.0 - Writer
-- Serialise `Dict` to TOML string
-- Pretty printing options
-- Round-trip fidelity
+### Planned for v0.6.0 - Performance & Benchmarking
+- Comparative benchmarks vs Python's `tomli`/`tomllib`
+- Memory profiling and allocation analysis
+- SIMD optimisations for string scanning (likely unnecessary for typical config files)
+- Large file handling optimisations (if needed)
+
+## [0.4.0] - 2026-01-11
+
+### Overview
+
+**TOML Writer Release** - mojo-toml now supports both reading and writing TOML files! This release adds complete serialisation capabilities with 41 comprehensive tests and full round-trip fidelity. 🎉
+
+### Added ✅
+
+**TOML Writer (`src/toml/writer.mojo`):**
+- `to_toml()` function - serialises `Dict[String, TomlValue]` to TOML string
+- Complete type support: strings, integers, floats, booleans, arrays, tables
+- String escaping: `\`, `"`, `\n`, `\t`, `\r`
+- Array formatting with proper nesting and mixed type support
+- Inline table formatting: `{ key = "value" }`
+- Table header formatting: `[section]` and `[section.subsection]`
+- Recursive nested table serialisation
+- Smart inline table heuristic (0-1 keys use inline format)
+
+**Testing:**
+- Created `tests/test_writer_basic.mojo` (20 tests) - primitive types and arrays
+- Created `tests/test_writer_tables.mojo` (11 tests) - table structures
+- Created `tests/test_writer_roundtrip.mojo` (10 tests) - round-trip verification
+- **Critical test**: pixi.toml successfully round-trips (parse → write → parse preserves semantic equality)
+- Total: **137 tests** (96 parser + 41 writer)
+
+**Examples:**
+- Created `examples/roundtrip.mojo` - comprehensive parse/modify/write workflow
+- Shows practical round-trip usage patterns
+- Demonstrates semantic equality verification
+
+**Documentation:**
+- Added writer documentation to README.md
+- Created `docs/TOML_WRITER_DESIGN.md` - implementation design and architecture
+- Updated quickstart with both reading and writing examples
+
+**Build Tasks:**
+- Added `pixi run test-writer-basic` task
+- Added `pixi run test-writer-tables` task
+- Added `pixi run test-writer-roundtrip` task
+- Added `pixi run example-roundtrip` task
+
+### Changed
+
+**Public API:**
+- Exported `to_toml()` from `src/toml/__init__.mojo`
+- No breaking changes to existing parser API
+
+**Project Structure:**
+```
+src/toml/
+  __init__.mojo   # Public API: parse(), to_toml()
+  lexer.mojo      # Tokenisation (unchanged)
+  parser.mojo     # TOML parsing (unchanged)
+  writer.mojo     # TOML serialisation [NEW]
+```
+
+### Technical Details
+
+**Writer Architecture:**
+```mojo
+struct Writer:
+    var buffer: String
+    
+    fn escape_string(self, s: String) -> String
+    fn format_string/integer/float/boolean(...)
+    fn format_array/inline_table(...)
+    fn should_use_inline(self, table: Dict[String, TomlValue]) -> Bool
+    fn write_key_value(...)
+    fn write_table_header(path: List[String])
+    fn write_table(path: List[String], table: Dict[String, TomlValue])
+    fn to_string() -> String
+
+fn to_toml(config: Dict[String, TomlValue]) raises -> String
+```
+
+**Inline Table Heuristic:**
+- Tables with 0-1 keys and simple values: `{ key = "value" }` or `{ }`
+- Larger tables: `[section]` format for readability
+- Root-level sections always use `[section]` headers
+- Nested tables use section headers `[a.b.c]`
+
+**Round-Trip Fidelity:**
+```mojo
+# Semantic equality preserved (values match)
+# Formatting/ordering may differ (whitespace, key order)
+var original = parse(toml_content)
+var written = to_toml(original)
+var reparsed = parse(written)
+assert compare_toml_values(original, reparsed)  # ✅ Passes
+```
+
+**String Escaping:**
+- Backslash: `\\`
+- Double quote: `\"`
+- Newline: `\n`
+- Tab: `\t`
+- Carriage return: `\r`
+
+### Usage Examples
+
+**Write TOML:**
+```mojo
+from toml import to_toml, TomlValue
+
+var config = Dict[String, TomlValue]()
+var app = Dict[String, TomlValue]()
+app["name"] = TomlValue("MyApp")
+app["version"] = TomlValue("1.0.0")
+config["app"] = TomlValue(app)
+
+var toml_str = to_toml(config)
+with open("config.toml", "w") as f:
+    f.write(toml_str)
+```
+
+**Round-Trip:**
+```mojo
+from toml import parse, to_toml
+
+var original = parse(read_file("config.toml"))
+var modified = original  # Make changes...
+var written = to_toml(modified)
+
+with open("config_updated.toml", "w") as f:
+    f.write(written)
+```
+
+### Known Behaviour
+
+- Empty inline tables format as `{ }` (no extra spaces)
+- Root-level sections always use `[section]` headers (never inline)
+- Key ordering may differ after round-trip (Dict iteration order)
+- Whitespace/formatting may differ (semantic equality preserved)
+- Comments are not preserved (parser doesn't track them)
+
+### Migration Guide
+
+No breaking changes. New functionality is purely additive.
+
+**New imports:**
+```mojo
+from toml import to_toml  # New writer function
+from toml import parse    # Existing parser (unchanged)
+```
+
+### Acknowledgements
+
+Co-Authored-By: Warp <agent@warp.dev>
+
+## [0.3.0] - 2026-01-07
 
 ### Planned for v0.6.0 - Performance
 - SIMD optimisations

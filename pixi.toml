@@ -3,7 +3,7 @@ authors = ["Michael Booth <michael@databooth.com.au>"]
 channels = ["conda-forge", "https://conda.modular.com/max-nightly"]
 name = "mojo-toml"
 platforms = ["osx-arm64", "linux-64"]
-version = "0.3.0"
+version = "0.4.0"
 
 [activation]
 env = { MOJO_PATH = "$PIXI_PROJECT_ROOT/src" }
@@ -24,42 +24,58 @@ test-dotted-keys = "mojo -I src tests/test_dotted_keys.mojo"
 test-validation = "mojo -I src tests/test_validation.mojo"
 test-parser-reset = "mojo -I src tests/test_parser_reset.mojo"
 
+# Writer tests
+test-writer-basic = "mojo -I src tests/test_writer_basic.mojo"
+test-writer-tables = "mojo -I src tests/test_writer_tables.mojo"
+test-writer-roundtrip = "mojo -I src tests/test_writer_roundtrip.mojo"
+
 # Run all tests
 test-all = """bash -c '
 set -e
 echo "=== Running All Tests ==="
 echo ""
-echo "[1/10] Lexer Tests (25 tests)"
+echo "Parser Tests (96 total):"
+echo "[1/13] Lexer Tests (25 tests)"
 mojo -I src tests/test_lexer.mojo
 echo ""
-echo "[2/10] Parser Tests (10 tests)"
+echo "[2/13] Parser Tests (10 tests)"
 mojo -I src tests/test_parser.mojo
 echo ""
-echo "[3/10] Real-World Tests (4 tests)"
+echo "[3/13] Real-World Tests (4 tests)"
 mojo -I src tests/test_real_world.mojo
 echo ""
-echo "[4/10] Fixture Tests (5 tests)"
+echo "[4/13] Fixture Tests (5 tests)"
 mojo -I src tests/test_fixtures.mojo
 echo ""
-echo "[5/10] Array Tests (14 tests)"
+echo "[5/13] Array Tests (14 tests)"
 mojo -I src tests/test_arrays.mojo
 echo ""
-echo "[6/10] Inline Table Tests (13 tests)"
+echo "[6/13] Inline Table Tests (13 tests)"
 mojo -I src tests/test_inline.mojo
 echo ""
-echo "[7/10] Table Header Tests (8 tests)"
+echo "[7/13] Table Header Tests (8 tests)"
 mojo -I src tests/test_tables.mojo
 echo ""
-echo "[8/10] Dotted Key Tests (7 tests)"
+echo "[8/13] Dotted Key Tests (7 tests)"
 mojo -I src tests/test_dotted_keys.mojo
 echo ""
-echo "[9/10] Validation Tests (7 tests)"
+echo "[9/13] Validation Tests (7 tests)"
 mojo -I src tests/test_validation.mojo
 echo ""
-echo "[10/10] Parser Reset Tests (3 tests)"
+echo "[10/13] Parser Reset Tests (3 tests)"
 mojo -I src tests/test_parser_reset.mojo
 echo ""
-echo "=== All 96 Tests Complete! ==="
+echo "Writer Tests (41 total):"
+echo "[11/13] Writer Basic Tests (20 tests)"
+mojo -I src tests/test_writer_basic.mojo
+echo ""
+echo "[12/13] Writer Table Tests (11 tests)"
+mojo -I src tests/test_writer_tables.mojo
+echo ""
+echo "[13/13] Writer Round-Trip Tests (10 tests)"
+mojo -I src tests/test_writer_roundtrip.mojo
+echo ""
+echo "=== All 137 Tests Complete! ==="
 '"""
 
 # Build tasks
@@ -70,6 +86,7 @@ clean = "rm -rf dist __pycache__ .pytest_cache toml.mojopkg"
 example-quickstart = "mojo -I src examples/quickstart.mojo"
 example-simple = "mojo -I src examples/simple.mojo"
 example-pixi = "mojo -I src examples/parse_pixi.mojo"
+example-roundtrip = "mojo -I src examples/roundtrip.mojo"
 
 [dependencies]
 mojo = "*"
