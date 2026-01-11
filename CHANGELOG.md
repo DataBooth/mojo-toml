@@ -6,11 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
-### Planned for v0.5.0 - Extended Format Support
+### Planned for v0.5.0 - TOML 1.0 Completion
 - Array of tables: `[[array]]`
 - Hex/Octal/Binary integers: `0xDEADBEEF`, `0o755`, `0b11010110`
 - Native datetime parsing (parse to datetime types vs strings)
-- INI file parser and writer (read/write .ini configuration files)
 
 ### Planned for v0.6.0 - Performance & Benchmarking
 - Comparative benchmarks vs Python's `tomli`/`tomllib`

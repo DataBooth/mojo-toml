@@ -128,7 +128,6 @@ When adding tests:
 - Array of tables: `[[section]]`
 - Hex/octal/binary integers: `0xDEAD`, `0o755`, `0b1101`
 - Native datetime parsing (currently returns ISO 8601 strings)
-- INI file parser and writer
 
 ### Known Behaviour
 - All parsing returns Dict[String, TomlValue], requiring explicit type conversions

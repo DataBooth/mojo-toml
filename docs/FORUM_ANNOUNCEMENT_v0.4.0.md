@@ -72,8 +72,9 @@ mojo -I your-project/lib your_app.mojo
 
 ## Roadmap
 
-**v0.5.0:** Array of tables `[[section]]`, hex/octal/binary integers, INI support  
-**v0.6.0:** Comparative Python benchmarks, memory profiling
+**v0.5.0:** TOML 1.0 completion - array of tables `[[section]]`, hex/octal/binary integers  
+**v0.6.0:** Comparative Python benchmarks, memory profiling  
+**Future:** Separate mojo-ini package for INI file support
 
 ---
 
