@@ -188,7 +188,7 @@ TOML 1.1 features not yet implemented:
 - Multiline inline tables with trailing commas
 - Optional seconds in datetime/time values
 
-See [ROADMAP.md](docs/ROADMAP.md) for development timeline.
+See [ROADMAP.md](docs/planning/ROADMAP.md) for development timeline.
 
 ## Development
 
@@ -222,24 +222,40 @@ mojo-toml/
 │   ├── lexer.mojo      # Tokenisation
 │   ├── parser.mojo     # TOML parsing
 │   └── writer.mojo     # TOML serialisation
-├── tests/              # Test suite (163 tests)
+├── tests/              # Test suite (168 tests)
 ├── examples/           # Usage examples
 ├── benchmarks/         # Performance benchmarks
 ├── fixtures/           # Test TOML files
 ├── docs/               # Documentation
-│   ├── ROADMAP.md      # Development roadmap
 │   ├── PERFORMANCE.md  # Performance characteristics
-│   └── ...
+│   └── planning/       # Planning and historical docs
 └── packaging/          # Conda packaging files
 ```
 
+### Benchmarks
+
+Run performance benchmarks with full system reporting:
+
+```bash
+# Mojo benchmark (mojo-toml performance)
+pixi run benchmark-mojo
+
+# Python baseline (tomllib/tomli_w comparison)
+pixi run benchmark-python
+```
+
+Both benchmarks generate markdown reports in `benchmarks/reports/` with:
+- System specifications (OS, CPU, GPU, RAM, Mojo/Python versions)
+- Performance tables with throughput and latency
+- Timestamp and machine configuration
+
+See [PERFORMANCE.md](docs/PERFORMANCE.md) for detailed results and analysis.
+
 ## Documentation
 
-- [ROADMAP.md](docs/ROADMAP.md) - Development roadmap and planned features
 - [PERFORMANCE.md](docs/PERFORMANCE.md) - Performance benchmarks and characteristics
-- [TEST_ORGANIZATION.md](docs/TEST_ORGANIZATION.md) - Test structure and guidelines
-- [TOML_WRITER_DESIGN.md](docs/TOML_WRITER_DESIGN.md) - Writer implementation design
 - [CHANGELOG.md](CHANGELOG.md) - Version history and changes
+- [docs/planning/](docs/planning/) - Development roadmap, design docs, and project history
 
 ## Contributing
 
@@ -252,7 +268,7 @@ Contributions welcome! This project is open source (MIT License).
 4. Run `pixi run test-all` to ensure tests pass
 5. Submit a pull request
 
-See [ROADMAP.md](docs/ROADMAP.md) for areas where contributions would be most valuable.
+See [ROADMAP.md](docs/planning/ROADMAP.md) for areas where contributions would be most valuable.
 
 ## Acknowledgements
 

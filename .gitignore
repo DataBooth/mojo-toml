@@ -7,6 +7,10 @@ __pycache__/
 # Benchmark reports (machine-specific)
 benchmarks/reports/
 
+# Generated/temporary files
+*.time-trace
+*_output.toml
+
 # Compiled binaries
 parse_pixi
 example-*
