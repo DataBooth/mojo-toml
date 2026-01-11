@@ -259,6 +259,6 @@ MIT License - See [LICENSE](LICENSE) for details.
 ## Links
 
 - [GitHub Repository](https://github.com/databooth/mojo-toml)
-- [v0.3.0 Release](https://github.com/DataBooth/mojo-toml/releases/tag/v0.3.0)
+- [v0.4.0 Release](https://github.com/DataBooth/mojo-toml/releases/tag/v0.4.0)
 - [TOML 1.0 Spec](https://toml.io/en/v1.0.0)
 - [Mojo Documentation](https://docs.modular.com/mojo/)
