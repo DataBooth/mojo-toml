@@ -6,14 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
-### Planned for v0.6.0 - TOML 1.1 Support
+### Planned for v0.6.0 - Remaining TOML 1.1
 - Multiline inline tables with trailing commas
-- `\xHH` escape sequences for low codepoints
-- `\e` escape for escape character  
-- Optional seconds in datetime/tim### Planned for v0.7.0 - Performance & Benchmarking
-- Comparative benchmarks vs Python's `tomli`/`tomllib`
+- Optional seconds in datetime/time values
+
+### Planned for v0.7.0 - Performance
 - Memory profiling and allocation analysis
-- SIMD optimisations for string scanning (likely unnecessary for typical config files)
+- SIMD optimisations for string scanning (if needed)
 - Large file handling optimisations (if needed)
 
 ## [0.5.0] - 2026-01-11
@@ -48,12 +47,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Special handling for nested arrays where parent is an array
 - Recursive approach handles arbitrary nesting depth
 
+**TOML 1.1 Partial Support:**
+- `\xHH` escape sequences for codepoints 0-255 (e.g., `\x00`, `\x61`)
+- `\e` escape for escape character (U+001B)
+- 5 comprehensive tests in `tests/test_toml11_escapes.mojo`
+- Writer support for outputting `\e` and `\xHH` for control characters
+
+**Benchmark System:**
+- Created `benchmarks/machine_info.py` - system information extraction
+- Created `benchmarks/report_utils.py` - markdown report generation
+- Updated `benchmarks/compare_python.py` - Python baseline benchmarks
+- Created `benchmarks/run_mojo_benchmark.py` - Mojo benchmark wrapper
+- Both benchmarks generate markdown reports in `benchmarks/reports/`
+- Reports include full system specs (OS, CPU, GPU, RAM, versions)
+- `pixi run benchmark-mojo` - mojo-toml performance
+- `pixi run benchmark-python` - Python tomllib/tomli_w baseline
+
 **Testing:**
-- **163 total tests** (up from 137)
-- Parser tests: 122 (up from 96)
+- **168 total tests** (up from 137)
+- Parser tests: 127 (up from 96)
 - Writer tests: 41 (unchanged)
 - Removed 1 obsolete test (`test_array_of_tables_not_supported`)
-- Updated `pixi run test-all` to include new test suites
+- Auto-discovery test runner: `scripts/run_tests.py`
 
 **Documentation:**
 - Updated README with TOML 1.0 compliance statement
@@ -76,7 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Test Organization:**
 ```
-Parser Tests (122 total):
+Parser Tests (127 total):
 1. test_lexer.mojo (25 tests)
 2. test_parser.mojo (10 tests)
 3. test_real_world.mojo (4 tests)
@@ -89,22 +104,34 @@ Parser Tests (122 total):
 10. test_parser_reset.mojo (3 tests)
 11. test_number_bases.mojo (14 tests)  # NEW
 12. test_array_of_tables.mojo (12 tests)  # NEW
+13. test_toml11_escapes.mojo (5 tests)  # NEW
 
 Writer Tests (41 total):
-13. test_writer_basic.mojo (20 tests)
-14. test_writer_tables.mojo (11 tests)
-15. test_writer_roundtrip.mojo (10 tests)
+14. test_writer_basic.mojo (20 tests)
+15. test_writer_tables.mojo (11 tests)
+16. test_writer_roundtrip.mojo (10 tests)
 ```
+
+**Documentation:**
+- Reorganised `docs/` directory structure
+- Moved planning/historical docs to `docs/planning/`
+- Updated `PERFORMANCE.md` to focus on mojo vs Python comparison
+- Added benchmark documentation to README.md
+- Simplified Documentation section in README
 
 **Project Structure:**
 ```
 mojo-toml/
 ├── src/toml/           # Source code
 │   ├── __init__.mojo   # Public API
-│   ├── lexer.mojo      # Tokenisation + alt number bases
+│   ├── lexer.mojo      # Tokenisation + alt number bases + TOML 1.1 escapes
 │   ├── parser.mojo     # Parsing + array-of-tables
-│   └── writer.mojo     # TOML serialisation
-├── tests/              # Test suite (163 tests)
+│   └── writer.mojo     # TOML serialisation + escape sequences
+├── tests/              # Test suite (168 tests)
+├── benchmarks/         # Performance benchmarking system
+├── docs/               # Documentation
+│   ├── PERFORMANCE.md  # Active performance docs
+│   └── planning/       # Planning and historical docs
 ```
 
 ### Technical Details
