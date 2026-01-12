@@ -14,7 +14,7 @@ fn main() raises:
     print("🔥 mojo-toml - Round-trip Example")
     print("=" * 50)
     print()
-    
+
     # Original TOML configuration
     var original_toml = """
 # Application Configuration
@@ -31,35 +31,35 @@ host = "db.example.com"
 port = 5432
 max_connections = 100
 """
-    
+
     print("Original TOML:")
     print(original_toml)
     print()
-    
+
     # Parse the TOML
     print("Parsing TOML...")
     var config = parse(original_toml)
     print("✓ Parsed successfully")
     print()
-    
+
     # Modify values
     print("Modifying configuration:")
     config["version"] = TomlValue("2.0.0")
     print("  • Updated version to 2.0.0")
-    
+
     var server = config["server"].as_table()
     server["port"] = TomlValue(9000)
     server["debug"] = TomlValue(True)
     config["server"] = TomlValue(server^)
     print("  • Changed server port to 9000")
     print("  • Enabled debug mode")
-    
+
     var db = config["database"].as_table()
     db["max_connections"] = TomlValue(200)
     config["database"] = TomlValue(db^)
     print("  • Increased max_connections to 200")
     print()
-    
+
     # Write back to TOML
     print("Writing updated configuration:")
     print("-" * 50)
@@ -67,7 +67,7 @@ max_connections = 100
     print(updated_toml)
     print("-" * 50)
     print()
-    
+
     # Verify round-trip
     print("Verifying round-trip...")
     var reparsed = parse(updated_toml)
@@ -76,5 +76,5 @@ max_connections = 100
     print("  ✓ Debug mode:", reparsed["server"].as_table()["debug"].as_bool())
     print("  ✓ Max connections:", reparsed["database"].as_table()["max_connections"].as_int())
     print()
-    
+
     print("Round-trip successful! 🎉")

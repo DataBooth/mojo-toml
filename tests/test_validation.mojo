@@ -45,7 +45,7 @@ key = "value1"
 [section2]
 key = "value2"
 """)
-    
+
     var section1 = data["section1"].as_table()
     var section2 = data["section2"].as_table()
     assert_equal(section1["key"].as_string(), "value1")

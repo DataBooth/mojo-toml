@@ -18,39 +18,39 @@ from report_utils import generate_report, save_report
 
 def parse_benchmark_output(output: str) -> list:
     """Parse mojo benchmark output into structured results.
-    
+
     Args:
         output: Console output from benchmark
-    
+
     Returns:
         List of result dictionaries
     """
     results = []
     lines = output.split('\n')
-    
+
     current_test = None
     for line in lines:
         # Match test name lines (e.g., "Simple parse (5 keys):")
         if line and not line.startswith(' ') and ':' in line and not line.startswith('='):
             current_test = line.rstrip(':')
-        
+
         # Match average time lines
         elif 'Average:' in line and current_test:
             # Extract time (e.g., "  Average: 24 μs per parse")
             time_match = re.search(r'(\d+\s*(?:μs|ms|s))', line)
             avg_time = time_match.group(1) if time_match else "N/A"
-            
+
             # Look for rate in next lines
             rate = "N/A"
             iterations = "N/A"
-            
+
             results.append({
                 "Test": current_test,
                 "Avg Time": avg_time,
                 "Rate": rate,
                 "Iterations": iterations
             })
-        
+
         # Match rate lines
         elif 'Rate:' in line and results:
             rate_match = re.search(r'Rate:\s*(\d+)', line)
@@ -60,7 +60,7 @@ def parse_benchmark_output(output: str) -> list:
                     results[-1]["Rate"] = f"{rate_val / 1000:.1f}K/sec"
                 else:
                     results[-1]["Rate"] = f"{rate_val}/sec"
-            
+
             # Also extract iterations
             iter_match = re.search(r'for\s+(\d+)\s+iterations', line)
             if not iter_match:
@@ -68,10 +68,10 @@ def parse_benchmark_output(output: str) -> list:
                 idx = lines.index(line)
                 if idx > 0:
                     iter_match = re.search(r'for\s+(\d+)\s+iterations', lines[idx-1])
-            
+
             if iter_match:
                 results[-1]["Iterations"] = iter_match.group(1)
-    
+
     return results
 
 
@@ -80,13 +80,13 @@ def main():
     print("=" * 70)
     print("mojo-toml Performance Benchmark")
     print("=" * 70)
-    
+
     # Display system info
     print("\nSystem Information:")
     sys_info = get_system_info()
     print(format_system_info(sys_info))
     print(f"  Timestamp: {get_timestamp()}")
-    
+
     # Add Mojo version
     try:
         mojo_result = subprocess.run(
@@ -100,11 +100,11 @@ def main():
         sys_info["Mojo"] = mojo_version
     except:
         sys_info["Mojo"] = "Unknown"
-    
+
     print("\n" + "=" * 70)
     print("Running benchmarks...")
     print("=" * 70)
-    
+
     # Run mojo benchmark
     try:
         result = subprocess.run(
@@ -114,17 +114,17 @@ def main():
             cwd=Path(__file__).parent.parent,
             timeout=60
         )
-        
+
         # Print the output
         print(result.stdout)
-        
+
         if result.returncode != 0:
             print(f"Error running benchmark: {result.stderr}", file=sys.stderr)
             sys.exit(1)
-        
+
         # Parse results
         results = parse_benchmark_output(result.stdout)
-        
+
         # Generate markdown report
         report = generate_report(
             title="mojo-toml Performance Benchmark",
@@ -133,13 +133,13 @@ def main():
             write_results=None,
             notes="Run `pixi run benchmark-python` to see Python baseline performance for comparison."
         )
-        
+
         # Save report
         report_dir = Path(__file__).parent / "reports"
         report_path = save_report(report, report_dir, "mojo_toml.md")
-        
+
         print(f"\nMarkdown report saved to: {report_path}")
-        
+
     except subprocess.TimeoutExpired:
         print("Error: Benchmark timed out", file=sys.stderr)
         sys.exit(1)

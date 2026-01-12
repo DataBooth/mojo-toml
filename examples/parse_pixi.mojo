@@ -9,24 +9,24 @@ from toml import parse
 
 fn main():
     """Parse pixi.toml and generate comprehensive report."""
-    
+
     print("🔥 mojo-toml - Pixi Configuration Report")
     print("=" * 60)
     print()
-    
+
     # Try to parse pixi.toml
     try:
         var file_content: String
         with open("pixi.toml", "r") as f:
             file_content = f.read()
-        
+
         var config = parse(file_content)
-        
+
         print("📊 Configuration Summary")
         print("-" * 60)
         print("Top-level sections:", config.__len__())
         print()
-        
+
         # Workspace section
         if config.__contains__("workspace"):
             var workspace = config["workspace"].as_table()
@@ -38,7 +38,7 @@ fn main():
             var channels = workspace["channels"].as_array()
             print("  Channels:", len(channels), "configured")
             print()
-        
+
         # Dependencies section
         if config.__contains__("dependencies"):
             var deps = config["dependencies"].as_table()
@@ -48,7 +48,7 @@ fn main():
             print("📚 Dependencies:")
             print("  Total packages:", dep_count)
             print()
-        
+
         # Tasks section
         if config.__contains__("tasks"):
             var tasks = config["tasks"].as_table()
@@ -70,7 +70,7 @@ fn main():
             print("  Build tasks:", build_count)
             print("  Example tasks:", example_count)
             print()
-        
+
         # Activation section
         if config.__contains__("activation"):
             var activation = config["activation"].as_table()
@@ -82,7 +82,7 @@ fn main():
                 print("⚙️  Activation:")
                 print("  Environment variables:", env_count)
                 print()
-        
+
         print("-" * 60)
         print("✅ Successfully parsed and analyzed pixi.toml!")
         print()
@@ -91,10 +91,10 @@ fn main():
         print("  • workspace[\"name\"].as_string()  # Get string values")
         print("  • workspace[\"platforms\"].as_array()  # Get arrays")
         print("  • for entry in table.items()  # Iterate table entries")
-        
+
     except e:
         print("❌ Error parsing pixi.toml:", e)
-    
+
     print()
     print("📖 More resources:")
     print("  • Basic demo: pixi run example-simple")

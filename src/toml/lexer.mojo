@@ -1,7 +1,7 @@
 """Lexer for TOML 1.0 files.
 
 # Why: Purpose of the Lexer
-The lexer (tokeniser) is the first stage of TOML parsing. It converts raw text into 
+The lexer (tokeniser) is the first stage of TOML parsing. It converts raw text into
 a stream of meaningful tokens, making it easier for the parser to understand structure.
 
 Example transformation:
@@ -23,7 +23,7 @@ The lexer uses a character-by-character scanner with lookahead:
 4. Emit token with type, value, and position
 5. Repeat until EOF
 
-This design keeps the parser simple—it works with high-level tokens rather than 
+This design keeps the parser simple—it works with high-level tokens rather than
 raw characters, making TOML syntax rules easier to implement.
 
 # TOML-Specific Handling
@@ -39,13 +39,13 @@ from collections import List
 @register_passable("trivial")
 struct Position:
     """Position in the source file (line and column).
-    
+
     Used for error messages to show users exactly where parsing failed.
     Example: "Error at line 5, column 12: unexpected character"
     """
     var line: Int
     var column: Int
-    
+
     fn __init__(out self, line: Int, column: Int):
         self.line = line
         self.column = column
@@ -54,121 +54,121 @@ struct Position:
 @register_passable("trivial")
 struct TokenKind:
     """Token types for TOML lexer.
-    
+
     Each token represents a meaningful unit in TOML syntax.
     Static methods replace deprecated `alias` keyword.
     """
     var _value: Int
-    
+
     fn __init__(out self, value: Int):
         self._value = value
-    
+
     # Special tokens
     @staticmethod
     fn EOF() -> TokenKind:
         """End of file marker."""
         return TokenKind(0)
-    
+
     @staticmethod
     fn NEWLINE() -> TokenKind:
         """Line break (significant in TOML for separating key-value pairs)."""
         return TokenKind(1)
-    
+
     @staticmethod
     fn WHITESPACE() -> TokenKind:
         """Spaces and tabs (usually skipped)."""
         return TokenKind(2)
-    
+
     @staticmethod
     fn COMMENT() -> TokenKind:
         """Comment text after # symbol."""
         return TokenKind(3)
-    
+
     # Literal values
     @staticmethod
     fn STRING() -> TokenKind:
         """String literal: "basic" or 'literal'."""
         return TokenKind(10)
-    
+
     @staticmethod
     fn INTEGER() -> TokenKind:
         """Integer: 42, +17, -5, 1_000."""
         return TokenKind(11)
-    
+
     @staticmethod
     fn FLOAT() -> TokenKind:
         """Float: 3.14, 1e10, inf, nan."""
         return TokenKind(12)
-    
+
     @staticmethod
     fn BOOLEAN() -> TokenKind:
         """Boolean: true or false."""
         return TokenKind(13)
-    
+
     @staticmethod
     fn DATETIME() -> TokenKind:
         """ISO 8601 datetime (parsed as string in v0.1.0)."""
         return TokenKind(14)
-    
+
     # Identifiers
     @staticmethod
     fn KEY() -> TokenKind:
         """Unquoted key name."""
         return TokenKind(20)
-    
+
     # Punctuation (structural elements)
     @staticmethod
     fn EQUALS() -> TokenKind:
         """Assignment operator: =."""
         return TokenKind(30)
-    
+
     @staticmethod
     fn DOT() -> TokenKind:
         """Dotted key separator: a.b.c."""
         return TokenKind(31)
-    
+
     @staticmethod
     fn COMMA() -> TokenKind:
         """Array/inline table separator: ,."""
         return TokenKind(32)
-    
+
     @staticmethod
     fn LEFT_BRACKET() -> TokenKind:
         """Array start or table header: [."""
         return TokenKind(33)
-    
+
     @staticmethod
     fn RIGHT_BRACKET() -> TokenKind:
         """Array end or table header close: ]."""
         return TokenKind(34)
-    
+
     @staticmethod
     fn LEFT_BRACE() -> TokenKind:
         """Inline table start: {."""
         return TokenKind(35)
-    
+
     @staticmethod
     fn RIGHT_BRACE() -> TokenKind:
         """Inline table end: }."""
         return TokenKind(36)
-    
+
     fn __eq__(self, other: TokenKind) -> Bool:
         return self._value == other._value
-    
+
     fn __ne__(self, other: TokenKind) -> Bool:
         return self._value != other._value
 
 
 struct Token(Copyable, Movable):
     """A token in the TOML input stream.
-    
-    Represents a single meaningful unit of TOML syntax with its type, 
+
+    Represents a single meaningful unit of TOML syntax with its type,
     content, and location in the source file.
     """
     var kind: TokenKind
     var value: String  # The actual text content
     var pos: Position  # Where it appears in the file
-    
+
     fn __init__(out self, kind: TokenKind, value: String, pos: Position):
         self.kind = kind
         self.value = value
@@ -177,28 +177,28 @@ struct Token(Copyable, Movable):
 
 struct Lexer:
     """Tokeniser for TOML input.
-    
-    The lexer scans TOML text character-by-character and produces a stream 
+
+    The lexer scans TOML text character-by-character and produces a stream
     of tokens. It handles:
     - String parsing (with escape sequences)
     - Number formats (integers, floats, scientific notation)
     - Comments (# to end of line)
     - Whitespace management
     - Position tracking for error messages
-    
+
     Usage:
         var lexer = Lexer("name = 'value'")
         var tokens = lexer.tokenize()  # Returns List[Token]
     """
-    
+
     var input: String
     var pos: Int      # Current position in input
     var line: Int     # Current line number (1-indexed)
     var column: Int   # Current column number (1-indexed)
-    
+
     fn __init__(out self, input: String):
         """Initialise lexer with TOML input.
-        
+
         Args:
             input: TOML content to tokenise.
         """
@@ -206,25 +206,25 @@ struct Lexer:
         self.pos = 0
         self.line = 1
         self.column = 1
-    
+
     fn current(self) -> String:
         """Get current character without advancing.
-        
+
         Returns:
             Current character or empty string if at EOF.
         """
         if self.pos >= len(self.input):
             return ""
         return String(self.input[self.pos])
-    
+
     fn peek(self, offset: Int = 1) -> String:
         """Look ahead at character without consuming it.
-        
+
         Used for lookahead decisions, e.g. detecting triple quotes.
-        
+
         Args:
             offset: Number of characters to look ahead (default: 1).
-        
+
         Returns:
             Character at pos + offset or empty string if out of bounds.
         """
@@ -232,32 +232,32 @@ struct Lexer:
         if peek_pos >= len(self.input):
             return ""
         return String(self.input[peek_pos])
-    
+
     fn advance(mut self) -> String:
         """Consume and return current character.
-        
+
         Advances position and updates line/column tracking for error messages.
-        
+
         Returns:
             Current character or empty string if at EOF.
         """
         if self.pos >= len(self.input):
             return ""
-        
+
         var c = String(self.input[self.pos])
         self.pos += 1
-        
+
         if c == "\n":
             self.line += 1
             self.column = 1
         else:
             self.column += 1
-        
+
         return c
-    
+
     fn skip_whitespace(mut self):
         """Skip whitespace characters (space, tab) but not newlines.
-        
+
         Newlines are significant in TOML for separating key-value pairs,
         so we preserve them as NEWLINE tokens.
         """
@@ -267,59 +267,59 @@ struct Lexer:
                 _ = self.advance()
             else:
                 break
-    
+
     fn read_comment(mut self) raises -> Token:
         """Read a comment starting with #.
-        
+
         Comments run from # to end of line. They can appear after values:
             name = "value"  # This is a comment
-        
+
         Returns:
             Comment token (excluding the # character).
         """
         var start_pos = Position(self.line, self.column)
         _ = self.advance()  # Skip #
-        
+
         var comment = String("")
         while self.pos < len(self.input):
             var c = self.current()
             if c == "\n":
                 break
             comment += self.advance()
-        
+
         return Token(TokenKind.COMMENT(), comment, start_pos)
-    
+
     fn read_string(mut self) raises -> Token:
         """Read a quoted string (basic or literal).
-        
+
         TOML supports two string types:
         1. Basic strings: "text" - supports escape sequences (\\n, \\t, etc.)
         2. Literal strings: 'raw' - no escape processing
-        
+
         Both support multiline variants with triple quotes:
         - \"\"\"multiline basic\"\"\"
         - '''multiline literal'''
-        
+
         Returns:
             String token with processed content (escapes handled).
         """
         var start_pos = Position(self.line, self.column)
         var quote_char = self.current()
         _ = self.advance()  # Skip opening quote
-        
+
         # Check for multiline (triple quotes)
         var is_multiline = False
         if self.current() == quote_char and self.peek(1) == quote_char:
             is_multiline = True
             _ = self.advance()  # Skip second quote
             _ = self.advance()  # Skip third quote
-        
+
         var value = String("")
         var is_literal = (quote_char == "'")
-        
+
         while self.pos < len(self.input):
             var c = self.current()
-            
+
             # Check for closing quotes
             if is_multiline:
                 if c == quote_char and self.peek(1) == quote_char and self.peek(2) == quote_char:
@@ -331,7 +331,7 @@ struct Lexer:
                 if c == quote_char:
                     _ = self.advance()  # Skip closing quote
                     break
-            
+
             # Handle escape sequences in basic strings only
             if not is_literal and c == "\\":
                 _ = self.advance()
@@ -378,12 +378,12 @@ struct Lexer:
                     value += "\\"
             else:
                 value += self.advance()
-        
+
         return Token(TokenKind.STRING(), value, start_pos)
-    
+
     fn read_number(mut self) raises -> Token:
         """Read a number (integer or float).
-        
+
         TOML supports rich number formats:
         - Integers: 42, +17, -5
         - Hex: 0xDEAD, 0xdead_beef
@@ -392,19 +392,19 @@ struct Lexer:
         - Underscores: 1_000, 5_349_221
         - Floats: 3.14, 1e10, 6.022e23
         - Special: inf, -inf, nan
-        
+
         Returns:
             INTEGER or FLOAT token.
         """
         var start_pos = Position(self.line, self.column)
         var value = String("")
         var is_float = False
-        
+
         # Handle sign
         var c = self.current()
         if c == "+" or c == "-":
             value += self.advance()
-        
+
         # Handle special float values (inf, nan)
         if self.current() == "i" and self.peek(1) == "n" and self.peek(2) == "f":
             value += self.advance()  # i
@@ -416,11 +416,11 @@ struct Lexer:
             value += self.advance()  # a
             value += self.advance()  # n
             return Token(TokenKind.FLOAT(), value, start_pos)
-        
+
         # Check for alternative number bases (hex, octal, binary)
         if self.current() == "0":
             var next_char = self.peek(1)
-            
+
             # Hexadecimal: 0x or 0X
             if next_char == "x" or next_char == "X":
                 value += self.advance()  # 0
@@ -435,7 +435,7 @@ struct Lexer:
                     else:
                         break
                 return Token(TokenKind.INTEGER(), value, start_pos)
-            
+
             # Octal: 0o or 0O
             elif next_char == "o" or next_char == "O":
                 value += self.advance()  # 0
@@ -450,7 +450,7 @@ struct Lexer:
                     else:
                         break
                 return Token(TokenKind.INTEGER(), value, start_pos)
-            
+
             # Binary: 0b or 0B
             elif next_char == "b" or next_char == "B":
                 value += self.advance()  # 0
@@ -465,11 +465,11 @@ struct Lexer:
                     else:
                         break
                 return Token(TokenKind.INTEGER(), value, start_pos)
-        
+
         # Read decimal digits and separators
         while self.pos < len(self.input):
             c = self.current()
-            
+
             if c >= "0" and c <= "9":
                 value += self.advance()
             elif c == "_":
@@ -487,26 +487,26 @@ struct Lexer:
                     value += self.advance()
             else:
                 break
-        
+
         if is_float:
             return Token(TokenKind.FLOAT(), value, start_pos)
         else:
             return Token(TokenKind.INTEGER(), value, start_pos)
-    
+
     fn read_key(mut self) raises -> Token:
         """Read an unquoted key or boolean/datetime value.
-        
+
         Unquoted keys can contain: a-z, A-Z, 0-9, _, -
         Examples: name, snake_case, kebab-case, CamelCase
-        
+
         Also handles boolean keywords (true/false).
-        
+
         Returns:
             KEY, BOOLEAN, or DATETIME token.
         """
         var start_pos = Position(self.line, self.column)
         var value = String("")
-        
+
         while self.pos < len(self.input):
             var c = self.current()
             if (c >= "a" and c <= "z") or (c >= "A" and c <= "Z") or \
@@ -514,46 +514,46 @@ struct Lexer:
                 value += self.advance()
             else:
                 break
-        
+
         # Check for boolean values
         if value == "true" or value == "false":
             return Token(TokenKind.BOOLEAN(), value, start_pos)
-        
+
         # TODO: Detect datetime patterns (ISO 8601 with colons/dashes)
         # For now, treat as key and let parser handle datetime validation
-        
+
         return Token(TokenKind.KEY(), value, start_pos)
-    
+
     fn next_token(mut self) raises -> Token:
         """Get the next token from the input.
-        
+
         This is the main lexer logic that dispatches to specific readers
         based on the current character.
-        
+
         Returns:
             Next token in the stream.
         """
         self.skip_whitespace()
-        
+
         if self.pos >= len(self.input):
             return Token(TokenKind.EOF(), "", Position(self.line, self.column))
-        
+
         var c = self.current()
         var pos = Position(self.line, self.column)
-        
+
         # Newline (significant in TOML)
         if c == "\n":
             _ = self.advance()
             return Token(TokenKind.NEWLINE(), "\n", pos)
-        
+
         # Comment
         if c == "#":
             return self.read_comment()
-        
+
         # Strings (basic or literal)
         if c == '"' or c == "'":
             return self.read_string()
-        
+
         # Numbers and special floats (inf, nan)
         if (c >= "0" and c <= "9") or c == "+" or c == "-" or c == "i" or c == "n":
             # Check for special floats: inf, -inf, nan (must be standalone, not part of identifier)
@@ -574,7 +574,7 @@ struct Lexer:
                     return self.read_number()
             elif c >= "0" and c <= "9":
                 return self.read_number()
-        
+
         # Single-character punctuation
         if c == "=":
             _ = self.advance()
@@ -597,27 +597,27 @@ struct Lexer:
         if c == "}":
             _ = self.advance()
             return Token(TokenKind.RIGHT_BRACE(), "}", pos)
-        
+
         # Unquoted key or boolean
         return self.read_key()
-    
+
     fn is_hex_digit(self, c: String) -> Bool:
         """Check if character is a hexadecimal digit (0-9, a-f, A-F).
-        
+
         Args:
             c: Character to check.
-        
+
         Returns:
             True if c is a hex digit.
         """
         return (c >= "0" and c <= "9") or (c >= "a" and c <= "f") or (c >= "A" and c <= "F")
-    
+
     fn hex_to_int(self, hex_str: String) -> Int:
         """Convert a 2-character hex string to integer.
-        
+
         Args:
             hex_str: Two hex digits (e.g. "1F", "a0").
-        
+
         Returns:
             Integer value (0-255).
         """
@@ -635,24 +635,24 @@ struct Lexer:
                 digit_value = 0
             result = result * 16 + digit_value
         return result
-    
+
     fn tokenize(mut self) raises -> List[Token]:
         """Tokenise entire input into list of tokens.
-        
+
         This is the main public API for the lexer. It produces a complete
         list of tokens that can be consumed by the parser.
-        
+
         Returns:
             List of all tokens in the input, ending with EOF.
         """
         var tokens = List[Token]()
-        
+
         while True:
             var token = self.next_token()
             var is_eof = token.kind == TokenKind.EOF()
             tokens.append(token^)
-            
+
             if is_eof:
                 break
-        
+
         return tokens^

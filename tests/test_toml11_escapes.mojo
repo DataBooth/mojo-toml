@@ -14,7 +14,7 @@ fn test_escape_character() raises:
     # Double-escape for Mojo compiler, will be single backslash in string
     var toml = '''csi = "\\e["'''
     var data = parse(toml)
-    
+
     # backslash-e should parse to ESC character (0x1B)
     var csi = data["csi"].as_string()
     assert_equal(ord(csi[0]), 0x1B)
@@ -62,11 +62,11 @@ def main():
     """Run TOML 1.1 escape sequence tests."""
     from testing import TestSuite
     var suite = TestSuite()
-    
+
     suite.test[test_escape_character]()
     suite.test[test_xhh_escape_letter_a]()
     suite.test[test_xhh_escape_null_byte]()
     suite.test[test_xhh_invalid_single_digit]()
     suite.test[test_xhh_invalid_non_hex]()
-    
+
     suite^.run()

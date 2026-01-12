@@ -10,7 +10,7 @@ from collections import Dict, List
 
 fn compare_toml_values(left: TomlValue, right: TomlValue) raises -> Bool:
     """Compare two TomlValue instances for semantic equality.
-    
+
     Returns True if values are semantically equal (same type and value).
     Note: Dict order may differ, so we compare contents not string representation.
     """
@@ -58,13 +58,13 @@ fn compare_toml_dicts(left: Dict[String, TomlValue], right: Dict[String, TomlVal
     """Compare two TOML dictionaries for semantic equality."""
     if len(left) != len(right):
         return False
-    
+
     for entry in left.items():
         if not right.__contains__(entry.key):
             return False
         if not compare_toml_values(entry.value, right[entry.key]):
             return False
-    
+
     return True
 
 
@@ -76,11 +76,11 @@ version = "1.0.0"
 port = 8080
 debug = false
 """
-    
+
     var parsed1 = parse(original_toml)
     var written = to_toml(parsed1)
     var parsed2 = parse(written)
-    
+
     assert_true(compare_toml_dicts(parsed1, parsed2))
 
 
@@ -91,11 +91,11 @@ numbers = [1, 2, 3, 4, 5]
 colors = ["red", "green", "blue"]
 mixed = [1, "two", 3.0, true]
 """
-    
+
     var parsed1 = parse(original_toml)
     var written = to_toml(parsed1)
     var parsed2 = parse(written)
-    
+
     assert_true(compare_toml_dicts(parsed1, parsed2))
 
 
@@ -110,11 +110,11 @@ port = 5432
 user = "admin"
 enabled = true
 """
-    
+
     var parsed1 = parse(original_toml)
     var written = to_toml(parsed1)
     var parsed2 = parse(written)
-    
+
     assert_true(compare_toml_dicts(parsed1, parsed2))
 
 
@@ -129,11 +129,11 @@ port = 5432
 host = "replica.example.com"
 port = 5433
 """
-    
+
     var parsed1 = parse(original_toml)
     var written = to_toml(parsed1)
     var parsed2 = parse(written)
-    
+
     assert_true(compare_toml_dicts(parsed1, parsed2))
 
 
@@ -144,11 +144,11 @@ pos_infinity = inf
 neg_infinity = -inf
 not_a_number = nan
 """
-    
+
     var parsed1 = parse(original_toml)
     var written = to_toml(parsed1)
     var parsed2 = parse(written)
-    
+
     assert_true(compare_toml_dicts(parsed1, parsed2))
 
 
@@ -156,11 +156,11 @@ fn test_roundtrip_string_escapes() raises:
     """Test round-trip with escaped strings."""
     # Simple newline escape test
     var original_toml = 'message = "Hello\\nWorld"'
-    
+
     var parsed1 = parse(original_toml)
     var written = to_toml(parsed1)
     var parsed2 = parse(written)
-    
+
     assert_true(compare_toml_dicts(parsed1, parsed2))
 
 
@@ -169,11 +169,11 @@ fn test_roundtrip_nested_arrays() raises:
     var original_toml = """
 matrix = [[1, 2], [3, 4], [5, 6]]
 """
-    
+
     var parsed1 = parse(original_toml)
     var written = to_toml(parsed1)
     var parsed2 = parse(written)
-    
+
     assert_true(compare_toml_dicts(parsed1, parsed2))
 
 
@@ -198,33 +198,33 @@ host = "replica.db"
 port = 5433
 timeout = 45.0
 """
-    
+
     var parsed1 = parse(original_toml)
     var written = to_toml(parsed1)
     var parsed2 = parse(written)
-    
+
     assert_true(compare_toml_dicts(parsed1, parsed2))
 
 
 fn test_roundtrip_root_tables() raises:
     """Test round-trip with root-level tables."""
     var config = Dict[String, TomlValue]()
-    
+
     # Create tables that will be written as [sections]
     var point1 = Dict[String, TomlValue]()
     point1["x"] = TomlValue(10)
     point1["y"] = TomlValue(20)
-    
+
     var point2 = Dict[String, TomlValue]()
     point2["x"] = TomlValue(30)
     point2["y"] = TomlValue(40)
-    
+
     config["point1"] = TomlValue(point1^)
     config["point2"] = TomlValue(point2^)
-    
+
     var written = to_toml(config)
     var parsed = parse(written)
-    
+
     assert_true(compare_toml_dicts(config, parsed))
 
 
@@ -234,19 +234,19 @@ fn test_roundtrip_pixi_toml() raises:
     var content: String
     with open("pixi.toml", "r") as f:
         content = f.read()
-    
+
     # Parse it
     var parsed1 = parse(content)
-    
+
     # Write it back
     var written = to_toml(parsed1)
-    
+
     # Parse the written version
     var parsed2 = parse(written)
-    
+
     # Compare semantic equality
     assert_true(compare_toml_dicts(parsed1, parsed2))
-    
+
     # Verify key sections exist
     assert_true(parsed2.__contains__("workspace"))
     assert_true(parsed2.__contains__("tasks"))

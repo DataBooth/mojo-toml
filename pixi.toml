@@ -55,6 +55,11 @@ example-roundtrip = "mojo -I src examples/roundtrip.mojo"
 benchmark-mojo = "python benchmarks/run_mojo_benchmark.py"
 benchmark-python = "python benchmarks/compare_python.py"
 
+# Code quality tasks
+pre-commit = "pre-commit run --all-files"
+pre-commit-install = "pre-commit install"
+
 [dependencies]
 mojo = "*"
 tomli-w = ">=1.0.0,<2"  # For write benchmarks (tomllib is read-only)
+pre-commit = ">=4.5.1,<5"

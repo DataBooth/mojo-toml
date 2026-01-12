@@ -4,14 +4,14 @@ This module provides TOML parsing and writing capabilities without Python depend
 
 Example:
     from toml import parse, to_toml
-    
+
     # Parse TOML
     var config = parse('''
         [package]
         name = "mojo-toml"
         version = "0.1.0"
     ''')
-    
+
     # Write TOML
     var toml_str = to_toml(config)
 """

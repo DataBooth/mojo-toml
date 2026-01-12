@@ -17,7 +17,7 @@ max_line_length = 100
 allow_warnings = false
 strict_mode = true
 
-# Test configuration  
+# Test configuration
 test_threads = 8
 test_timeout = 300.0
 coverage_threshold = 80.0

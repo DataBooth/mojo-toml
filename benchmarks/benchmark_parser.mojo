@@ -27,16 +27,16 @@ enabled = true
 count = 42
 pi = 3.14159
 """
-    
+
     var iterations = 1000
     var start = perf_counter()
-    
+
     for i in range(iterations):
         var data = parse(toml_content)
-    
+
     var elapsed = perf_counter() - start
     var avg_time = elapsed / Float64(iterations)
-    
+
     print("Simple parse (5 keys):")
     print("  Total:", format_time(elapsed), "for", iterations, "iterations")
     print("  Average:", format_time(avg_time), "per parse")
@@ -62,16 +62,16 @@ port = 5433
 host = "0.0.0.0"
 port = 8080
 """
-    
+
     var iterations = 1000
     var start = perf_counter()
-    
+
     for i in range(iterations):
         var data = parse(toml_content)
-    
+
     var elapsed = perf_counter() - start
     var avg_time = elapsed / Float64(iterations)
-    
+
     print("\nNested tables (3 tables, 7 keys):")
     print("  Total:", format_time(elapsed), "for", iterations, "iterations")
     print("  Average:", format_time(avg_time), "per parse")
@@ -86,16 +86,16 @@ strings = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"]
 mixed = [1, "two", 3.0, true, [5, 6], {key = "value"}]
 nested = [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10]]
 """
-    
+
     var iterations = 1000
     var start = perf_counter()
-    
+
     for i in range(iterations):
         var data = parse(toml_content)
-    
+
     var elapsed = perf_counter() - start
     var avg_time = elapsed / Float64(iterations)
-    
+
     print("\nArrays (4 arrays, ~40 elements):")
     print("  Total:", format_time(elapsed), "for", iterations, "iterations")
     print("  Average:", format_time(avg_time), "per parse")
@@ -115,16 +115,16 @@ server.port = 8080
 server.ssl.enabled = true
 server.ssl.cert = "/path/to/cert"
 """
-    
+
     var iterations = 1000
     var start = perf_counter()
-    
+
     for i in range(iterations):
         var data = parse(toml_content)
-    
+
     var elapsed = perf_counter() - start
     var avg_time = elapsed / Float64(iterations)
-    
+
     print("\nDotted keys (9 keys creating nested structure):")
     print("  Total:", format_time(elapsed), "for", iterations, "iterations")
     print("  Average:", format_time(avg_time), "per parse")
@@ -189,16 +189,16 @@ authentication = ["jwt", "oauth"]
 caching = ["redis", "memcached"]
 monitoring = ["prometheus", "grafana"]
 """
-    
+
     var iterations = 500
     var start = perf_counter()
-    
+
     for i in range(iterations):
         var data = parse(toml_content)
-    
+
     var elapsed = perf_counter() - start
     var avg_time = elapsed / Float64(iterations)
-    
+
     print("\nLarge document (8 tables, 40+ keys, arrays, nested):")
     print("  Total:", format_time(elapsed), "for", iterations, "iterations")
     print("  Average:", format_time(avg_time), "per parse")
@@ -220,22 +220,22 @@ port = 5432
 host = "db2.example.com"
 port = 5433
 """
-    
+
     # Parse once
     var data = parse(toml_content)
-    
+
     # Benchmark accessing tables repeatedly
     var iterations = 10000
     var start = perf_counter()
-    
+
     for i in range(iterations):
         var db = data["database"].as_table()
         var primary = db["primary"].as_table()
         var host = primary["host"].as_string()
-    
+
     var elapsed = perf_counter() - start
     var avg_time = elapsed / Float64(iterations)
-    
+
     print("\nTable access (nested as_table() calls):")
     print("  Total:", format_time(elapsed), "for", iterations, "iterations")
     print("  Average:", format_time(avg_time), "per access")
@@ -247,16 +247,16 @@ fn benchmark_pixi_toml() raises:
     try:
         var path = Path("pixi.toml")
         var content = path.read_text()
-        
+
         var iterations = 100
         var start = perf_counter()
-        
+
         for i in range(iterations):
             var data = parse(content)
-        
+
         var elapsed = perf_counter() - start
         var avg_time = elapsed / Float64(iterations)
-        
+
         print("\nReal-world pixi.toml:")
         print("  Total:", format_time(elapsed), "for", iterations, "iterations")
         print("  Average:", format_time(avg_time), "per parse")
@@ -270,7 +270,7 @@ fn main() raises:
     print("=" * 60)
     print("mojo-toml Performance Benchmark")
     print("=" * 60)
-    
+
     benchmark_simple_parse()
     benchmark_nested_tables()
     benchmark_arrays()
@@ -278,7 +278,7 @@ fn main() raises:
     benchmark_large_document()
     benchmark_table_access()
     benchmark_pixi_toml()
-    
+
     print("\n" + "=" * 60)
     print("Benchmark Complete")
     print("=" * 60)

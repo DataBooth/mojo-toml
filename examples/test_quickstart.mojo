@@ -13,10 +13,10 @@ fn test_quickstart_app() raises:
     var content: String
     with open("examples/quickstart.toml", "r") as f:
         content = f.read()
-    
+
     var config = parse(content)
     var app = config["app"].as_table()
-    
+
     assert_equal(app["name"].as_string(), "QuickStart")
     assert_equal(app["version"].as_string(), "1.0.0")
     assert_equal(app["debug"].as_bool(), False)
@@ -27,10 +27,10 @@ fn test_quickstart_database() raises:
     var content: String
     with open("examples/quickstart.toml", "r") as f:
         content = f.read()
-    
+
     var config = parse(content)
     var db = config["database"].as_table()
-    
+
     assert_equal(db["host"].as_string(), "localhost")
     assert_equal(db["port"].as_int(), 5432)
     assert_equal(db["timeout"].as_float(), 30.5)
@@ -41,10 +41,10 @@ fn test_quickstart_features() raises:
     var content: String
     with open("examples/quickstart.toml", "r") as f:
         content = f.read()
-    
+
     var config = parse(content)
     var features = config["features"].as_table()["enabled"].as_array()
-    
+
     assert_equal(len(features), 3)
     assert_equal(features[0].as_string(), "auth")
     assert_equal(features[1].as_string(), "logging")
@@ -56,25 +56,25 @@ fn test_quickstart_complete() raises:
     var content: String
     with open("examples/quickstart.toml", "r") as f:
         content = f.read()
-    
+
     var config = parse(content)
-    
+
     # Verify all top-level keys exist
     assert_true(config["app"].is_table())
     assert_true(config["database"].is_table())
     assert_true(config["features"].is_table())
-    
+
     # Verify correct types
     var app = config["app"].as_table()
     assert_true(app["name"].is_string())
     assert_true(app["version"].is_string())
     assert_true(app["debug"].is_bool())
-    
+
     var db = config["database"].as_table()
     assert_true(db["host"].is_string())
     assert_true(db["port"].is_int())
     assert_true(db["timeout"].is_float())
-    
+
     var features = config["features"].as_table()["enabled"].copy()
     assert_true(features.is_array())
 

@@ -96,13 +96,13 @@ def format_rate(rate: float) -> str:
 def run_parse_comparison(name: str, toml_content: str, iterations: int = 1000) -> dict:
     """Run and display Python parsing benchmark. Returns result dict."""
     print(f"\n{name}:")
-    
+
     py_time, py_iters = benchmark_python_parse(toml_content, iterations)
     py_rate = py_iters / py_time
     py_avg = py_time / py_iters
-    
+
     print(f"  Python (tomllib):  {format_time(py_avg)} per parse  |  {format_rate(py_rate)}")
-    
+
     return {
         "Test": name,
         "Avg Time": format_time(py_avg),
@@ -114,13 +114,13 @@ def run_parse_comparison(name: str, toml_content: str, iterations: int = 1000) -
 def run_write_comparison(name: str, data: dict, iterations: int = 500) -> dict:
     """Run and display Python writing benchmark. Returns result dict."""
     print(f"\n{name}:")
-    
+
     py_time, py_iters = benchmark_python_write(data, iterations)
     py_rate = py_iters / py_time
     py_avg = py_time / py_iters
-    
+
     print(f"  Python (tomli_w):  {format_time(py_avg)} per write  |  {format_rate(py_rate)}")
-    
+
     return {
         "Test": name,
         "Avg Time": format_time(py_avg),
@@ -134,30 +134,30 @@ def main():
     print("=" * 70)
     print("Python TOML Baseline Benchmarks (tomllib + tomli_w)")
     print("=" * 70)
-    
+
     # Display system info
     print("\nSystem Information:")
     sys_info = get_system_info()
     print(format_system_info(sys_info))
     print(f"  Timestamp: {get_timestamp()}")
-    
+
     print("\nThese establish baseline performance for comparison with mojo-toml.")
     print("Run 'pixi run benchmark-mojo' to see mojo-toml performance.")
-    
+
     # Collect parse results
     print("\n\nParsing Benchmarks (tomllib):")
     print("=" * 70)
-    
+
     parse_results = []
     parse_results.append(run_parse_comparison("Simple document (5 keys)", SIMPLE_TOML, 1000))
     parse_results.append(run_parse_comparison("Nested tables (3 tables, 6 keys)", NESTED_TABLES, 1000))
     parse_results.append(run_parse_comparison("Array of tables (2 products)", ARRAY_OF_TABLES, 1000))
     parse_results.append(run_parse_comparison("Alternative number bases (3 numbers)", ALT_NUMBER_BASES, 1000))
-    
+
     # Collect write results
     print("\n\nWriting Benchmarks (tomli_w):")
     print("=" * 70)
-    
+
     write_results = []
     simple_data = {
         "title": "TOML Benchmark",
@@ -167,7 +167,7 @@ def main():
         "pi": 3.14159
     }
     write_results.append(run_write_comparison("Simple document (5 keys)", simple_data, 500))
-    
+
     nested_data = {
         "database": {
             "host": "localhost",
@@ -183,11 +183,11 @@ def main():
         }
     }
     write_results.append(run_write_comparison("Nested tables (3 tables, 6 keys)", nested_data, 500))
-    
+
     print("\n" + "=" * 70)
     print("Benchmark Complete")
     print("=" * 70)
-    
+
     # Generate and save markdown report
     report = generate_report(
         title="Python TOML Baseline Benchmarks",
@@ -196,10 +196,10 @@ def main():
         write_results=write_results,
         notes="These benchmarks use Python 3.11+ stdlib `tomllib` for parsing and `tomli_w` for writing. Run `pixi run benchmark-mojo` to see mojo-toml performance."
     )
-    
+
     report_dir = Path(__file__).parent / "reports"
     report_path = save_report(report, report_dir, "python_baseline.md")
-    
+
     print(f"\nMarkdown report saved to: {report_path}")
     print("\nNote: These are Python baseline numbers.")
     print("For mojo-toml performance, run: pixi run benchmark-mojo")

@@ -12,7 +12,7 @@ fn test_simple_dotted_key() raises:
     var data = parse("""
 a.b = "value"
 """)
-    
+
     assert_true(data["a"].is_table())
     var a_table = data["a"].as_table()
     assert_equal(a_table["b"].as_string(), "value")
@@ -24,7 +24,7 @@ fn test_multiple_dotted_keys() raises:
 a.b = "value1"
 a.c = "value2"
 """)
-    
+
     var a_table = data["a"].as_table()
     assert_equal(a_table["b"].as_string(), "value1")
     assert_equal(a_table["c"].as_string(), "value2")
@@ -35,7 +35,7 @@ fn test_deeply_dotted_key() raises:
     var data = parse("""
 a.b.c.d.e = 42
 """)
-    
+
     var a = data["a"].as_table()
     var b = a["b"].as_table()
     var c = b["c"].as_table()
@@ -50,10 +50,10 @@ fn test_dotted_key_with_table_header() raises:
 a.b = "nested"
 c = "flat"
 """)
-    
+
     var section = data["section"].as_table()
     assert_equal(section["c"].as_string(), "flat")
-    
+
     var a = section["a"].as_table()
     assert_equal(a["b"].as_string(), "nested")
 
@@ -65,7 +65,7 @@ server.host = "localhost"
 server.port = 8080
 server.enabled = true
 """)
-    
+
     var server = data["server"].as_table()
     assert_equal(server["host"].as_string(), "localhost")
     assert_equal(server["port"].as_int(), 8080)
@@ -77,7 +77,7 @@ fn test_dotted_key_with_inline_table() raises:
     var data = parse("""
 a.b = {c = "value"}
 """)
-    
+
     var a = data["a"].as_table()
     var b = a["b"].as_table()
     assert_equal(b["c"].as_string(), "value")
@@ -88,7 +88,7 @@ fn test_dotted_key_array() raises:
     var data = parse("""
 a.b = [1, 2, 3]
 """)
-    
+
     var a = data["a"].as_table()
     var arr = a["b"].as_array()
     assert_equal(len(arr), 3)

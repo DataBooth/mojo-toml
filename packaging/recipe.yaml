@@ -33,10 +33,10 @@ about:
   license_file: LICENSE
   summary: A native TOML 1.0 parser and writer for Mojo 🔥
   description: |
-    mojo-toml is the first native TOML 1.0 parser and writer for Mojo, enabling 
-    fast and efficient parsing and writing of TOML configuration files with zero 
+    mojo-toml is the first native TOML 1.0 parser and writer for Mojo, enabling
+    fast and efficient parsing and writing of TOML configuration files with zero
     Python dependencies.
-    
+
     Features:
     - Complete TOML 1.0 parser support (strings, numbers, arrays, tables)
     - TOML writer with full round-trip fidelity
@@ -46,8 +46,8 @@ about:
     - Clear error messages with line/column context
     - 137 comprehensive tests (96 parser + 41 writer)
     - Performance: 26μs for simple parses, 2ms for real-world files
-    
-    Perfect for configuration files, build systems, and any Mojo application 
+
+    Perfect for configuration files, build systems, and any Mojo application
     needing structured configuration.
   doc_url: https://github.com/DataBooth/mojo-toml/blob/main/README.md
   dev_url: https://github.com/DataBooth/mojo-toml

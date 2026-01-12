@@ -27,7 +27,7 @@ def run_test(test_file: Path, current: int, total: int) -> Tuple[bool, str]:
     """Run a single test file and return (success, output)."""
     test_name = format_test_name(test_file)
     print(f"[{current}/{total}] {test_name}")
-    
+
     try:
         result = subprocess.run(
             ["mojo", "-I", "src", str(test_file)],
@@ -35,15 +35,15 @@ def run_test(test_file: Path, current: int, total: int) -> Tuple[bool, str]:
             text=True,
             timeout=30
         )
-        
+
         # Print output (test framework shows pass/fail)
         if result.stdout:
             print(result.stdout)
         if result.stderr:
             print(result.stderr, file=sys.stderr)
-        
+
         return result.returncode == 0, result.stdout
-        
+
     except subprocess.TimeoutExpired:
         print(f"  ✗ TIMEOUT after 30s")
         return False, ""
@@ -58,30 +58,30 @@ def main():
     script_dir = Path(__file__).parent
     project_root = script_dir.parent
     tests_dir = project_root / "tests"
-    
+
     # Change to project root for consistent paths
     import os
     os.chdir(project_root)
-    
+
     print("=== mojo-toml Test Suite ===")
     print()
-    
+
     # Discover tests
     test_files = discover_tests(tests_dir)
     if not test_files:
         print("No test files found!")
         sys.exit(1)
-    
+
     print(f"Found {len(test_files)} test suites")
     print()
-    
+
     # Run tests
     failed = []
     for i, test_file in enumerate(test_files, 1):
         success, output = run_test(test_file, i, len(test_files))
         if not success:
             failed.append(test_file.name)
-    
+
     # Summary
     print()
     print("=" * 50)

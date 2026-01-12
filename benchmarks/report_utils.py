@@ -11,27 +11,27 @@ from machine_info import get_system_info, get_timestamp
 
 def format_benchmark_table(results: List[Dict], columns: List[str]) -> str:
     """Format benchmark results as markdown table.
-    
+
     Args:
         results: List of result dictionaries
         columns: Column names to display (keys from result dicts)
-    
+
     Returns:
         Markdown table string
     """
     if not results:
         return "No results available"
-    
+
     # Header
     header = "| " + " | ".join(columns) + " |"
     separator = "|" + "|".join(["--------"] * len(columns)) + "|"
-    
+
     # Rows
     rows = []
     for result in results:
         row_values = [str(result.get(col, "N/A")) for col in columns]
         rows.append("| " + " | ".join(row_values) + " |")
-    
+
     return "\n".join([header, separator] + rows)
 
 
@@ -43,24 +43,24 @@ def generate_report(
     notes: Optional[str] = None
 ) -> str:
     """Generate markdown benchmark report.
-    
+
     Args:
         title: Report title
         description: Brief description
         parse_results: List of parsing benchmark results
         write_results: List of writing benchmark results
         notes: Optional additional notes
-    
+
     Returns:
         Markdown formatted report
     """
     sys_info = get_system_info()
     timestamp = get_timestamp()
-    
+
     # Build system info section
     sys_info_lines = [f"- **{key}**: {value}" for key, value in sys_info.items()]
     sys_info_str = "\n".join(sys_info_lines)
-    
+
     # Build report
     lines = [
         f"# {title}",
@@ -73,7 +73,7 @@ def generate_report(
         sys_info_str,
         ""
     ]
-    
+
     # Parse results
     if parse_results:
         lines.extend([
@@ -85,7 +85,7 @@ def generate_report(
             ),
             ""
         ])
-    
+
     # Write results
     if write_results:
         lines.extend([
@@ -97,7 +97,7 @@ def generate_report(
             ),
             ""
         ])
-    
+
     # Notes
     if notes:
         lines.extend([
@@ -106,25 +106,25 @@ def generate_report(
             notes,
             ""
         ])
-    
+
     return "\n".join(lines)
 
 
 def save_report(content: str, output_dir: Path, filename: str) -> Path:
     """Save markdown report to file.
-    
+
     Args:
         content: Markdown content
         output_dir: Directory to save in
         filename: Output filename (should end in .md)
-    
+
     Returns:
         Path to saved file
     """
     output_dir.mkdir(parents=True, exist_ok=True)
     filepath = output_dir / filename
-    
+
     with open(filepath, 'w') as f:
         f.write(content)
-    
+
     return filepath
