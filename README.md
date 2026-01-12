@@ -116,6 +116,23 @@ fn main() raises:
 pixi run example-quickstart
 ```
 
+### Future: Type-Safe Configs 🎯
+
+We're tracking Mojo's reflection capabilities for automatic struct serialisation:
+
+```mojo
+// Future API (v0.8.0+)
+struct Config:
+    var name: String
+    var port: Int
+    var debug: Bool
+
+var config = from_toml[Config]("config.toml")  // No .as_*() needed!
+print(config.name)  // Direct field access
+```
+
+This will eliminate all the `.as_string()`, `.as_int()` boilerplate. Blocked on runtime field access in Mojo's reflection module. See [REFLECTION_SERIALIZATION.md](docs/planning/REFLECTION_SERIALIZATION.md) for details.
+
 ## Installation
 
 Choose the installation method that best fits your workflow:
