@@ -24,53 +24,61 @@ Skipped - jumped directly to v0.2.0 after community feedback enabled nested tabl
 
 ## Planned Features
 
-### v0.4.0 - TOML 1.0 Compliance
+### v0.5.0 - TOML 1.0 Complete + Partial 1.1 (2026-01-11) ✅
+- ✅ Array of tables: `[[section]]` with full nesting
+- ✅ Hex/Octal/Binary integers: `0xDEAD`, `0o755`, `0b1101`
+- ✅ TOML writer with round-trip support
+- ✅ Partial TOML 1.1: `\xHH` and `\e` escape sequences
+- ✅ Comprehensive benchmark system with machine info
+- ✅ 168 tests passing (127 parser + 41 writer)
+
+### v0.4.0 - TOML Writer (2026-01-08) ✅
+- ✅ Complete TOML writer implementation
+- ✅ String escaping and formatting
+- ✅ Array and table serialisation
+- ✅ Round-trip fidelity (parse → write → parse)
+- ✅ 137 tests passing
+
+### v0.6.0 - Remaining TOML 1.1
 **Target:** Q1 2026
 
 **Features:**
-- [ ] Array of tables: `[[array]]`
-- [ ] Hex/Octal/Binary integers: `0xDEAD`, `0o755`, `0b1101`
-- [ ] Native datetime parsing (currently returns ISO 8601 strings)
-- [ ] Additional spec compliance edge cases
-
-**Estimated Effort:** 5-7 days
-
-### v0.5.0 - Writer/Serialiser
-**Target:** Q2 2026
-
-**Features:**
-- [ ] Basic writer: `to_toml(Dict) -> String`
-- [ ] String escaping and formatting
-- [ ] Array and table serialisation
-- [ ] Round-trip testing (parse → write → parse)
-
-See [TOML_WRITER_DESIGN.md](TOML_WRITER_DESIGN.md) for detailed design.
-
-**Estimated Effort:**
-- MVP: 3-5 days
-- Complete: 8-12 days
-
-### v0.6.0 - Pretty Printing
-**Target:** Q2 2026
-
-**Features:**
-- [ ] Configurable writer options
-- [ ] Key ordering strategies
-- [ ] Multiline array formatting
-- [ ] Comment preservation (stretch goal)
+- [ ] Multiline inline tables with trailing commas
+- [ ] Optional seconds in datetime/time values
+- [ ] Complete TOML 1.1 compliance
 
 **Estimated Effort:** 3-5 days
 
-### v0.7.0 - Performance Optimisations
-**Target:** Q3 2026
+### v0.7.0 - Type-Safe Config (Trait-Based)
+**Target:** Q2 2026
 
 **Features:**
-- [ ] SIMD optimisations for parsing
-- [ ] String processing optimisations
-- [ ] Benchmarks vs Python tomli
-- [ ] Performance profiling tools
+- [ ] `Deserializable` trait for struct conversion
+- [ ] `Serializable` trait for struct serialisation
+- [ ] Example implementations and patterns
+- [ ] Documentation for manual struct mapping
 
-**Estimated Effort:** 7-10 days
+**Estimated Effort:** 3-5 days
+
+See [REFLECTION_SERIALIZATION.md](REFLECTION_SERIALIZATION.md) for analysis.
+
+### v0.8.0+ - Automatic Struct Serialisation (Future)
+**Target:** TBD (Blocked on Mojo reflection maturity)
+
+**Features:**
+- [ ] Automatic serialisation: `from_toml[T](str)`
+- [ ] Automatic deserialisation: `to_toml(struct)`
+- [ ] Type-safe config loading without manual mapping
+- [ ] Nested struct support
+
+**Blockers:**
+- Runtime field value access in Mojo reflection
+- Stable reflection API
+- Dynamic struct construction
+
+**Status:** Tracking Mojo stdlib development. See [REFLECTION_SERIALIZATION.md](REFLECTION_SERIALIZATION.md).
+
+**Estimated Effort:** 7-10 days (after blockers resolved)
 
 ## Long-Term Vision
 
