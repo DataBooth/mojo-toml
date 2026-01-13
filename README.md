@@ -287,6 +287,15 @@ Contributions welcome! This project is open source (MIT License).
 
 See [ROADMAP.md](docs/planning/ROADMAP.md) for areas where contributions would be most valuable.
 
+## Related Projects
+
+**Other Mojo Config Libraries:**
+- **[mojo-ini](https://github.com/databooth/mojo-ini)** - INI file parser with Python configparser compatibility
+- **[mojo-dotenv](https://github.com/databooth/mojo-dotenv)** - Load environment variables from .env files
+
+**Other TOML Parsers in Mojo:**
+- **[decimojo/tomlmojo](https://github.com/forfudan/decimojo/tree/main/src/tomlmojo)** - Lightweight TOML parser (~900 LOC, parser-only) embedded in the decimojo library. Good choice if you only need basic config reading for tests and don't need a standalone package or TOML 1.0 features.
+
 ## Acknowledgements
 
 Special thanks to:
