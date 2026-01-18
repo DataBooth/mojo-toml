@@ -276,7 +276,7 @@ See [PERFORMANCE.md](docs/PERFORMANCE.md) for detailed results and analysis.
 
 ## Contributing
 
-Contributions welcome! This project is open source (MIT License).
+Contributions welcome! This project is open source (Apache 2.0 License).
 
 **How to contribute:**
 1. Fork the repository
@@ -306,7 +306,7 @@ Special thanks to:
 
 ## License
 
-MIT License - See [LICENSE](LICENSE) for details.
+Apache 2.0 License - See [LICENSE](LICENSE) for details.
 
 ## Links
 
