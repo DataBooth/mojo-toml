@@ -1,0 +1,34 @@
+name: Validate Recipe
+
+on:
+  push:
+    paths:
+      - 'recipe.yaml'
+  pull_request:
+    paths:
+      - 'recipe.yaml'
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: prefix-dev/setup-pixi@v0.9.3
+        with:
+          pixi-version: v0.37.0
+
+      - name: Install rattler-build
+        run: pixi global install rattler-build
+
+      - name: Validate recipe schema
+        run: |
+          pixi exec rattler-build build \
+            --recipe recipe.yaml \
+            --channel conda-forge \
+            --channel https://conda.modular.com/max \
+            --channel https://prefix.dev/modular-community \
+            --render-only
+        env:
+          RATTLER_BUILD_COLOR: always
