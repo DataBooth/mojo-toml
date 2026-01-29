@@ -30,3 +30,4 @@ Thumbs.db
 # Pixi
 .pixi/
 pixi.lock
+output/
