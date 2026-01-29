@@ -449,3 +449,254 @@ Reference these for examples:
 ---
 
 *This guide is based on the experience of submitting mojo-toml v0.5.1 to modular-community in January 2026.*
+
+## Lessons Learned & Best Practices
+
+### ✅ Recipe Schema Requirements (Critical!)
+
+**Issue:** Recipe parser is strict about field names and structure.
+
+**Required schema (not optional):**
+```yaml
+# ❌ WRONG - Will fail CI
+test:
+  commands:
+    - test -f $PREFIX/lib/mojo/package/__init__.mojo
+
+about:
+  doc_url: https://github.com/user/package/blob/main/README.md
+  dev_url: https://github.com/user/package
+
+# ✅ CORRECT - Will pass CI  
+tests:
+  - script:
+      - test -f $PREFIX/lib/mojo/package/__init__.mojo
+
+about:
+  documentation: https://github.com/user/package/blob/main/README.md
+  repository: https://github.com/user/package
+```
+
+**Key differences:**
+- Use `tests:` (plural) not `test:`
+- Use `script:` block, not `commands:`
+- Tests must be a list (note the `-` before `script:`)
+- Use `documentation:` not `doc_url`
+- Use `repository:` not `dev_url`
+
+**Prevention:** Use local validation (see next section)
+
+### ✅ Local Validation Setup
+
+**Problem:** Schema errors aren't caught until CI runs, wasting time.
+
+**Solution:** Validate locally before submission.
+
+**Setup in your package repo:**
+
+1. Add validation script: [`scripts/validate-recipe.sh`](../scripts/validate-recipe.sh)
+2. Add GitHub Actions: [`.github/workflows/validate-recipe.yml`](../.github/workflows/validate-recipe.yml)
+3. Add to pre-commit:
+   ```yaml
+   - repo: local
+     hooks:
+       - id: validate-recipe
+         name: Validate recipe.yaml schema
+         entry: ./scripts/validate-recipe.sh
+         language: system
+         files: ^recipe\.yaml$
+         pass_filenames: false
+   ```
+
+**Usage:**
+```bash
+./scripts/validate-recipe.sh recipe.yaml
+```
+
+See [RECIPE_VALIDATION.md](RECIPE_VALIDATION.md) for complete setup guide.
+
+### ✅ Mojo Version Management
+
+**Best practice:** Use context variables for version management.
+
+**Recommended pattern:**
+```yaml
+context:
+  version: 0.5.1
+  mojo_version: "=0.25.7"  # Latest stable
+
+package:
+  name: mojo-package
+  version: ${{ version }}
+
+requirements:
+  build:
+    - mojo-compiler ${{ mojo_version }}
+  host:
+    - mojo-compiler ${{ mojo_version }}
+  run:
+    - ${{ pin_compatible('mojo-compiler') }}
+```
+
+**Benefits:**
+- Single place to update Mojo version
+- `pin_compatible()` allows patch updates (0.25.7 → 0.25.8)
+- Clear which version was tested
+
+**When to update:** When new stable Mojo releases (check [Mojo changelog](https://docs.modular.com/mojo/changelog/))
+
+### ✅ Pre-commit Hygiene
+
+**Issue:** Trailing whitespace, incorrect line endings cause CI failures.
+
+**Solution:** Install and run pre-commit in your package repos.
+
+**Setup:**
+```bash
+cd your-package-repo
+pixi run bash -c "pre-commit install"
+pixi run bash -c "pre-commit run --all-files"
+```
+
+**Common fixes pre-commit catches:**
+- Trailing whitespace
+- Missing final newlines
+- YAML/TOML syntax errors
+- Mixed line endings
+
+**Automate:** Pre-commit runs on every `git commit` once installed.
+
+### ✅ Git Tag Management
+
+**Critical:** Recipe `tag:` field must match an actual git tag in your repo.
+
+**Common mistake:**
+```yaml
+package:
+  version: 0.5.1
+
+source:
+  tag: v0.5.0  # ❌ Version mismatch!
+```
+
+**Correct approach:**
+```bash
+# 1. Make sure tag exists
+git tag v0.5.1
+git push --tags
+
+# 2. Then reference it in recipe
+source:
+  tag: v0.5.1  # ✅ Matches package version
+```
+
+**Workflow:**
+1. Commit all changes
+2. Create and push git tag: `git tag -a v0.5.1 -m "v0.5.1 - Description" && git push --tags`
+3. Update recipe.yaml with matching version/tag
+4. Submit PR to modular-community
+
+### ✅ Platform Considerations
+
+**Your packages are likely cross-platform:**
+
+If your package:
+- ✅ Ships pure Mojo source code
+- ✅ Has no platform-specific dependencies
+- ✅ Doesn't compile binaries during install
+
+**Consider adding:**
+```yaml
+build:
+  number: 0
+  noarch: generic  # Single build for all platforms
+```
+
+**Benefits:**
+- 3x faster CI (one build vs. three)
+- ~66% less storage
+- Faster user installs
+
+**When NOT to use `noarch`:**
+- Building `.mojopkg` files (platform-specific binaries)
+- Using platform-specific tools in build script
+- Running compiled tests
+
+See [PLATFORM_BUILDS.md](PLATFORM_BUILDS.md) for details.
+
+### ✅ PR Workflow Tips
+
+**After submitting PR:**
+
+1. **CI needs approval** - First-time contributors need maintainer approval to run workflows
+2. **Be patient** - CI runs take 5-15 minutes across 3 platforms
+3. **Watch for feedback** - Reviewers may request changes (schema, tests, documentation)
+4. **Update efficiently** - Fix issues, commit, push to same branch (PR auto-updates)
+
+**Common review requests:**
+- Add package image
+- Enable CodeQL scanning
+- Fix recipe schema (tests:, documentation:, repository:)
+- Update license to Apache-2.0 (if applicable)
+- Add missing test files
+
+**Iteration workflow:**
+```bash
+# 1. Fix locally first
+./scripts/validate-recipe.sh recipe.yaml
+
+# 2. Commit changes
+git add recipes/your-package/
+git commit -m "Address review feedback: fix schema"
+
+# 3. Push (PR updates automatically)
+git push origin add-your-package-v0.1.0
+```
+
+## Checklist Before Submission
+
+Use this checklist before creating your PR:
+
+**Your Package Repo:**
+- [ ] Git tag exists and pushed (e.g., `v0.5.1`)
+- [ ] CodeQL enabled with badge in README
+- [ ] Pre-commit hooks installed and passing
+- [ ] Tests pass locally
+- [ ] LICENSE file exists
+- [ ] Package image created (512×512 PNG)
+
+**Recipe Files:**
+- [ ] `recipe.yaml` validates locally (`./scripts/validate-recipe.sh recipe.yaml`)
+- [ ] Uses `tests:` (plural) with `script:` block
+- [ ] Uses `documentation:` and `repository:` (not `doc_url`/`dev_url`)
+- [ ] `tag:` matches package `version:`
+- [ ] `test_package.mojo` exists and tests core functionality
+- [ ] `image.png` exists (512×512 PNG)
+
+**PR Quality:**
+- [ ] Branch name: `add-PACKAGE-vX.Y.Z`
+- [ ] PR title clear: "Add package-name vX.Y.Z"
+- [ ] PR description includes features, use case, compliance checklist
+- [ ] All files committed and pushed
+
+## Resources
+
+**Official:**
+- [Modular Community Package Submission](https://www.modular.com/community/package-submission)
+- [rattler-build Documentation](https://prefix-dev.github.io/rattler-build/)
+- [Mojo Changelog](https://docs.modular.com/mojo/changelog/)
+
+**Package-Specific:**
+- [RECIPE_VALIDATION.md](RECIPE_VALIDATION.md) - Local validation setup
+- [PLATFORM_BUILDS.md](PLATFORM_BUILDS.md) - Cross-platform considerations
+- [ROADMAP.md](../ROADMAP.md) - Future improvements (noarch, etc.)
+
+**Community:**
+- [modular-community GitHub](https://github.com/modular/modular-community)
+- [Mojo Discord](https://discord.gg/modular)
+
+---
+
+**Document version:** 2.0  
+**Last updated:** 2026-01-29  
+**Maintainer:** @mjboothaus

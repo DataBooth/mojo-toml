@@ -10,3 +10,11 @@ repos:
       - id: mixed-line-ending
       - id: end-of-file-fixer
       - id: check-added-large-files
+  - repo: local
+    hooks:
+      - id: validate-recipe
+        name: Validate recipe.yaml schema
+        entry: ./scripts/validate-recipe.sh
+        language: system
+        files: ^recipe\.yaml$
+        pass_filenames: false
