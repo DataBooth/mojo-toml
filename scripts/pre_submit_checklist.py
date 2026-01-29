@@ -301,23 +301,23 @@ def check_package_install() -> List[CheckResult]:
         results.append(CheckResult("Package installation", True, "Package installs successfully"))
 
         # Verify files are present
-        package_name = PROJECT_ROOT.name
-        installed_path = (
+        # The recipe installs files under $PREFIX/lib/mojo/toml
+        installed_root = (
             test_project
             / ".pixi"
             / "envs"
             / "default"
             / "lib"
             / "mojo"
-            / package_name
         )
+        installed_toml = installed_root / "toml"
 
-        if installed_path.is_dir():
-            msg = "Package files installed correctly"
+        if installed_toml.is_dir():
+            msg = "Package files installed correctly (lib/mojo/toml)"
             success(msg)
             results.append(CheckResult("Package files present", True, msg))
         else:
-            msg = "Package files not found in environment"
+            msg = f"Package files not found in environment (expected {installed_toml})"
             error(msg)
             results.append(CheckResult("Package files present", False, msg))
 
