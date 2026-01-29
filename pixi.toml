@@ -64,3 +64,4 @@ mojo = "*"
 python = ">=3.11"  # Required for test runner and benchmarks
 tomli-w = ">=1.0.0,<2"  # For write benchmarks (tomllib is read-only)
 pre-commit = ">=4.5.1,<5"
+rattler-build = ">=0.55.1,<0.56"

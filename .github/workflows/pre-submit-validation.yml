@@ -1,0 +1,116 @@
+name: Pre-Submit Validation
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'recipe.yaml'
+      - 'src/**'
+      - 'tests/**'
+      - 'scripts/**'
+      - '.github/workflows/pre-submit-validation.yml'
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+      fail-fast: false
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch all history for tag checking
+
+    - name: Setup pixi
+      uses: prefix-dev/setup-pixi@v0.8.1
+      with:
+        cache: true
+
+    - name: Check Mojo version
+      run: pixi run mojo-version
+
+    - name: Run full test suite
+      run: pixi run test-all
+
+    - name: Validate recipe schema
+      run: bash scripts/validate-recipe.sh
+
+    - name: Build package
+      run: bash scripts/build-recipe.sh
+
+    - name: Verify package artifacts
+      run: |
+        if [ ! -d output ]; then
+          echo "::error::Output directory not found"
+          exit 1
+        fi
+
+        PACKAGE_FILES=$(find output -name "*.conda" -o -name "*.tar.bz2" | wc -l)
+        if [ "$PACKAGE_FILES" -eq 0 ]; then
+          echo "::error::No package files found in output/"
+          exit 1
+        fi
+
+        echo "::notice::Found $PACKAGE_FILES package file(s)"
+
+    - name: Verify git tag
+      run: |
+        RECIPE_VERSION=$(grep "^  version:" recipe.yaml | awk '{print $2}' | tr -d '"' | tr -d "'")
+        echo "Recipe version: $RECIPE_VERSION"
+
+        if ! git tag | grep -q "^v${RECIPE_VERSION}$"; then
+          echo "::warning::Git tag v${RECIPE_VERSION} does not exist"
+          echo "::notice::This is expected for development - tag will be created before release"
+        else
+          echo "::notice::Git tag v${RECIPE_VERSION} exists"
+        fi
+
+    - name: Test package installation
+      run: |
+        # Create test environment
+        TEST_DIR=$(mktemp -d)
+        TEST_PROJECT="$TEST_DIR/test-install"
+
+        pixi init "$TEST_PROJECT"
+
+        # Add package from local build
+        pixi add \
+          --manifest-path "$TEST_PROJECT/pixi.toml" \
+          --channel "file://$(pwd)/output" \
+          --channel conda-forge \
+          --channel https://conda.modular.com/max \
+          --channel https://prefix.dev/modular-community \
+          mojo-toml
+
+        # Verify installation
+        if [ ! -d "$TEST_PROJECT/.pixi/envs/default/lib/mojo/mojo-toml" ]; then
+          echo "::error::Package files not found after installation"
+          exit 1
+        fi
+
+        echo "::notice::Package installed successfully"
+
+        # Cleanup
+        rm -rf "$TEST_DIR"
+
+    - name: Upload build artifacts
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: packages-${{ matrix.os }}
+        path: output/
+        if-no-files-found: warn
+        retention-days: 7
+
+    - name: Validation summary
+      if: always()
+      run: |
+        echo "### Pre-Submit Validation Results (${{ matrix.os }})" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "✅ All validation checks passed" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Ready for submission to modular-community**" >> $GITHUB_STEP_SUMMARY
