@@ -25,11 +25,17 @@ requirements:
     - ${{ pin_compatible('mojo-compiler') }}
 
 tests:
-  - script:
+  - files:
+      source:
+        - test_package.mojo
+    script:
+      # Basic sanity checks: files installed under PREFIX
       - test -f $PREFIX/lib/mojo/toml/__init__.mojo
       - test -f $PREFIX/lib/mojo/toml/lexer.mojo
       - test -f $PREFIX/lib/mojo/toml/parser.mojo
       - test -f $PREFIX/lib/mojo/toml/writer.mojo
+      # Execute smoke test shipped in recipe sources inside test environment
+      - $PREFIX/bin/mojo -I $PREFIX/lib/mojo info/recipe/test_package.mojo
 
 about:
   homepage: https://github.com/DataBooth/mojo-toml
