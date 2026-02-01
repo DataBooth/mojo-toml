@@ -1,6 +1,6 @@
 [workspace]
 authors = ["Michael Booth <michael@databooth.com.au>"]
-channels = ["conda-forge", "https://conda.modular.com/max-nightly"]
+channels = ["conda-forge", "https://conda.modular.com/max"]
 name = "mojo-toml"
 platforms = ["osx-arm64", "linux-64"]
 version = "0.5.0"
@@ -45,6 +45,13 @@ test-all = "python scripts/run_tests.py"
 build-package = "mkdir -p dist && mojo package src/toml -o dist/toml.mojopkg"
 clean = "rm -rf dist __pycache__ .pytest_cache toml.mojopkg"
 
+# Release / validation tasks
+validate-recipe = "./scripts/validate-recipe.sh recipe.yaml"
+pre-submit = "python scripts/pre_submit_checklist.py"
+
+# External integration tasks
+clone-modular-community = "mkdir -p ~/code/github/external && cd ~/code/github/external && git clone https://github.com/modular-community/modular-community.git || (cd modular-community && git pull)"
+
 # Example tasks
 example-quickstart = "mojo -I src examples/quickstart.mojo"
 example-simple = "mojo -I src examples/simple.mojo"
@@ -60,7 +67,7 @@ pre-commit = "pre-commit run --all-files"
 pre-commit-install = "pre-commit install"
 
 [dependencies]
-mojo = "*"
+max = ">=25.7.0,<26"
 python = ">=3.11"  # Required for test runner and benchmarks
 tomli-w = ">=1.0.0,<2"  # For write benchmarks (tomllib is read-only)
 pre-commit = ">=4.5.1,<5"

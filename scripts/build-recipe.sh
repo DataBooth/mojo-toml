@@ -55,13 +55,14 @@ if [ -d "$OUTPUT_DIR" ]; then
 fi
 
 # Build the package
-info "Running rattler-build..."
+info "Running rattler-build (tests disabled; tests are covered by pixi test-all)..."
 if ! pixi exec rattler-build build \
     --recipe "$RECIPE_FILE" \
     --channel conda-forge \
     --channel https://conda.modular.com/max \
     --channel https://prefix.dev/modular-community \
-    --output-dir "$OUTPUT_DIR"; then
+    --output-dir "$OUTPUT_DIR" \
+    --test skip; then
     error "rattler-build failed"
 fi
 

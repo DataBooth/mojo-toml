@@ -18,9 +18,15 @@ import os
 import subprocess
 import sys
 import tempfile
+import argparse
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, List
+
+try:
+    import tomllib  # Python 3.11+
+except ModuleNotFoundError:  # pragma: no cover - fallback for older Pythons
+    import tomli as tomllib
 
 
 # Colours for output
@@ -36,6 +42,31 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SCRIPT_DIR = PROJECT_ROOT / "scripts"
 RECIPE_FILE = PROJECT_ROOT / "recipe.yaml"
 OUTPUT_DIR = PROJECT_ROOT / "output"
+PIXl_MANIFEST = PROJECT_ROOT / "pixi.toml"
+
+
+def get_package_name() -> str:
+    """Best-effort detection of the package name from pixi.toml.
+
+    We use [workspace].name if available. If pixi.toml is missing or malformed,
+    fall back to the repository directory name.
+    """
+
+    try:
+        if PIXl_MANIFEST.is_file():
+            data = tomllib.loads(PIXl_MANIFEST.read_text(encoding="utf-8"))
+            workspace = data.get("workspace") or {}
+            name = workspace.get("name")
+            if isinstance(name, str) and name.strip():
+                return name.strip()
+    except Exception:
+        # Non-fatal – we'll just fall back to the directory name
+        pass
+
+    return PROJECT_ROOT.name
+
+
+PACKAGE_NAME = get_package_name()
 
 
 @dataclass
@@ -65,7 +96,9 @@ def section(title: str) -> None:
     print(f"{BOLD}{BLUE}{line}{NC}")
 
 
-def run_command(cmd: List[str], *, check_name: str) -> subprocess.CompletedProcess:
+def run_command(
+    cmd: List[str], *, check_name: str, cwd: Path | None = None
+) -> subprocess.CompletedProcess:
     """Run a command, returning the CompletedProcess without raising.
 
     Stdout/stderr are inherited so the user sees streaming output.
@@ -74,7 +107,7 @@ def run_command(cmd: List[str], *, check_name: str) -> subprocess.CompletedProce
     """
 
     try:
-        return subprocess.run(cmd, cwd=PROJECT_ROOT, check=False)
+        return subprocess.run(cmd, cwd=cwd or PROJECT_ROOT, check=False)
     except FileNotFoundError:
         error(f"Required command not found while running '{' '.join(cmd)}'")
         # Use 127 (command not found) by convention
@@ -258,7 +291,7 @@ def check_package_install() -> List[CheckResult]:
             results.append(CheckResult("Package installation", False, msg))
             return results
 
-        # Configure channels for the test project so mojo-toml can be resolved
+        # Configure channels for the test project so the local package can be resolved
         manifest_path = test_project / "pixi.toml"
         cmd_channels = [
             "pixi",
@@ -288,9 +321,12 @@ def check_package_install() -> List[CheckResult]:
             "add",
             "--manifest-path",
             str(manifest_path),
-            "mojo-toml",
+            PACKAGE_NAME,
         ]
-        cp_add = run_command(cmd_add, check_name="pixi add mojo-toml from configured channels")
+        cp_add = run_command(
+            cmd_add,
+            check_name=f"pixi add {PACKAGE_NAME} from configured channels",
+        )
         if cp_add.returncode != 0:
             msg = "Package installation failed"
             error(msg)
@@ -313,7 +349,7 @@ def check_package_install() -> List[CheckResult]:
         installed_toml = installed_root / "toml"
 
         if installed_toml.is_dir():
-            msg = "Package files installed correctly (lib/mojo/toml)"
+            msg = f"{PACKAGE_NAME} files installed correctly (lib/mojo/toml)"
             success(msg)
             results.append(CheckResult("Package files present", True, msg))
         else:
@@ -330,6 +366,72 @@ def print_header() -> None:
     print(f"{BOLD}{GREEN}║         Pre-Submission Validation Checklist                  ║{NC}")
     print(f"{BOLD}{GREEN}╚══════════════════════════════════════════════════════════════╝{NC}")
     print()
+
+
+def resolve_modular_community_dir(args: argparse.Namespace) -> Path:
+    """Determine the modular-community repo location.
+
+    Precedence:
+    1. --modular-community CLI argument
+    2. MODULAR_COMMUNITY_DIR environment variable
+    3. Default to ~/code/github/external/modular-community
+    """
+
+    if getattr(args, "modular_community", None):
+        return Path(args.modular_community).expanduser()
+
+    env_value = os.getenv("MODULAR_COMMUNITY_DIR")
+    if env_value:
+        return Path(env_value).expanduser()
+
+    return Path.home() / "code" / "github" / "external" / "modular-community"
+
+
+def check_modular_community_build_all(repo_dir: Path) -> List[CheckResult]:
+    """Run `pixi run build-all` in the modular-community repository.
+
+    This mirrors the CI pipeline used by modular-community to validate
+    recipes and ensures our local recipe passes the same build process.
+    """
+
+    section("CHECK 6: Running modular-community pixi run build-all")
+
+    if not repo_dir.exists():
+        msg = (
+            "modular-community repo not found at "
+            f"{repo_dir} (set MODULAR_COMMUNITY_DIR or use --modular-community)"
+        )
+        error(msg)
+        return [CheckResult("modular-community build-all", False, msg)]
+
+    pixi_manifest = repo_dir / "pixi.toml"
+    if not pixi_manifest.is_file():
+        msg = f"No pixi.toml found in modular-community repo at {repo_dir}"
+        error(msg)
+        return [CheckResult("modular-community build-all", False, msg)]
+
+    info(f"Using modular-community repo at {repo_dir}")
+
+    cp = run_command(["pixi", "run", "build-all"],
+                     check_name="modular-community pixi run build-all",
+                     cwd=repo_dir)
+
+    if cp.returncode == 0:
+        success("modular-community pixi run build-all completed successfully")
+        return [
+            CheckResult(
+                "modular-community build-all",
+                True,
+                "modular-community pixi run build-all completed successfully",
+            )
+        ]
+
+    msg = (
+        "modular-community pixi run build-all failed. "
+        "Inspect the output above and modular-community logs for details."
+    )
+    error(msg)
+    return [CheckResult("modular-community build-all", False, msg)]
 
 
 def print_summary(results: List[CheckResult], recipe_version: str | None) -> int:
@@ -377,7 +479,43 @@ def print_summary(results: List[CheckResult], recipe_version: str | None) -> int
     return 1
 
 
-def main() -> int:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    if argv is None:
+        argv = sys.argv[1:]
+
+    # If -- is present, pixi might be passing it through.
+    # Argparse treats -- as end of options, but we don't have positional args.
+    # If we see -- followed by our known flags, we can just remove --.
+    if "--" in argv:
+        argv = [arg for arg in argv if arg != "--"]
+
+    parser = argparse.ArgumentParser(
+        description=(
+            "Run the mojo-toml pre-submission checklist, including optional "
+            "modular-community pixi run build-all validation."
+        )
+    )
+    parser.add_argument(
+        "--modular-community",
+        dest="modular_community",
+        metavar="PATH",
+        help=(
+            "Path to a local clone of the modular-community repository. "
+            "If omitted, MODULAR_COMMUNITY_DIR or the default "
+            "~/code/github/external/modular-community will be used."
+        ),
+    )
+    parser.add_argument(
+        "--skip-modular-community",
+        action="store_true",
+        help="Skip the modular-community pixi run build-all check.",
+    )
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
+
     os.chdir(PROJECT_ROOT)
     print_header()
 
@@ -389,6 +527,10 @@ def main() -> int:
     all_results.extend(check_build_and_artifacts())
     all_results.extend(check_git_tag())
     all_results.extend(check_package_install())
+
+    if not args.skip_modular_community:
+        modular_repo = resolve_modular_community_dir(args)
+        all_results.extend(check_modular_community_build_all(modular_repo))
 
     recipe_version = get_recipe_version(RECIPE_FILE)
     return print_summary(all_results, recipe_version)

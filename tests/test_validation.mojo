@@ -10,7 +10,7 @@ from toml import parse
 fn test_duplicate_key_error() raises:
     """Test that duplicate keys at root level raise an error."""
     with assert_raises(contains="Duplicate key"):
-        var data = parse("""
+        _ = parse("""
 name = "first"
 name = "second"
 """)
@@ -19,7 +19,7 @@ name = "second"
 fn test_duplicate_key_in_table() raises:
     """Test that duplicate keys in table sections raise an error."""
     with assert_raises(contains="Duplicate key"):
-        var data = parse("""
+        _ = parse("""
 [section]
 key = "first"
 key = "second"
@@ -29,7 +29,7 @@ key = "second"
 fn test_duplicate_nested_key() raises:
     """Test that duplicate nested keys raise an error."""
     with assert_raises(contains="Duplicate key"):
-        var data = parse("""
+        _ = parse("""
 a.b.c = 1
 a.b.c = 2
 """)
@@ -55,7 +55,7 @@ key = "value2"
 fn test_redefining_table_as_value() raises:
     """Test that redefining a table as a value raises an error."""
     with assert_raises(contains="not a table"):
-        var data = parse("""
+        _ = parse("""
 [database]
 host = "localhost"
 
@@ -67,7 +67,7 @@ port = 5432
 fn test_trailing_comma_in_inline_table() raises:
     """Test that trailing comma in inline table raises error."""
     with assert_raises(contains="Trailing comma"):
-        var data = parse("""
+        _ = parse("""
 server = {host = "localhost", port = 8080,}
 """)
 
