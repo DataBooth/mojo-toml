@@ -192,7 +192,8 @@ struct Lexer:
     """
 
     var input: String
-    var pos: Int      # Current position in input
+    var chars: List[String]
+    var pos: Int      # Current position in input (index into chars)
     var line: Int     # Current line number (1-indexed)
     var column: Int   # Current column number (1-indexed)
 
@@ -203,6 +204,11 @@ struct Lexer:
             input: TOML content to tokenise.
         """
         self.input = input
+        self.chars = List[String]()
+        # Build a list of single-character strings using codepoint_slices to
+        # avoid relying on String.__iter__ semantics in Mojo 0.26.1.
+        for slice in input.codepoint_slices():
+            self.chars.append(String(slice))
         self.pos = 0
         self.line = 1
         self.column = 1
@@ -213,9 +219,9 @@ struct Lexer:
         Returns:
             Current character or empty string if at EOF.
         """
-        if self.pos >= len(self.input):
+        if self.pos >= len(self.chars):
             return ""
-        return String(self.input[self.pos])
+        return self.chars[self.pos]
 
     fn peek(self, offset: Int = 1) -> String:
         """Look ahead at character without consuming it.
@@ -229,9 +235,9 @@ struct Lexer:
             Character at pos + offset or empty string if out of bounds.
         """
         var peek_pos = self.pos + offset
-        if peek_pos >= len(self.input):
+        if peek_pos >= len(self.chars):
             return ""
-        return String(self.input[peek_pos])
+        return self.chars[peek_pos]
 
     fn advance(mut self) -> String:
         """Consume and return current character.
@@ -241,10 +247,10 @@ struct Lexer:
         Returns:
             Current character or empty string if at EOF.
         """
-        if self.pos >= len(self.input):
+        if self.pos >= len(self.chars):
             return ""
 
-        var c = String(self.input[self.pos])
+        var c = self.chars[self.pos]
         self.pos += 1
 
         if c == "\n":
@@ -261,7 +267,7 @@ struct Lexer:
         Newlines are significant in TOML for separating key-value pairs,
         so we preserve them as NEWLINE tokens.
         """
-        while self.pos < len(self.input):
+        while self.pos < len(self.chars):
             var c = self.current()
             if c == " " or c == "\t":
                 _ = self.advance()
@@ -281,7 +287,7 @@ struct Lexer:
         _ = self.advance()  # Skip #
 
         var comment = String("")
-        while self.pos < len(self.input):
+        while self.pos < len(self.chars):
             var c = self.current()
             if c == "\n":
                 break
@@ -317,7 +323,7 @@ struct Lexer:
         var value = String("")
         var is_literal = (quote_char == "'")
 
-        while self.pos < len(self.input):
+        while self.pos < len(self.chars):
             var c = self.current()
 
             # Check for closing quotes
@@ -426,7 +432,7 @@ struct Lexer:
                 value += self.advance()  # 0
                 value += self.advance()  # x
                 # Read hex digits and underscores
-                while self.pos < len(self.input):
+                while self.pos < len(self.chars):
                     c = self.current()
                     if (c >= "0" and c <= "9") or (c >= "a" and c <= "f") or (c >= "A" and c <= "F"):
                         value += self.advance()
@@ -441,7 +447,7 @@ struct Lexer:
                 value += self.advance()  # 0
                 value += self.advance()  # o
                 # Read octal digits and underscores
-                while self.pos < len(self.input):
+                while self.pos < len(self.chars):
                     c = self.current()
                     if c >= "0" and c <= "7":
                         value += self.advance()
@@ -456,7 +462,7 @@ struct Lexer:
                 value += self.advance()  # 0
                 value += self.advance()  # b
                 # Read binary digits and underscores
-                while self.pos < len(self.input):
+                while self.pos < len(self.chars):
                     c = self.current()
                     if c == "0" or c == "1":
                         value += self.advance()
@@ -467,7 +473,7 @@ struct Lexer:
                 return Token(TokenKind.INTEGER(), value, start_pos)
 
         # Read decimal digits and separators
-        while self.pos < len(self.input):
+        while self.pos < len(self.chars):
             c = self.current()
 
             if c >= "0" and c <= "9":
@@ -507,7 +513,7 @@ struct Lexer:
         var start_pos = Position(self.line, self.column)
         var value = String("")
 
-        while self.pos < len(self.input):
+        while self.pos < len(self.chars):
             var c = self.current()
             if (c >= "a" and c <= "z") or (c >= "A" and c <= "Z") or \
                (c >= "0" and c <= "9") or c == "_" or c == "-":
@@ -535,7 +541,7 @@ struct Lexer:
         """
         self.skip_whitespace()
 
-        if self.pos >= len(self.input):
+        if self.pos >= len(self.chars):
             return Token(TokenKind.EOF(), "", Position(self.line, self.column))
 
         var c = self.current()
@@ -622,8 +628,13 @@ struct Lexer:
             Integer value (0-255).
         """
         var result = 0
-        for i in range(len(hex_str)):
-            var c = String(hex_str[i])
+        # Avoid direct String indexing (0.26.1 changed __getitem__ semantics).
+        # Convert to a list of single-character strings for stable indexing.
+        var chars = List[String]()
+        for slice in hex_str.codepoint_slices():
+            chars.append(String(slice))
+        for i in range(len(chars)):
+            var c = chars[i]
             var digit_value: Int
             if c >= "0" and c <= "9":
                 digit_value = ord(c) - ord("0")

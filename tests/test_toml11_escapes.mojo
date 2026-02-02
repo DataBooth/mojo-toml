@@ -17,8 +17,12 @@ fn test_escape_character() raises:
 
     # backslash-e should parse to ESC character (0x1B)
     var csi = data["csi"].as_string()
-    assert_equal(ord(csi[0]), 0x1B)
-    assert_equal(String(csi[1]), "[")
+    # Avoid direct String indexing under Mojo 0.26.1: convert to list of 1-char strings.
+    var csi_chars = List[String]()
+    for slice in csi.codepoint_slices():
+        csi_chars.append(String(slice))
+    assert_equal(ord(csi_chars[0]), 0x1B)
+    assert_equal(csi_chars[1], "[")
 
 
 fn test_xhh_escape_letter_a() raises:
@@ -33,7 +37,10 @@ fn test_xhh_escape_null_byte() raises:
     var toml = '''str = "null:\\x00end"'''
     var data = parse(toml)
     var s = data["str"].as_string()
-    assert_equal(ord(s[5]), 0)  # Null byte at position 5
+    var s_chars = List[String]()
+    for slice in s.codepoint_slices():
+        s_chars.append(String(slice))
+    assert_equal(ord(s_chars[5]), 0)  # Null byte at position 5
 
 
 fn test_xhh_invalid_single_digit() raises:

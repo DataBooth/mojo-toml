@@ -37,7 +37,7 @@ timeout = 30.5
     print("Example 2: Parse fixture file")
     print("-" * 50)
 
-    var file_content: String = ""
+    var file_content: String
     with open("fixtures/app_config.toml", "r") as f:
         file_content = f.read()
 

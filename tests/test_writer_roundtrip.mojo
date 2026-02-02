@@ -247,8 +247,8 @@ fn test_roundtrip_pixi_toml() raises:
     # Compare semantic equality
     assert_true(compare_toml_dicts(parsed1, parsed2))
 
-    # Verify key sections exist
-    assert_true(parsed2.__contains__("workspace"))
+    # Verify key sections exist (pixi 0.37 uses [project] not [workspace])
+    assert_true(parsed2.__contains__("project"))
     assert_true(parsed2.__contains__("tasks"))
     assert_true(parsed2.__contains__("dependencies"))
 

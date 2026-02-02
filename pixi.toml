@@ -54,10 +54,7 @@ pre-submit-modular-community = "python scripts/pre_submit_checklist.py"
 clone-modular-community = "mkdir -p ~/code/github/external && cd ~/code/github/external && git clone https://github.com/modular-community/modular-community.git || (cd modular-community && git pull)"
 
 # Example tasks
-example-quickstart = "mojo -I src examples/quickstart.mojo"
-example-simple = "mojo -I src examples/simple.mojo"
-example-pixi = "mojo -I src examples/parse_pixi.mojo"
-example-roundtrip = "mojo -I src examples/roundtrip.mojo"
+examples-all = "python scripts/run_examples.py"
 
 # Benchmark tasks
 benchmark-mojo = "python benchmarks/run_mojo_benchmark.py"

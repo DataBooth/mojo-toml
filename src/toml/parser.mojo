@@ -503,16 +503,25 @@ struct Parser:
         """
         var clean_value = value_str
 
+        # Short values cannot have base prefixes; treat as decimal
+        if len(clean_value) <= 2:
+            return atol(clean_value)
+
+        # Convert to a list of single-character strings to avoid direct String indexing.
+        var chars = List[String]()
+        for slice in clean_value.codepoint_slices():
+            chars.append(String(slice))
+
         # Check for hex prefix (0x or 0X)
-        if len(clean_value) > 2 and clean_value[0] == "0" and (clean_value[1] == "x" or clean_value[1] == "X"):
+        if chars[0] == "0" and (chars[1] == "x" or chars[1] == "X"):
             return self.parse_hex(clean_value)
 
         # Check for octal prefix (0o or 0O)
-        elif len(clean_value) > 2 and clean_value[0] == "0" and (clean_value[1] == "o" or clean_value[1] == "O"):
+        elif chars[0] == "0" and (chars[1] == "o" or chars[1] == "O"):
             return self.parse_octal(clean_value)
 
         # Check for binary prefix (0b or 0B)
-        elif len(clean_value) > 2 and clean_value[0] == "0" and (clean_value[1] == "b" or clean_value[1] == "B"):
+        elif chars[0] == "0" and (chars[1] == "b" or chars[1] == "B"):
             return self.parse_binary(clean_value)
 
         # Decimal (default)
@@ -529,8 +538,14 @@ struct Parser:
         """
         # Skip "0x" or "0X" prefix
         var result = 0
-        for i in range(2, len(hex_str)):
-            var c = hex_str[i]
+        # Avoid direct String indexing for 0.26.1 by iterating from index 2.
+        var index = 0
+        for slice in hex_str.codepoint_slices():
+            if index < 2:
+                index += 1
+                continue
+            var c = String(slice)
+            index += 1
 
             if c >= "0" and c <= "9":
                 var digit = ord(c) - ord("0")
@@ -558,8 +573,13 @@ struct Parser:
         """
         # Skip "0o" or "0O" prefix
         var result = 0
-        for i in range(2, len(octal_str)):
-            var c = octal_str[i]
+        var index = 0
+        for slice in octal_str.codepoint_slices():
+            if index < 2:
+                index += 1
+                continue
+            var c = String(slice)
+            index += 1
 
             if c >= "0" and c <= "7":
                 var digit = ord(c) - ord("0")
@@ -581,8 +601,13 @@ struct Parser:
         """
         # Skip "0b" or "0B" prefix
         var result = 0
-        for i in range(2, len(binary_str)):
-            var c = binary_str[i]
+        var index = 0
+        for slice in binary_str.codepoint_slices():
+            if index < 2:
+                index += 1
+                continue
+            var c = String(slice)
+            index += 1
 
             if c == "0" or c == "1":
                 var digit = ord(c) - ord("0")

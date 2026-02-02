@@ -61,8 +61,9 @@ struct Writer:
         """
         var result = String("")
 
-        for i in range(len(s)):
-            var c = s[i]
+        # Avoid direct String iteration under 0.26.1 by using codepoint_slices().
+        for slice in s.codepoint_slices():
+            var c = String(slice)
             var code = ord(c)
 
             if c == "\\":
@@ -79,7 +80,9 @@ struct Writer:
                 result += "\\e"
             elif code < 32 or code == 127:  # Other control chars (TOML 1.1)
                 # Use \xHH for control characters
-                var hex_digits = "0123456789abcdef"
+                var hex_digits = List[String]()
+                for slice in "0123456789abcdef".codepoint_slices():
+                    hex_digits.append(String(slice))
                 result += "\\x"
                 result += hex_digits[code // 16]
                 result += hex_digits[code % 16]
