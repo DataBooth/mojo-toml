@@ -1,79 +1,108 @@
-# mojo-toml migration notes: moving towards Mojo 1.0.0b1
-This post captures the first migration tranche for `mojo-toml`: aligning packaging/tooling and modernising standard-library imports so the repository is easier to keep compatible on the 1.0 beta line.
+# mojo-* migration notes: what we learned moving to Mojo 1.0.0b1
+This write-up captures the full multi-repo migration wave across the DataBooth `mojo-*` libraries. The goal was practical: get everything onto a stable Mojo 1.0 beta workflow without breaking day-to-day development speed.
 
-## Why this migration was started
-The project had started moving to a 1.0-era toolchain, but some repository flows were still mixed between old and new conventions. The main risks were:
-- hidden CI/local breakage due to inconsistent recipe path assumptions,
-- ongoing migration friction across sibling `mojo-*` repositories,
-- stale docs and hooks teaching contributors the wrong command flow.
+## Why this wave mattered
+We were carrying a mix of old and new assumptions across repositories:
+- recipe validation paths diverged between local scripts, CI, and pre-commit,
+- several packages still depended on legacy import/syntax patterns,
+- test harnesses worked in one repo and failed in another for avoidable reasons,
+- and docs were increasingly out of sync with real commands.
 
-## What was changed in this tranche
-### 1) Canonical recipe path and flow
-We standardised on `packaging/recipe.yaml` as the single recipe source and aligned the operational paths around it:
-- `pixi.toml` task `validate-recipe`,
-- `scripts/validate-recipe.sh`,
-- `scripts/build-recipe.sh`,
-- `scripts/pre_submit_checklist.py`,
-- `.github/workflows/pre-submit-validation.yml`,
-- `.github/workflows/validate-recipe.yml`,
-- `.pre-commit-config.yaml`,
-- docs that describe validation and pre-submit.
+In short, this was operational debt, not just code debt.
 
-### 2) Mojo stdlib import modernisation
-We migrated maintained `.mojo` files from legacy imports to `std.*` paths:
-- `from collections import ...` → `from std.collections import ...`
-- `from pathlib import Path` → `from std.pathlib import Path`
+## What we standardised across repositories
+## 1) Packaging path consistency
+For packaging-focused repos, we standardised on `packaging/recipe.yaml` and pushed that path through:
+- `pixi.toml` tasks,
+- build/validation scripts,
+- pre-submit checklists,
+- pre-commit hooks,
+- workflow triggers,
+- and docs.
 
-Applied across core modules, key tests, examples, benchmarks, and dev helper tests.
+Repos where this was applied in this tranche:
+- `mojo-toml`
+- `mojo-ini`
+- `mojo-yaml`
+- `mojo-dotenv`
+- `mojo-asciichart`
 
-### 3) Documentation alignment
-We updated migration-sensitive docs to reflect the current packaging layout and toolchain assumptions, reducing copy/paste drift for future repos.
+## 2) Mojo 1.0 compatibility fixes
+The recurring upgrade pattern was:
+- move legacy imports to `std.*` where needed,
+- remove or replace APIs removed in 1.0 beta,
+- align tests with checked-raises semantics (`raises` where assertion helpers may raise),
+- and tighten task definitions so local validation matches real usage.
 
-## Pitfalls encountered (and how to avoid them)
-1. **Path drift between scripts and workflows**
-   Scripts were not always using the same recipe location as workflows. Fix by setting one canonical recipe path and threading it through every entry point.
-2. **Package installation assertions can silently rot**
-   One workflow checked the wrong install directory shape for this package. Keep install assertions based on actual package layout (`lib/mojo/toml` here), not package name guesswork.
-3. **Docs can lag after operational refactors**
-   Validation docs and quick-start snippets often become stale first. Treat docs updates as required in the same PR as tooling changes.
+## 3) Validation discipline
+Every repo was migrated with repo-native validation, not assumptions. Typical command sets included:
+- `pixi run test-all` (or equivalent),
+- targeted benchmark/example smoke runs where tests are limited,
+- `pixi run validate-recipe` for packaging repos,
+- and Python syntax checks where checklist scripts changed.
 
-## Repeatable checklist for other repositories
-Use this for:
+## Repo-by-repo findings
+## mojo-ini / mojo-yaml / mojo-dotenv / mojo-asciichart
+These four were the cleanest high-leverage wins:
+- recipe-path drift resolved end-to-end,
+- pre-submit scripts aligned,
+- docs updated in the same change set,
+- validations passed with only non-blocking pixi/lock-format warnings.
+
+The important lesson: fixing operational path drift early removes most migration friction.
+
+## mojo-benchsuite
+Primary issue was framework-level Mojo compatibility in benchmark plumbing:
+- modernised collection imports,
+- removed brittle Python subprocess pattern used for version probing,
+- confirmed benchmark tasks (`run-example`, `bench-adaptive`, `bench-comprehensive`) still execute.
+
+This repo highlighted that benchmark frameworks are often more API-sensitive than the benchmark kernels themselves.
+
+## mojo-data-star
+This was the sharpest 1.0 API delta in the wave:
+- old tensor/layout + PythonObject conversion paths no longer compiled cleanly,
+- migrated to a simpler `MandelbrotGrid` representation for native Mojo tests,
+- updated checked-raises usage in Mojo tests,
+- rebased pixi constraints to the MAX 26.x line.
+
+Key takeaway: where interop APIs are still moving, simpler data models reduce upgrade risk substantially.
+
+## mojo-fireplace
+This repo needed a pragmatic test-flow stabilisation rather than full code modernisation:
+- ensured Mojo CLI availability in pixi env via MAX channel/dependency,
+- migrated Mojo test files to `std.testing` + checked-raises signatures,
+- fixed AoC string parsing that relied on deprecated slicing behaviour,
+- removed obsolete `Stringable` trait usage in Game of Life `gridv1`,
+- fixed Python interop test collection by setting `PYTHONPATH` in task execution.
+
+Outcome: the consolidated `pixi run test` path now passes on the migrated branch for the covered matrix.
+
+## The patterns that repeatedly bit us
+1. **Checked raises in tests**
+   Assertion helpers can raise; test functions and `main()` often need `raises` now.
+2. **String and conversion API drift**
+   Legacy convenience idioms (for example old slicing/conversion shortcuts) are now stricter.
+3. **Tooling path drift beats code drift**
+   More breakage came from scripts/hooks/workflows disagreeing than from core algorithms.
+4. **Interop wrappers age faster than core logic**
+   The pure compute kernels were usually fine; wrapper layers were where most compile churn appeared.
+
+## Practical migration playbook (kept short)
+1. Branch: `feature/mojo-1.0b1-migration`
+2. Fix packaging/tooling path consistency first.
+3. Run tests, then fix compile/runtime issues in clusters.
+4. Update docs in the same commit range.
+5. Re-run full validation commands before push.
+
+## Current status
+Migration commits are pushed on `feature/mojo-1.0b1-migration` for:
+- `mojo-ini`
+- `mojo-yaml`
+- `mojo-dotenv`
 - `mojo-asciichart`
 - `mojo-benchsuite`
 - `mojo-data-star`
-- `mojo-dotenv`
 - `mojo-fireplace`
-- `mojo-ini`
-- `mojo-yaml`
 
-1. **Create a migration branch**
-   - `git checkout -b feature/mojo-1.0b1-migration`
-2. **Pick one canonical recipe path**
-   - Prefer `packaging/recipe.yaml` (or explicitly decide otherwise), then update all scripts/workflows/hooks/docs to match.
-3. **Update Mojo import paths in `.mojo` files**
-   - Migrate `collections`/`pathlib` imports to `std.collections`/`std.pathlib` as applicable.
-4. **Run baseline validation**
-   - `pixi run mojo-version`
-   - `pixi run test-all`
-   - `pixi run examples-all` (if present)
-   - `pixi run validate-recipe`
-   - `pixi run pre-submit -- --skip-modular-community` (or project equivalent)
-5. **Fix failures by cluster**
-   - Tooling path issues first, then import/syntax issues, then behavioural regressions.
-6. **Update docs in same change set**
-   - Any file containing migration-sensitive commands should be updated before merge.
-7. **Capture repo-specific deltas**
-   - Record exceptions (for example package install layout differences) so the next repo migration is faster.
-
-## Current status (post-tranche update)
-- Migration-to-beta validation for `mojo-toml` is complete and green.
-- Version progression metadata has been aligned to `0.9.1`.
-- `scripts/pre_submit_checklist.py` now supports both `context.version` and `package.version` recipe layouts.
-- Operational docs were synchronised in both `docs/*.md` and `docs/planning/*.md`, while preserving intentionally historical release artefacts.
-
-## Next tranche for mojo-toml
-The next tranche should focus on optional warning-reduction and syntax modernisation polish (`fn`→`def` where required by target compiler behaviour), then re-run the full validation flow and fold findings back into this playbook.
-
-## Next execution focus across sibling repos
-The migration queue starts with repos that are closest to the completed `mojo-toml` pattern (`mojo-ini`, `mojo-yaml`, `mojo-dotenv`, `mojo-asciichart`) before moving to higher-variance repos (`mojo-benchsuite`, `mojo-data-star`, `mojo-fireplace`).
+Alongside the earlier `mojo-toml` completion work, this closes the current in-scope migration wave.
