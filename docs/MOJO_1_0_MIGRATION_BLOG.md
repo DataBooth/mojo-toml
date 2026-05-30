@@ -94,6 +94,33 @@ Outcome: the consolidated `pixi run test` path now passes on the migrated branch
 3. Run tests, then fix compile/runtime issues in clusters.
 4. Update docs in the same commit range.
 5. Re-run full validation commands before push.
+## Distribution policy for the 1.0 beta line
+To avoid users accidentally resolving to older modular-community builds, we are treating the DataBooth `0.9.1` line as the canonical Mojo 1.0 beta release stream.
+
+Pragmatic rule for now:
+- prefer DataBooth-hosted `0.9.1` packages for the migrated `mojo-*` libraries,
+- pin versions to `>=0.9.1,<0.10`,
+- and do not rely on older modular-community artefacts for these packages.
+
+Example consumer setup:
+
+```toml
+[project]
+channels = [
+  "conda-forge",
+  "https://conda.modular.com/max",
+  "<DATABOOTH_CHANNEL_URL>"
+]
+
+[dependencies]
+mojo-toml = ">=0.9.1,<0.10"
+mojo-ini = ">=0.9.1,<0.10"
+mojo-yaml = ">=0.9.1,<0.10"
+mojo-dotenv = ">=0.9.1,<0.10"
+mojo-asciichart = ">=0.9.1,<0.10"
+```
+
+If modular-community remains in a project for other packages, keep explicit version pins for these DataBooth libraries so old 26.x-era builds are not selected.
 
 ## Current status
 Migration commits are pushed on `feature/mojo-1.0b1-migration` for:
