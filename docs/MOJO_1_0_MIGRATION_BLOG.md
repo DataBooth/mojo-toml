@@ -1,10 +1,28 @@
++++
+title = "Mojo 1.0 beta migration wave: what changed, what worked, and what’s next"
+date = "2026-05-30"
+draft = false
+[taxonomies]
+tags = [
+  "Mojo 🔥",
+  "Mojo 1.0 Beta",
+  "Library Migration",
+  "Release Engineering",
+  "Open Source",
+  "Packaging",
+  "Testing",
+  "Refactoring"
+]
+[extra]
+comment = true
++++
 # Mojo 1.0 beta migration wave: what changed, what worked, and what’s next
 ## Exec summary
-Over this migration wave, I moved the in-scope DataBooth `mojo-*` libraries onto one consistent Mojo 1.0 beta baseline.
+Over this migration wave, I moved my `mojo-*` libraries onto one consistent Mojo 1.0 beta baseline.
 
 The goal was practical: reduce release friction, keep each package usable, and stop the “works in repo A, breaks in repo B” cycle.
 
-The result is a cleaner operational path, better cross-repo consistency, and one shared `0.9.1` beta line with matching tags.
+The result is a cleaner operational path, better cross-repo consistency, and a clear public release set on the `0.9.1` beta line.
 
 This post keeps the main story concise. Full technical notes are in the appendices.
 
@@ -46,20 +64,34 @@ In practice:
 - pin versions explicitly (`==0.9.1` is the safest default),
 - use modular-community for other dependencies only where needed.
 
-## Current status
-This closes the current in-scope migration wave across:
+## Public release scope for this wave
+This public release now focuses on five libraries:
 - `mojo-toml`
 - `mojo-ini`
 - `mojo-yaml`
 - `mojo-dotenv`
 - `mojo-asciichart`
-- `mojo-benchsuite`
+
+Deferred for follow-up releases:
+- `mojo-benchsuite` (I want to expand practical use cases and release guidance first)
 - `mojo-data-star`
 - `mojo-fireplace`
 
+## Current status
+This closes the current migration execution wave across:
+- `mojo-toml`
+- `mojo-ini`
+- `mojo-yaml`
+- `mojo-dotenv`
+- `mojo-asciichart`
+- `mojo-benchsuite` (deferred from this public release)
+- `mojo-data-star` (deferred from this public release)
+- `mojo-fireplace` (deferred from this public release)
+
 ## What happens next
 Near term, the plan stays simple and low-risk:
-- keep the `0.9.1` beta line clean,
+- publish and support the five-library `0.9.1` release cleanly,
+- expand `mojo-benchsuite` use-case content before its public release,
 - keep release mechanics repeatable,
 - revisit packaging strategy once the ecosystem settles further.
 
@@ -73,16 +105,19 @@ Near term, the plan stays simple and low-risk:
 - Updated compatibility in benchmark plumbing.
 - Removed brittle subprocess-based version probing.
 - Confirmed benchmark task execution after migration.
+- Public release deferred until richer practical use cases are documented.
 
 ### `mojo-data-star`
 - Reworked the most brittle 1.0 beta interop surface.
 - Simplified data-shape handling to reduce API churn exposure.
 - Brought Mojo/Python test paths back into a stable green state.
+- Public release deferred for now.
 
 ### `mojo-fireplace`
 - Stabilised Mojo test flow and environment assumptions.
 - Updated test patterns for checked raises and current stdlib usage.
 - Fixed practical runtime and test-path issues that blocked reliable local validation.
+- Public release deferred for now.
 
 ## Appendix B: Practical migration sequence used
 1. Create or switch to `feature/mojo-1.0b1-migration`.
@@ -92,15 +127,16 @@ Near term, the plan stays simple and low-risk:
 5. Update docs in the same change set.
 6. Re-run full validation before push.
 
-## Appendix C: Consumer install policy example
-For projects consuming the DataBooth beta-line releases:
+## Appendix C: Consumer install policy examples
+### Option 1: Packaged installs via a DataBooth channel (recommended)
+For packaged releases, use one package channel URL plus explicit pins:
 
 ```toml
 [project]
 channels = [
   "conda-forge",
   "https://conda.modular.com/max",
-  "<DATABOOTH_CHANNEL_URL>"
+  "<DATABOOTH_CONDA_CHANNEL_URL>"
 ]
 
 [dependencies]
@@ -111,4 +147,27 @@ mojo-dotenv = "==0.9.1"
 mojo-asciichart = "==0.9.1"
 ```
 
+Important: `<DATABOOTH_CONDA_CHANNEL_URL>` is the package index/channel endpoint, not individual GitHub repository URLs.
+
 If modular-community is present for other packages, explicit pins prevent accidental resolution to older incompatible builds for these libraries.
+
+### Option 2: Source consumption from GitHub repos (follow-up or experimental)
+If you want to consume directly from source, add each library repo and include its `src` path when running Mojo:
+
+```bash
+git submodule add https://github.com/databooth/mojo-toml vendor/mojo-toml
+git submodule add https://github.com/databooth/mojo-ini vendor/mojo-ini
+git submodule add https://github.com/databooth/mojo-yaml vendor/mojo-yaml
+git submodule add https://github.com/databooth/mojo-dotenv vendor/mojo-dotenv
+git submodule add https://github.com/databooth/mojo-asciichart vendor/mojo-asciichart
+```
+
+```bash
+mojo \
+  -I vendor/mojo-toml/src \
+  -I vendor/mojo-ini/src \
+  -I vendor/mojo-yaml/src \
+  -I vendor/mojo-dotenv/src \
+  -I vendor/mojo-asciichart/src \
+  your_app.mojo
+```
