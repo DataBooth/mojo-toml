@@ -14,7 +14,7 @@ The modular-community channel allows you to distribute your Mojo packages so the
 
 Before submitting, ensure your package has:
 
-- ✅ **Git tags for releases** (e.g., `v0.5.0`)
+- ✅ **Git tags for releases** (e.g., `v0.9.1`)
 - ✅ **LICENSE file** in repository root
 - ✅ **README.md** with clear documentation
 - ✅ **Tests** that can be run to verify the package works
@@ -57,7 +57,7 @@ git pull origin main
 git checkout -b add-YOURPACKAGE-v0.1.0
 ```
 
-**Naming convention**: `add-YOURPACKAGE-vX.Y.Z` (e.g., `add-mojo-toml-v0.5.1`)
+**Naming convention**: `add-YOURPACKAGE-vX.Y.Z` (e.g., `add-mojo-toml-v0.9.1`)
 
 ### Step 2: Create Recipe Directory Structure
 
@@ -78,11 +78,11 @@ Use this template and customize for your package:
 ```yaml
 package:
   name: mojo-toml
-  version: 0.5.1
+  version: 0.9.1
 
 source:
   git: https://github.com/DataBooth/mojo-toml.git
-  tag: v0.5.0  # Git tag in your repo
+  tag: v0.9.1  # Git tag in your repo
 
 build:
   number: 0  # Increment for same version, reset to 0 for new version
@@ -93,17 +93,17 @@ build:
 
 requirements:
   build:
-    - mojo >=25.1
+    - mojo-compiler =1.0.0b1
   host:
-    - mojo >=25.1
+    - mojo-compiler =1.0.0b1
   run:
-    - mojo >=25.1
+    - ${{ pin_compatible('mojo-compiler') }}
 
-test:
-  commands:
-    # Verify files were installed correctly
-    - test -f $PREFIX/lib/mojo/toml/__init__.mojo
-    - test -f $PREFIX/lib/mojo/toml/parser.mojo
+tests:
+  - script:
+      # Verify files were installed correctly
+      - test -f $PREFIX/lib/mojo/toml/__init__.mojo
+      - test -f $PREFIX/lib/mojo/toml/parser.mojo
 
 about:
   homepage: https://github.com/DataBooth/mojo-toml
@@ -120,8 +120,8 @@ about:
     - TOML writer with full round-trip fidelity
     - 168 comprehensive tests (100% passing)
     - Zero Python dependencies
-  doc_url: https://github.com/DataBooth/mojo-toml/blob/main/README.md
-  dev_url: https://github.com/DataBooth/mojo-toml
+  documentation: https://github.com/DataBooth/mojo-toml/blob/main/README.md
+  repository: https://github.com/DataBooth/mojo-toml
 
 extra:
   recipe-maintainers:
@@ -133,7 +133,7 @@ extra:
 **Context Variables** (optional but recommended):
 ```yaml
 context:
-  version: "0.5.1"
+  version: "0.9.1"
   
 package:
   version: ${{ version }}  # Reference context variable
@@ -158,7 +158,7 @@ package:
 - `build`: Tools needed during build
 - `host`: Runtime dependencies for building
 - `run`: Runtime dependencies for users
-- Use `${{ pin_compatible('max') }}` to lock MAX version compatibility
+- Use `${{ pin_compatible('mojo-compiler') }}` to lock Mojo compiler compatibility
 
 **Test Commands**:
 - Verify installed files exist
@@ -280,7 +280,7 @@ gh pr create \
 
 ## Updating Your Package
 
-### For New Version (e.g., 0.5.0 → 0.5.1)
+### For New Version (e.g., 0.9.0 → 0.9.1)
 
 ```bash
 cd modular-community
@@ -288,16 +288,16 @@ git checkout main
 git pull origin main
 
 # Create new branch for updated version
-git checkout -b add-YOURPACKAGE-v0.5.1
+git checkout -b add-YOURPACKAGE-v0.9.1
 
 # Update recipe.yaml
-# - Change package.version to 0.5.1
-# - Change source.tag to v0.5.1 (or appropriate tag)
+# - Change package.version to 0.9.1
+# - Change source.tag to v0.9.1 (or appropriate tag)
 # - Reset build.number to 0
 
 git add recipes/YOURPACKAGE/recipe.yaml
-git commit -m "Update YOURPACKAGE to v0.5.1"
-git push origin add-YOURPACKAGE-v0.5.1
+git commit -m "Update YOURPACKAGE to v0.9.1"
+git push origin add-YOURPACKAGE-v0.9.1
 
 # Create new PR
 gh pr create --repo modular/modular-community ...
@@ -311,7 +311,7 @@ gh pr create --repo modular/modular-community ...
 
 git add recipes/YOURPACKAGE/recipe.yaml
 git commit -m "Fix YOURPACKAGE recipe: description of fix"
-git push origin add-YOURPACKAGE-v0.5.1
+git push origin add-YOURPACKAGE-v0.9.1
 ```
 
 ## Common Issues & Solutions
@@ -341,8 +341,8 @@ git push origin add-YOURPACKAGE-vX.Y.Z-v2
 **Problem**: When to increment build number vs version?
 
 **Solution**:
-- **New version** (0.5.0 → 0.5.1): Reset `build.number` to `0`
-- **Recipe fix** (same 0.5.1): Increment `build.number` (0 → 1 → 2)
+- **New version** (0.9.0 → 0.9.1): Reset `build.number` to `0`
+- **Recipe fix** (same 0.9.1): Increment `build.number` (0 → 1 → 2)
 - **New PR for same version**: Usually keep `build.number` at `0`
 
 ### Issue: License identifier unclear
@@ -412,7 +412,7 @@ Users can then import and use it in their Mojo projects!
 
 Before submitting, verify:
 
-- [ ] Git tag exists for version (e.g., `v0.5.1`)
+- [ ] Git tag exists for version (e.g., `v0.9.1`)
 - [ ] LICENSE file in repository
 - [ ] CodeQL scanning enabled
 - [ ] CodeQL badge in README
@@ -448,7 +448,7 @@ Reference these for examples:
 
 ---
 
-*This guide is based on the experience of submitting mojo-toml v0.5.1 to modular-community in January 2026.*
+*This guide is based on the experience of submitting mojo-toml v0.9.1 to modular-community in January 2026.*
 
 ## Lessons Learned & Best Practices
 
@@ -504,13 +504,13 @@ about:
          name: Validate recipe.yaml schema
          entry: ./scripts/validate-recipe.sh
          language: system
-         files: ^recipe\.yaml$
+         files: ^packaging/recipe\\.yaml$
          pass_filenames: false
    ```
 
 **Usage:**
 ```bash
-./scripts/validate-recipe.sh recipe.yaml
+./scripts/validate-recipe.sh packaging/recipe.yaml
 ```
 
 See [RECIPE_VALIDATION.md](RECIPE_VALIDATION.md) for complete setup guide.
@@ -522,8 +522,8 @@ See [RECIPE_VALIDATION.md](RECIPE_VALIDATION.md) for complete setup guide.
 **Recommended pattern:**
 ```yaml
 context:
-  version: 0.5.1
-  mojo_version: "=0.25.7"  # Latest stable
+  version: 0.9.1
+  mojo_version: "=1.0.0b1"  # Current migration target
 
 package:
   name: mojo-package
@@ -540,7 +540,7 @@ requirements:
 
 **Benefits:**
 - Single place to update Mojo version
-- `pin_compatible()` allows patch updates (0.25.7 → 0.25.8)
+- `pin_compatible()` allows compatible patch/minor updates within your selected compiler series
 - Clear which version was tested
 
 **When to update:** When new stable Mojo releases (check [Mojo changelog](https://docs.modular.com/mojo/changelog/))
@@ -573,26 +573,26 @@ pixi run bash -c "pre-commit run --all-files"
 **Common mistake:**
 ```yaml
 package:
-  version: 0.5.1
+  version: 0.9.1
 
 source:
-  tag: v0.5.0  # ❌ Version mismatch!
+  tag: v0.9.0  # ❌ Version mismatch!
 ```
 
 **Correct approach:**
 ```bash
 # 1. Make sure tag exists
-git tag v0.5.1
+git tag v0.9.1
 git push --tags
 
 # 2. Then reference it in recipe
 source:
-  tag: v0.5.1  # ✅ Matches package version
+  tag: v0.9.1  # ✅ Matches package version
 ```
 
 **Workflow:**
 1. Commit all changes
-2. Create and push git tag: `git tag -a v0.5.1 -m "v0.5.1 - Description" && git push --tags`
+2. Create and push git tag: `git tag -a v0.9.1 -m "v0.9.1 - Description" && git push --tags`
 3. Update recipe.yaml with matching version/tag
 4. Submit PR to modular-community
 
@@ -643,7 +643,7 @@ See [PLATFORM_BUILDS.md](PLATFORM_BUILDS.md) for details.
 **Iteration workflow:**
 ```bash
 # 1. Fix locally first
-./scripts/validate-recipe.sh recipe.yaml
+./scripts/validate-recipe.sh packaging/recipe.yaml
 
 # 2. Commit changes
 git add recipes/your-package/
@@ -658,7 +658,7 @@ git push origin add-your-package-v0.1.0
 Use this checklist before creating your PR:
 
 **Your Package Repo:**
-- [ ] Git tag exists and pushed (e.g., `v0.5.1`)
+- [ ] Git tag exists and pushed (e.g., `v0.9.1`)
 - [ ] CodeQL enabled with badge in README
 - [ ] Pre-commit hooks installed and passing
 - [ ] Tests pass locally
@@ -666,7 +666,7 @@ Use this checklist before creating your PR:
 - [ ] Package image created (512×512 PNG)
 
 **Recipe Files:**
-- [ ] `recipe.yaml` validates locally (`./scripts/validate-recipe.sh recipe.yaml`)
+- [ ] `packaging/recipe.yaml` validates locally (`./scripts/validate-recipe.sh packaging/recipe.yaml`)
 - [ ] Uses `tests:` (plural) with `script:` block
 - [ ] Uses `documentation:` and `repository:` (not `doc_url`/`dev_url`)
 - [ ] `tag:` matches package `version:`
@@ -689,7 +689,7 @@ Use this checklist before creating your PR:
 **Package-Specific:**
 - [RECIPE_VALIDATION.md](RECIPE_VALIDATION.md) - Local validation setup
 - [PLATFORM_BUILDS.md](PLATFORM_BUILDS.md) - Cross-platform considerations
-- [ROADMAP.md](../ROADMAP.md) - Future improvements (noarch, etc.)
+- [ROADMAP.md](planning/ROADMAP.md) - Future improvements (noarch, etc.)
 
 **Community:**
 - [modular-community GitHub](https://github.com/modular/modular-community)

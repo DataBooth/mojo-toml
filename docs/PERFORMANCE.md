@@ -1,8 +1,8 @@
 # Performance Characteristics
 
-This document explains the performance characteristics of mojo-toml v0.5.0 and the copying behaviour inherent in Mojo's ownership model.
+This document explains the performance characteristics of mojo-toml v0.9.1 and the copying behaviour inherent in Mojo's ownership model.
 
-## Benchmark Results (v0.5.0)
+## Benchmark Results (v0.9.1)
 
 Performance measurements on Apple M1 Max (macOS). See `benchmarks/benchmark_parser.mojo` for Mojo benchmarks and `benchmarks/compare_python.py` for Python baselines.
 

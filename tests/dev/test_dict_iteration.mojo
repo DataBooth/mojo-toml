@@ -1,6 +1,6 @@
 """Test if Dict iteration works without [] dereference operator."""
 
-from collections import Dict
+from std.collections import Dict
 
 fn main() raises:
     var data = Dict[String, String]()

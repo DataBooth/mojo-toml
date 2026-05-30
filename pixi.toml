@@ -1,9 +1,9 @@
-[project]
+[workspace]
 authors = ["Michael Booth <michael@databooth.com.au>"]
 channels = ["conda-forge", "https://conda.modular.com/max"]
 name = "mojo-toml"
 platforms = ["linux-64", "linux-aarch64", "osx-arm64"]
-version = "0.5.0"
+version = "0.9.1"
 
 [activation]
 env = { MOJO_PATH = "$PIXI_PROJECT_ROOT/src" }
@@ -46,7 +46,7 @@ build-package = "mkdir -p dist && mojo package src/toml -o dist/toml.mojopkg"
 clean = "rm -rf dist __pycache__ .pytest_cache toml.mojopkg"
 
 # Release / validation tasks
-validate-recipe = "./scripts/validate-recipe.sh recipe.yaml"
+validate-recipe = "./scripts/validate-recipe.sh packaging/recipe.yaml"
 pre-submit = "python scripts/pre_submit_checklist.py"
 pre-submit-modular-community = "python scripts/pre_submit_checklist.py"
 
@@ -65,7 +65,7 @@ pre-commit = "pre-commit run --all-files"
 pre-commit-install = "pre-commit install"
 
 [dependencies]
-max = ">=26.1.0,<27"
+mojo = "==1.0.0b1"
 python = ">=3.11,<4"  # Required for test runner and benchmarks
 tomli-w = ">=1.0.0,<2"  # For write benchmarks (tomllib is read-only)
 pre-commit = ">=4.5.1,<5"

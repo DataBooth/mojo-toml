@@ -1,6 +1,6 @@
 # Recipe Validation for modular-community
 
-This guide explains how to validate your `recipe.yaml` locally before submitting to modular-community, ensuring it passes CI on the first try.
+This guide explains how to validate your `packaging/recipe.yaml` locally before submitting to modular-community, ensuring it passes CI on the first try.
 
 ## Why Validate Locally?
 
@@ -27,27 +27,27 @@ modular-community uses `rattler-build` to parse and build packages. Running the 
 Run the validation script from your package root:
 
 ```bash
-./scripts/validate-recipe.sh recipe.yaml
+./scripts/validate-recipe.sh packaging/recipe.yaml
 ```
 
 This runs the exact same validation as modular-community CI in `--render-only` mode (no actual build).
 
 **Example output:**
 ```
-🔍 Validating recipe.yaml against modular-community schema...
+🔍 Validating packaging/recipe.yaml against modular-community schema...
 
 🏗️  Running rattler-build validation...
 ✅ Recipe validation passed!
 
-Your recipe.yaml follows the modular-community schema.
+Your recipe file follows the modular-community schema.
 It should pass CI when submitted.
 ```
 
 ### Method 2: GitHub Actions (Automated)
 
 The `.github/workflows/validate-recipe.yml` workflow runs automatically when you:
-- Push changes to `recipe.yaml`
-- Create a PR that modifies `recipe.yaml`
+- Push changes to `packaging/recipe.yaml`
+- Create a PR that modifies `packaging/recipe.yaml`
 
 View results in the "Actions" tab of your repo.
 
@@ -57,7 +57,7 @@ For advanced users who want full control:
 
 ```bash
 pixi exec rattler-build build \
-    --recipe recipe.yaml \
+    --recipe packaging/recipe.yaml \
     --channel conda-forge \
     --channel https://conda.modular.com/max \
     --channel https://prefix.dev/modular-community \
@@ -123,10 +123,10 @@ repos:
   - repo: local
     hooks:
       - id: validate-recipe
-        name: Validate recipe.yaml
+        name: Validate packaging/recipe.yaml
         entry: ./scripts/validate-recipe.sh
         language: system
-        files: ^recipe\.yaml$
+        files: ^packaging/recipe\.yaml$
         pass_filenames: false
 ```
 
@@ -137,9 +137,9 @@ Then install: `pre-commit install`
 Add to `justfile`:
 
 ```just
-# Validate recipe.yaml against modular-community schema
+# Validate packaging/recipe.yaml against modular-community schema
 validate-recipe:
-    ./scripts/validate-recipe.sh recipe.yaml
+    ./scripts/validate-recipe.sh packaging/recipe.yaml
 ```
 
 Usage: `just validate-recipe`
@@ -150,7 +150,7 @@ Add to `pixi.toml`:
 
 ```toml
 [tasks]
-validate-recipe = "./scripts/validate-recipe.sh recipe.yaml"
+validate-recipe = "./scripts/validate-recipe.sh packaging/recipe.yaml"
 ```
 
 Usage: `pixi run validate-recipe`
@@ -172,7 +172,7 @@ Read the error output carefully - it tells you exactly which line/field is probl
 ### Need more details?
 Run with verbose output:
 ```bash
-RATTLER_BUILD_LOG=debug ./scripts/validate-recipe.sh recipe.yaml
+RATTLER_BUILD_LOG=debug ./scripts/validate-recipe.sh packaging/recipe.yaml
 ```
 
 ## Reference

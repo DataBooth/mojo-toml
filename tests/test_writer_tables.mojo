@@ -5,7 +5,7 @@ Tests the serialisation of tables with [section] headers and nested structures.
 
 from testing import assert_equal, assert_true, TestSuite
 from toml import TomlValue, to_toml
-from collections import Dict, List
+from std.collections import Dict, List
 
 
 fn test_write_simple_table() raises:
@@ -280,7 +280,7 @@ fn test_write_table_hierarchy() raises:
     assert_true(output.find("ip = \"10.0.0.2\"") != -1)
 
 
-def main():
+def main() raises:
     """Run all table writer tests."""
     var suite = TestSuite()
     suite.test[test_write_simple_table]()

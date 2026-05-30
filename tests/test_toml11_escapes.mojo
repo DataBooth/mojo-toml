@@ -5,7 +5,7 @@ Tests the TOML 1.1 additions:
 - backslash-xHH for codepoints 0-255
 """
 
-from testing import assert_equal
+from testing import assert_equal, TestSuite
 from toml import parse, to_toml
 
 
@@ -65,9 +65,8 @@ fn test_xhh_invalid_non_hex() raises:
 
 
 
-def main():
+def main() raises:
     """Run TOML 1.1 escape sequence tests."""
-    from testing import TestSuite
     var suite = TestSuite()
 
     suite.test[test_escape_character]()

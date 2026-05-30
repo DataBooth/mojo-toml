@@ -4,7 +4,7 @@
 
 [![CodeQL](https://github.com/DataBooth/mojo-toml/workflows/CodeQL/badge.svg)](https://github.com/DataBooth/mojo-toml/actions/workflows/codeql.yml)
 
-> **Status:** 🚀 **v0.5.0** - TOML 1.0 Complete + Partial 1.1 (168 tests passing)
+> **Status:** 🚀 **v0.9.1** - TOML 1.0 Complete + Partial 1.1 (168 tests passing)
 
 ## Overview
 

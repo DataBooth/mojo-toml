@@ -13,8 +13,8 @@ repos:
   - repo: local
     hooks:
       - id: validate-recipe
-        name: Validate recipe.yaml schema
+        name: Validate packaging/recipe.yaml schema
         entry: ./scripts/validate-recipe.sh
         language: system
-        files: ^recipe\.yaml$
+        files: ^packaging/recipe\.yaml$
         pass_filenames: false

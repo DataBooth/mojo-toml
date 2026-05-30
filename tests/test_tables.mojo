@@ -158,7 +158,7 @@ port = 5433
     assert_equal(replica["port"].as_int(), 5433)
 
 
-def main():
+def main() raises:
     """Run all table header tests."""
     var suite = TestSuite()
     suite.test[test_simple_table]()

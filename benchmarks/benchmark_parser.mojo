@@ -5,7 +5,7 @@ Measures parsing performance with various TOML document sizes and complexities.
 
 from time import perf_counter
 from toml import parse
-from pathlib import Path
+from std.pathlib import Path
 
 
 fn format_time(seconds: Float64) -> String:

@@ -113,9 +113,8 @@ fn test_parse_quoted_keys() raises:
     assert_equal(data["127.0.0.1"].as_string(), "localhost")
 
 
-def main():
+def main() raises:
     """Run all parser tests."""
-    from testing import TestSuite
     var suite = TestSuite()
     suite.test[test_parse_string_value]()
     suite.test[test_parse_integer_value]()

@@ -72,7 +72,7 @@ server = {host = "localhost", port = 8080,}
 """)
 
 
-def main():
+def main() raises:
     """Run all validation tests."""
     var suite = TestSuite()
     suite.test[test_duplicate_key_error]()

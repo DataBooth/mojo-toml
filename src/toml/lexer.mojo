@@ -33,11 +33,10 @@ raw characters, making TOML syntax rules easier to implement.
 - Comments: # to end of line (not inside strings)
 """
 
-from collections import List
+from std.collections import List
 
 
-@register_passable("trivial")
-struct Position:
+struct Position(Copyable, Movable):
     """Position in the source file (line and column).
 
     Used for error messages to show users exactly where parsing failed.
@@ -51,8 +50,7 @@ struct Position:
         self.column = column
 
 
-@register_passable("trivial")
-struct TokenKind:
+struct TokenKind(Copyable, Movable):
     """Token types for TOML lexer.
 
     Each token represents a meaningful unit in TOML syntax.
@@ -170,9 +168,9 @@ struct Token(Copyable, Movable):
     var pos: Position  # Where it appears in the file
 
     fn __init__(out self, kind: TokenKind, value: String, pos: Position):
-        self.kind = kind
+        self.kind = kind.copy()
         self.value = value
-        self.pos = pos
+        self.pos = pos.copy()
 
 
 struct Lexer:

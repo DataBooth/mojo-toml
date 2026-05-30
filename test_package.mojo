@@ -5,7 +5,7 @@ fn main() raises:
     let config = parse("""
 [package]
 name = "mojo-toml"
-version = "0.5.1"
+version = "0.9.1"
 """)
 
     if config["package"].as_table()["name"].as_string() != "mojo-toml":

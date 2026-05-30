@@ -51,4 +51,4 @@ fn main() raises:
 
     print()
     print("✅ All tests passed! mojo-toml is working correctly.")
-    print("Package version: 0.3.0")
+    print("Package version: 0.9.1")

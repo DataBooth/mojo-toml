@@ -114,7 +114,7 @@ build:
 ```bash
 docker run -it --rm -v $(pwd):/workspace condaforge/miniforge3:latest bash
 cd /workspace
-./scripts/validate-recipe.sh recipe.yaml
+./scripts/validate-recipe.sh packaging/recipe.yaml
 ```
 
 ### Test on Linux (via GitHub Actions)

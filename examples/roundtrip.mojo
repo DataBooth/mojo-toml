@@ -7,7 +7,7 @@ This demonstrates how to:
 """
 
 from toml import parse, to_toml, TomlValue
-from collections import Dict
+from std.collections import Dict
 
 
 fn main() raises:

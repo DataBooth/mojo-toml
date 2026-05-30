@@ -6,7 +6,7 @@ Tests TOML 1.0 alternative integer formats:
 - Binary: 0b1101, 0b1111_0000
 """
 
-from testing import assert_equal
+from testing import assert_equal, TestSuite
 from toml import parse
 
 
@@ -139,9 +139,8 @@ fn test_bases_in_array() raises:
     assert_equal(arr[3].as_int(), 42)
 
 
-def main():
+def main() raises:
     """Run all alternative number base tests."""
-    from testing import TestSuite
     var suite = TestSuite()
     suite.test[test_hex_lowercase]()
     suite.test[test_hex_uppercase]()

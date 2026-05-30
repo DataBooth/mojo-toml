@@ -321,9 +321,8 @@ fn test_complex_toml_line() raises:
     assert_equal(tokens[4].value, "name")
 
 
-def main():
+def main() raises:
     """Run all lexer tests."""
-    from testing import TestSuite
     var suite = TestSuite()
     suite.test[test_empty_input]()
     suite.test[test_simple_key_value]()

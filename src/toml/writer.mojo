@@ -26,7 +26,7 @@ The writer uses a buffer-based approach:
 This keeps serialisation logic clean and predictable.
 """
 
-from collections import Dict, List
+from std.collections import Dict, List
 from .parser import TomlValue, TomlValueType
 
 

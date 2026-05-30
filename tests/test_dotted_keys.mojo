@@ -95,7 +95,7 @@ a.b = [1, 2, 3]
     assert_equal(arr[0].as_int(), 1)
 
 
-def main():
+def main() raises:
     """Run all dotted key tests."""
     var suite = TestSuite()
     suite.test[test_simple_dotted_key]()

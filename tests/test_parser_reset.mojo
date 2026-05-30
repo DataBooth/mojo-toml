@@ -80,7 +80,7 @@ fn test_parser_reset_multiple_times() raises:
     assert_equal(data2["count"].as_int(), 2)
 
 
-def main():
+def main() raises:
     """Run all parser reset tests."""
     var suite = TestSuite()
     suite.test[test_parser_reset_simple]()

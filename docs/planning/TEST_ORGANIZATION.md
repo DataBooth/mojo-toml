@@ -39,11 +39,29 @@ This document describes how tests are organized in the mojo-toml project.
   - Dotted keys combined with table headers
 
 ### Validation Tests
-- **test_validation.mojo** (7 tests) - Error detection and validation
+- **test_validation.mojo** (6 tests) - Error detection and validation
   - Duplicate key detection (root, table, nested)
   - Invalid syntax detection
-  - Unsupported features (array of tables)
+  - Inline table trailing comma detection
   - Type conflicts (redefining table as value)
+
+### TOML 1.0 Completion Tests
+- **test_number_bases.mojo** (14 tests) - Alternative number bases
+  - Hexadecimal integers: `0xDEAD`
+  - Octal integers: `0o755`
+  - Binary integers: `0b1101`
+  - Underscore separators in non-decimal numbers
+
+- **test_array_of_tables.mojo** (12 tests) - Array-of-tables syntax
+  - `[[section]]` parsing
+  - Nested array-of-tables
+  - Mixed table and array-of-table documents
+  - Array/table redefinition error handling
+
+- **test_toml11_escapes.mojo** (5 tests) - Partial TOML 1.1 escapes
+  - `\\e` escape character support
+  - `\\xHH` hex escape support
+  - Invalid escape rejection
 
 ### Real-World Tests
 - **test_real_world.mojo** (4 tests) - Real TOML file parsing
@@ -118,7 +136,7 @@ pixi run test-all
 
 ### Run Individual Test Suites
 ```bash
-# Parser tests (96 total)
+# Parser tests (127 total)
 pixi run test-lexer          # Lexer tests
 pixi run test-parser         # Parser tests
 pixi run test-arrays         # Array tests
@@ -129,6 +147,9 @@ pixi run test-validation     # Validation/error tests
 pixi run test-real-world     # Real file tests
 pixi run test-fixtures       # Complex example tests
 pixi run test-parser-reset   # Parser reset tests
+pixi run test-number-bases   # Alternative number bases
+pixi run test-array-of-tables  # Array-of-tables syntax
+pixi run test-toml11-escapes # TOML 1.1 escapes
 
 # Writer tests (41 total)
 pixi run test-writer-basic      # Basic type serialisation
@@ -140,7 +161,7 @@ pixi run test-writer-roundtrip  # Round-trip fidelity
 
 | Category | File | Tests |
 |----------|------|-------|
-| **Parser Tests** | | **96** |
+| **Parser Tests** | | **127** |
 | Lexer | test_lexer.mojo | 25 |
 | Parser | test_parser.mojo | 10 |
 | Real-World | test_real_world.mojo | 4 |
@@ -149,13 +170,16 @@ pixi run test-writer-roundtrip  # Round-trip fidelity
 | Inline Tables | test_inline.mojo | 13 |
 | Table Headers | test_tables.mojo | 8 |
 | Dotted Keys | test_dotted_keys.mojo | 7 |
-| Validation | test_validation.mojo | 7 |
+| Validation | test_validation.mojo | 6 |
 | Parser API | test_parser_reset.mojo | 3 |
+| Number Bases | test_number_bases.mojo | 14 |
+| Array of Tables | test_array_of_tables.mojo | 12 |
+| TOML 1.1 Escapes | test_toml11_escapes.mojo | 5 |
 | **Writer Tests** | | **41** |
 | Basic Types | test_writer_basic.mojo | 20 |
 | Table Structures | test_writer_tables.mojo | 11 |
 | Round-Trip | test_writer_roundtrip.mojo | 10 |
-| **Total** | **13 files** | **137 tests** |
+| **Total** | **16 files** | **168 tests** |
 
 ## Adding New Tests
 

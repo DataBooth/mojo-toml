@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'recipe.yaml'
+      - 'packaging/recipe.yaml'
       - 'src/**'
       - 'tests/**'
       - 'scripts/**'
@@ -37,7 +37,7 @@ jobs:
       run: pixi run test-all
 
     - name: Validate recipe schema
-      run: bash scripts/validate-recipe.sh
+      run: bash scripts/validate-recipe.sh packaging/recipe.yaml
 
     - name: Build package
       run: bash scripts/build-recipe.sh
@@ -59,7 +59,7 @@ jobs:
 
     - name: Verify git tag
       run: |
-        RECIPE_VERSION=$(grep "^  version:" recipe.yaml | awk '{print $2}' | tr -d '"' | tr -d "'")
+        RECIPE_VERSION=$(grep "^  version:" packaging/recipe.yaml | awk '{print $2}' | tr -d '"' | tr -d "'")
         echo "Recipe version: $RECIPE_VERSION"
 
         if ! git tag | grep -q "^v${RECIPE_VERSION}$"; then
@@ -87,7 +87,7 @@ jobs:
           mojo-toml
 
         # Verify installation
-        if [ ! -d "$TEST_PROJECT/.pixi/envs/default/lib/mojo/mojo-toml" ]; then
+        if [ ! -d "$TEST_PROJECT/.pixi/envs/default/lib/mojo/toml" ]; then
           echo "::error::Package files not found after installation"
           exit 1
         fi

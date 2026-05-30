@@ -206,7 +206,7 @@ fn test_game_settings() raises:
     assert_equal(config["max_players"].as_int(), 16)
 
 
-def main():
+def main() raises:
     """Run all fixture tests."""
     var suite = TestSuite()
     suite.test[test_app_config]()

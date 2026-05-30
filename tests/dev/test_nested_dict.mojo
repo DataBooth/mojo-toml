@@ -1,6 +1,6 @@
 """Test if we can now build nested Dict structures."""
 
-from collections import Dict
+from std.collections import Dict
 
 struct TomlValue(Movable, Copyable):
     var data: String

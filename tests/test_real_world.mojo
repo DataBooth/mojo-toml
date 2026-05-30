@@ -6,7 +6,7 @@ This is "dogfooding" - using our own project's config files to test the parser.
 
 from testing import assert_equal, assert_true, TestSuite
 from toml import parse
-from pathlib import Path
+from std.pathlib import Path
 
 
 fn test_parse_pixi_toml() raises:
@@ -187,9 +187,8 @@ not_a_num = nan
     assert_true(data["not_a_num"].is_float())
 
 
-def main():
+def main() raises:
     """Run all real-world parsing tests."""
-    from testing import TestSuite
     var suite = TestSuite()
 
     # Note: test_parse_pixi_toml will likely fail until we implement table support

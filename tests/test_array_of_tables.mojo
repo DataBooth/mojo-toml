@@ -4,7 +4,7 @@ Tests the [[section]] array-of-tables feature which allows defining
 arrays of tables in TOML configuration files.
 """
 
-from testing import assert_equal, assert_true
+from testing import assert_equal, assert_true, TestSuite
 from toml import parse
 
 
@@ -266,9 +266,8 @@ name = "second"
         pass
 
 
-def main():
+def main() raises:
     """Run all array-of-tables tests."""
-    from testing import TestSuite
     var suite = TestSuite()
 
     # Basic tests

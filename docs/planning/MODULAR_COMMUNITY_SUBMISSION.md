@@ -1,4 +1,6 @@
 # Modular Community Submission Guide
+> Historical submission notes from an earlier release cycle.
+> For current operational steps, use `docs/SUBMITTING_TO_MODULAR_COMMUNITY.md` and `docs/PRE_SUBMISSION_VALIDATION.md`.
 
 This document outlines the steps to submit mojo-toml to the modular-community channel and announce it on the forum.
 
@@ -29,30 +31,30 @@ This document outlines the steps to submit mojo-toml to the modular-community ch
 4. Commit and push:
    ```bash
    git add recipes/mojo-toml/
-   git commit -m "Add mojo-toml v0.3.0 - Native TOML parser for Mojo"
+   git commit -m "Add mojo-toml v0.9.1 - Native TOML parser for Mojo"
    git push origin main
    ```
 
 ### 1.3 Create Pull Request
 1. Go to your fork on GitHub
 2. Click "Contribute" → "Open pull request"
-3. Title: `Add mojo-toml v0.3.0 - Native TOML parser`
+3. Title: `Add mojo-toml v0.9.1 - Native TOML parser`
 4. Description:
    ```markdown
-   ## Package: mojo-toml v0.3.0
+   ## Package: mojo-toml v0.9.1
    
    A native TOML 1.0 parser for Mojo with zero Python dependencies.
    
    ### Features
    - Complete TOML 1.0 syntax support
-   - 96 comprehensive tests
+   - 168 comprehensive tests
    - Performance: 26μs for simple parses, 2ms for real files
    - Nested tables, dotted keys, duplicate detection
    - Clear error messages with line/column context
    
    ### Repository
    - GitHub: https://github.com/DataBooth/mojo-toml
-   - Release: https://github.com/DataBooth/mojo-toml/releases/tag/v0.3.0
+   - Release: https://github.com/DataBooth/mojo-toml/releases/tag/v0.9.1
    - License: MIT
    
    ### Testing
@@ -62,7 +64,7 @@ This document outlines the steps to submit mojo-toml to the modular-community ch
    - Nested table structures
    - Dotted key functionality
    
-   All 96 tests pass in the source repository.
+   All 168 tests pass in the source repository.
    ```
 
 5. Submit the PR and wait for review
@@ -75,15 +77,15 @@ This document outlines the steps to submit mojo-toml to the modular-community ch
 3. Click "New Topic"
 
 ### 2.2 Create Forum Post
-Use the content from `FORUM_ANNOUNCEMENT.md`:
+Use `FORUM_ANNOUNCEMENT.md` as a historical template, then update version, test-count, and roadmap content for the current release:
 
-**Title**: 🔥 Announcing mojo-toml v0.3.0 - Native TOML Parser for Mojo
+**Title**: 🔥 Announcing mojo-toml v0.9.1 - Native TOML Parser for Mojo
 
 **Category**: Community Showcase
 
 **Tags**: mojo, toml, parser, library, configuration
 
-**Content**: Copy the entire content from FORUM_ANNOUNCEMENT.md
+**Content**: Start from `FORUM_ANNOUNCEMENT.md`, but edit all release-specific values before posting.
 
 ### 2.3 Engage with Community
 - Respond to questions and feedback
@@ -113,7 +115,7 @@ The following files have been created in your mojo-toml repository:
 ## ✅ Checklist
 
 ### Before Submission
-- [x] v0.3.0 released and tagged on GitHub
+- [x] v0.9.1 released and tagged on GitHub
 - [x] recipe.yaml created with correct version
 - [x] test_package.mojo created and validated
 - [x] Forum announcement prepared
@@ -139,7 +141,7 @@ The following files have been created in your mojo-toml repository:
 - **Modular Forum**: https://forum.modular.com
 - **Community Showcase**: https://forum.modular.com/c/community-showcase
 - **mojo-toml GitHub**: https://github.com/DataBooth/mojo-toml
-- **v0.3.0 Release**: https://github.com/DataBooth/mojo-toml/releases/tag/v0.3.0
+- **v0.9.1 Release**: https://github.com/DataBooth/mojo-toml/releases/tag/v0.9.1
 
 ## 💡 Tips
 

@@ -7,7 +7,7 @@ the project's own pixi.toml file and generating a detailed report of its content
 from toml import parse
 
 
-fn main():
+fn main() raises:
     """Parse pixi.toml and generate comprehensive report."""
 
     print("🔥 mojo-toml - Pixi Configuration Report")

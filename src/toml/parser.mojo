@@ -25,7 +25,8 @@ The parser uses a recursive descent approach:
 This keeps parsing logic separate from tokenisation, making both simpler.
 """
 
-from collections import Dict, List
+from std.collections import Dict, List
+from math import inf, nan
 from .lexer import Token, TokenKind, Lexer
 
 
@@ -468,7 +469,6 @@ struct Parser:
         elif token.kind == TokenKind.FLOAT():
             _ = self.advance()
             # Handle special float values using math constants
-            from math import inf, nan
             if token.value == "inf":
                 return TomlValue(inf[DType.float64]())
             elif token.value == "-inf":

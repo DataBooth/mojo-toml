@@ -30,21 +30,22 @@ bash scripts/build-recipe.sh
 
 **Output location:** `output/` directory (git-ignored)
 
-### 2. Pre-Submit Checklist (`scripts/pre-submit-checklist.sh`)
+### 2. Pre-Submit Checklist (`scripts/pre_submit_checklist.py`)
 
-Comprehensive validation script that runs all 5 checks:
+Comprehensive validation script that runs all core checks:
 
 ```bash
-bash scripts/pre-submit-checklist.sh
+pixi run pre-submit
 ```
 
 **Checks performed:**
 
-1. **Full test suite** - Runs `pixi run test-all` (137 tests across 16 suites)
-2. **Recipe schema validation** - Runs `scripts/validate-recipe.sh`
-3. **Package build** - Runs `scripts/build-recipe.sh` and verifies artifacts
-4. **Git tag verification** - Checks if tag exists and points to HEAD
-5. **Package installation test** - Creates temporary environment and installs package
+1. **Full test suite** - Runs `pixi run test-all` (168 tests across 16 suites)
+2. **Examples run** - Runs `pixi run examples-all`
+3. **Recipe schema validation** - Runs `scripts/validate-recipe.sh`
+4. **Package build** - Runs `scripts/build-recipe.sh` and verifies artefacts
+5. **Git tag verification** - Checks if tag exists and points to HEAD
+6. **Package installation test** - Creates temporary environment and installs package
 
 **Exit codes:**
 - `0` - All checks passed, ready for submission
@@ -87,7 +88,7 @@ SUMMARY
 ### 3. GitHub Actions Workflow (`.github/workflows/pre-submit-validation.yml`)
 
 Automated validation that runs on every push affecting:
-- `recipe.yaml`
+- `packaging/recipe.yaml`
 - `src/**`
 - `tests/**`
 - `scripts/**`
@@ -95,7 +96,7 @@ Automated validation that runs on every push affecting:
 
 **What it does:**
 - Runs on both `ubuntu-latest` and `macos-latest`
-- Executes all 5 validation checks
+- Executes the same core validation checks as local pre-submit
 - Uploads build artifacts for inspection
 - Creates workflow summary
 
@@ -116,8 +117,8 @@ Before submitting to modular-community, follow these steps:
 
 ### Step 1: Update Version
 ```bash
-# Update version in recipe.yaml
-vim recipe.yaml  # Change context.version
+# Update version in packaging/recipe.yaml
+vim packaging/recipe.yaml  # Change package.version and source.tag
 
 # Update CHANGELOG.md
 vim CHANGELOG.md
@@ -125,7 +126,7 @@ vim CHANGELOG.md
 
 ### Step 2: Run Local Validation
 ```bash
-bash scripts/pre-submit-checklist.sh
+pixi run pre-submit
 ```
 
 **All checks must pass** before proceeding.
@@ -156,7 +157,7 @@ Update the recipe in your modular-community PR:
 ```bash
 cd ../modular-community
 git checkout your-branch
-cp ../mojo-toml/recipe.yaml recipes/mojo-toml/recipe.yaml
+cp ../mojo-toml/packaging/recipe.yaml recipes/mojo-toml/recipe.yaml
 git add recipes/mojo-toml/recipe.yaml
 git commit -m "Update mojo-toml to vX.Y.Z
 
@@ -189,7 +190,7 @@ pixi add rattler-build
 
 **Problem:** Package files not found after installation
 
-**Solution:** Check recipe.yaml `files.include` section matches your source structure:
+**Solution:** Check `packaging/recipe.yaml` file inclusion settings match your source structure:
 ```yaml
 files:
   include:
@@ -201,12 +202,12 @@ files:
 
 ### Git Tag Doesn't Match Recipe Version
 
-**Problem:** Tag v0.5.1 doesn't exist for recipe version 0.5.1
+**Problem:** Tag v0.9.1 doesn't exist for recipe version 0.9.1
 
 **Solution:** Create the tag:
 ```bash
-git tag -a v0.5.1 -m "Release v0.5.1"
-git push origin v0.5.1
+git tag -a v0.9.1 -m "Release v0.9.1"
+git push origin v0.9.1
 ```
 
 ### Tests Pass Locally but Fail in CI
@@ -236,5 +237,5 @@ This validation infrastructure prevents the following issues:
 
 - [`RECIPE_VALIDATION.md`](RECIPE_VALIDATION.md) - Recipe schema validation details
 - [`PLATFORM_BUILDS.md`](PLATFORM_BUILDS.md) - Platform-specific build notes
-- [`SUBMITTING_TO_MODULAR_COMMUNITY.md`](../SUBMITTING_TO_MODULAR_COMMUNITY.md) - Full submission guide
-- [`ROADMAP.md`](../ROADMAP.md) - Future improvements (noarch: generic)
+- [`SUBMITTING_TO_MODULAR_COMMUNITY.md`](SUBMITTING_TO_MODULAR_COMMUNITY.md) - Full submission guide
+- [`planning/ROADMAP.md`](planning/ROADMAP.md) - Future improvements (noarch: generic)

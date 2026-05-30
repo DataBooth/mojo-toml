@@ -3,6 +3,11 @@
 This document outlines the development roadmap for mojo-toml.
 
 ## Version History
+### v0.9.1 - Mojo 1.0 beta migration tranche (2026-05) ✅
+- ✅ Mojo 1.0.0b1 toolchain alignment and validation flow green
+- ✅ Packaging path standardisation on `packaging/recipe.yaml`
+- ✅ Migration playbook added for sibling `mojo-*` repositories
+- ✅ Full validation pass (`test-all`, `examples-all`, recipe validation, recipe build)
 
 ### v0.3.0 - Quality & Performance (2026-01-07) ✅
 - ✅ Proper dotted key support
@@ -101,19 +106,18 @@ See [REFLECTION_SERIALIZATION.md](REFLECTION_SERIALIZATION.md) for analysis.
 - [ ] Code of conduct
 
 ### Testing
-- [x] Comprehensive test suite (96 tests)
+- [x] Comprehensive test suite (168 tests)
 - [x] Real-world file parsing
 - [ ] TOML spec compliance test suite
 - [ ] Fuzzing tests
 - [ ] Property-based testing
 
 ## Contributing
-
-See specific version plans for areas where contributions would be most valuable. Current priority is **v0.4.0** (TOML 1.0 compliance).
+See specific version plans for areas where contributions would be most valuable. Current priority is **v0.6.0** (remaining TOML 1.1 features).
 
 For implementation details, see:
 - [TOML_WRITER_DESIGN.md](TOML_WRITER_DESIGN.md) - Writer implementation
-- [PERFORMANCE.md](PERFORMANCE.md) - Performance characteristics
+- [../PERFORMANCE.md](../PERFORMANCE.md) - Performance characteristics
 - [TEST_ORGANIZATION.md](TEST_ORGANIZATION.md) - Test structure
 
 ## Version Numbering

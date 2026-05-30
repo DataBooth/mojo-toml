@@ -5,7 +5,7 @@ Tests that parse → write → parse produces semantically equivalent results.
 
 from testing import assert_equal, assert_true, TestSuite
 from toml import TomlValue, parse, to_toml
-from collections import Dict, List
+from std.collections import Dict, List
 
 
 fn compare_toml_values(left: TomlValue, right: TomlValue) raises -> Bool:
@@ -247,13 +247,13 @@ fn test_roundtrip_pixi_toml() raises:
     # Compare semantic equality
     assert_true(compare_toml_dicts(parsed1, parsed2))
 
-    # Verify key sections exist (pixi 0.37 uses [project] not [workspace])
-    assert_true(parsed2.__contains__("project"))
+    # Verify key sections exist (Pixi schema may use [workspace] or [project])
+    assert_true(parsed2.__contains__("workspace") or parsed2.__contains__("project"))
     assert_true(parsed2.__contains__("tasks"))
     assert_true(parsed2.__contains__("dependencies"))
 
 
-def main():
+def main() raises:
     """Run all round-trip tests."""
     var suite = TestSuite()
     suite.test[test_roundtrip_simple]()

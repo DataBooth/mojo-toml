@@ -79,7 +79,7 @@ fn test_quickstart_complete() raises:
     assert_true(features.is_array())
 
 
-def main():
+def main() raises:
     """Run all quickstart tests."""
     var suite = TestSuite()
     suite.test[test_quickstart_app]()

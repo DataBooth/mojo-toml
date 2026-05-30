@@ -41,7 +41,7 @@ NC = "\033[0m"  # No colour
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SCRIPT_DIR = PROJECT_ROOT / "scripts"
-RECIPE_FILE = PROJECT_ROOT / "recipe.yaml"
+RECIPE_FILE = PROJECT_ROOT / "packaging" / "recipe.yaml"
 OUTPUT_DIR = PROJECT_ROOT / "output"
 PIXl_MANIFEST = PROJECT_ROOT / "pixi.toml"
 
@@ -118,38 +118,51 @@ def run_command(
 
 def get_recipe_version(path: Path) -> str | None:
     """Extract the concrete numeric version from recipe.yaml.
+    Supports both recipe styles used in this repository:
+    - context.version: 0.9.1
+    - package.version: 0.9.1
 
-    The file contains multiple "version" fields (context.version,
-    package.version template). We want the numeric value from the
-    context block, e.g. "0.5.1".
+    If both are present, context.version takes precedence.
+    Templated values like "${{ version }}" are ignored.
     """
 
     if not path.is_file():
         return None
 
     in_context = False
+    in_package = False
+    package_version: str | None = None
     try:
         with path.open("r", encoding="utf-8") as f:
             for raw_line in f:
                 line = raw_line.rstrip("\n")
-                if not line.strip():
+                stripped = line.strip()
+                if not stripped or stripped.startswith("#"):
                     continue
 
                 # Top-level key
                 if not line.startswith(" "):
-                    in_context = line.strip().startswith("context:")
+                    in_context = stripped.startswith("context:")
+                    in_package = stripped.startswith("package:")
                     continue
 
                 if in_context:
-                    stripped = line.strip()
                     if stripped.startswith("version:"):
                         _, value = stripped.split(":", 1)
-                        return value.strip().strip("'\"")
+                        candidate = value.strip().strip("'\"")
+                        if candidate and "${{" not in candidate:
+                            return candidate
+
+                if in_package:
+                    if stripped.startswith("version:"):
+                        _, value = stripped.split(":", 1)
+                        candidate = value.strip().strip("'\"")
+                        if candidate and "${{" not in candidate:
+                            package_version = candidate
     except OSError as exc:
         error(f"Failed to read recipe file: {exc}")
         return None
-
-    return None
+    return package_version
 
 
 def check_tests() -> CheckResult:

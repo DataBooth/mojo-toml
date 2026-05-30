@@ -236,7 +236,7 @@ third = [true, false]
     assert_true(arr3[0].as_bool())
 
 
-def main():
+def main() raises:
     """Run all array tests."""
     var suite = TestSuite()
     suite.test[test_empty_array]()

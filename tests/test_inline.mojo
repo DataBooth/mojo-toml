@@ -210,7 +210,7 @@ fn test_deeply_nested_inline_table() raises:
     assert_equal(c["value"].as_int(), 42)
 
 
-def main():
+def main() raises:
     """Run all inline table tests."""
     var suite = TestSuite()
     suite.test[test_empty_inline_table]()

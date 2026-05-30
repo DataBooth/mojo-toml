@@ -1,4 +1,6 @@
 # 🔥 Announcing mojo-toml v0.3.0 - Native TOML Parser for Mojo
+> Historical forum post for the v0.3.0 release.
+> Rework version numbers, feature counts, and roadmap items before reusing for newer releases.
 
 I'm excited to share **mojo-toml** - the first native TOML 1.0 parser for Mojo! Parse configuration files with zero Python dependencies and blazing-fast performance.
 

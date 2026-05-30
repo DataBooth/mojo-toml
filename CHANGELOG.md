@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bumped MAX / Mojo toolchain dependency to `max ">=26.1.0,<27"` and updated recipes to pin `mojo_version = "=0.26.1"`.
 - Updated lexer, parser, writer, and tests to use `codepoint_slices()` and explicit `List[String]` buffers instead of direct `String` indexing or iteration, matching Mojo 0.26.1 string and `__getitem__` semantics.
 - Adopted a "no warnings" policy for the core library and tests so future migrations surface only new issues.
+- Bumped project and packaging version metadata to `0.9.1` to mark progression towards the Mojo 1.0 beta migration milestone.
 
 ### Planned for v0.6.0 - Remaining TOML 1.1
 - Multiline inline tables with trailing commas

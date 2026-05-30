@@ -3,10 +3,10 @@ name: Validate Recipe
 on:
   push:
     paths:
-      - 'recipe.yaml'
+      - 'packaging/recipe.yaml'
   pull_request:
     paths:
-      - 'recipe.yaml'
+      - 'packaging/recipe.yaml'
   workflow_dispatch:
 
 jobs:
@@ -25,7 +25,7 @@ jobs:
       - name: Validate recipe schema
         run: |
           pixi exec rattler-build build \
-            --recipe recipe.yaml \
+            --recipe packaging/recipe.yaml \
             --channel conda-forge \
             --channel https://conda.modular.com/max \
             --channel https://prefix.dev/modular-community \

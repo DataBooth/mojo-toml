@@ -5,7 +5,7 @@ Tests the serialisation of primitive types, strings, arrays, and simple structur
 
 from testing import assert_equal, assert_true, TestSuite
 from toml import TomlValue, to_toml
-from collections import Dict, List
+from std.collections import Dict, List
 
 
 fn test_write_string() raises:
@@ -229,7 +229,7 @@ fn test_write_empty_string() raises:
     assert_equal(output, "empty = \"\"\n")
 
 
-def main():
+def main() raises:
     """Run all basic writer tests."""
     var suite = TestSuite()
     suite.test[test_write_string]()
