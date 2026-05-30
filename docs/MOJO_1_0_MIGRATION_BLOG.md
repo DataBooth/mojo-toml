@@ -72,11 +72,6 @@ This public release now focuses on five libraries:
 - `mojo-dotenv`
 - `mojo-asciichart`
 
-Deferred for follow-up releases:
-- `mojo-benchsuite` (I want to expand practical use cases and release guidance first)
-- `mojo-data-star`
-- `mojo-fireplace`
-
 ## Current status
 This closes the current migration execution wave across:
 - `mojo-toml`
@@ -84,14 +79,10 @@ This closes the current migration execution wave across:
 - `mojo-yaml`
 - `mojo-dotenv`
 - `mojo-asciichart`
-- `mojo-benchsuite` (deferred from this public release)
-- `mojo-data-star` (deferred from this public release)
-- `mojo-fireplace` (deferred from this public release)
 
 ## What happens next
 Near term, the plan stays simple and low-risk:
 - publish and support the five-library `0.9.1` release cleanly,
-- expand `mojo-benchsuite` use-case content before its public release,
 - keep release mechanics repeatable,
 - revisit packaging strategy once the ecosystem settles further.
 
@@ -105,19 +96,16 @@ Near term, the plan stays simple and low-risk:
 - Updated compatibility in benchmark plumbing.
 - Removed brittle subprocess-based version probing.
 - Confirmed benchmark task execution after migration.
-- Public release deferred until richer practical use cases are documented.
 
 ### `mojo-data-star`
 - Reworked the most brittle 1.0 beta interop surface.
 - Simplified data-shape handling to reduce API churn exposure.
 - Brought Mojo/Python test paths back into a stable green state.
-- Public release deferred for now.
 
 ### `mojo-fireplace`
 - Stabilised Mojo test flow and environment assumptions.
 - Updated test patterns for checked raises and current stdlib usage.
 - Fixed practical runtime and test-path issues that blocked reliable local validation.
-- Public release deferred for now.
 
 ## Appendix B: Practical migration sequence used
 1. Create or switch to `feature/mojo-1.0b1-migration`.
