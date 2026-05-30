@@ -1,108 +1,99 @@
-# mojo-* migration notes: what we learned moving to Mojo 1.0.0b1
-This write-up captures the full multi-repo migration wave across the DataBooth `mojo-*` libraries. The goal was practical: get everything onto a stable Mojo 1.0 beta workflow without breaking day-to-day development speed.
+# Mojo 1.0 beta migration wave: what changed, what worked, and what’s next
+## Exec summary
+Over this migration wave, I moved the in-scope DataBooth `mojo-*` libraries onto one consistent Mojo 1.0 beta baseline.
 
-## Why this wave mattered
-We were carrying a mix of old and new assumptions across repositories:
-- recipe validation paths diverged between local scripts, CI, and pre-commit,
-- several packages still depended on legacy import/syntax patterns,
-- test harnesses worked in one repo and failed in another for avoidable reasons,
-- and docs were increasingly out of sync with real commands.
+The goal was practical: reduce release friction, keep each package usable, and stop the “works in repo A, breaks in repo B” cycle.
 
-In short, this was operational debt, not just code debt.
+The result is a cleaner operational path, better cross-repo consistency, and one shared `0.9.1` beta line with matching tags.
 
-## What we standardised across repositories
-## 1) Packaging path consistency
-For packaging-focused repos, we standardised on `packaging/recipe.yaml` and pushed that path through:
-- `pixi.toml` tasks,
-- build/validation scripts,
-- pre-submit checklists,
-- pre-commit hooks,
-- workflow triggers,
-- and docs.
+This post keeps the main story concise. Full technical notes are in the appendices.
 
-Repos where this was applied in this tranche:
+## Why this migration now
+The ecosystem has been moving quickly, and the repos had drifted in small but painful ways: packaging paths, validation assumptions, and compatibility handling.
+
+None of those issues was huge on its own. Together, they created avoidable drag in day-to-day delivery.
+
+So the migration focused on three things:
+- one release approach across repos,
+- one repeatable validation posture,
+- and one version line for this beta phase.
+
+## What was delivered
+### 1) Operational consistency
+For package-oriented repos, recipe handling and validation flow were aligned so local scripts, CI, and docs all reference the same source of truth.
+
+### 2) Compatibility uplift
+The key Mojo 1.0 beta breakpoints were addressed, including stricter API surfaces and checked-raises related test stabilisation.
+
+### 3) Release alignment
+All migrated repos now sit on a shared `0.9.1` beta line with corresponding tags, so consumers can target a coherent set of builds.
+
+## Alignment with agentic engineering practice
+This migration broadly followed the pattern in Modular’s write-up on building Mojo projects with AI agents:
+- human-led architecture and product judgement,
+- agent-led execution for repetitive, cross-repo, and boilerplate-heavy work.
+
+Where I deliberately diverged: distribution policy. Because packaging is still evolving, the practical choice for now is controlled `0.9.1` beta releases with explicit consumer pinning.
+
+Reference:
+- https://www.modular.com/blog/how-i-built-a-pure-mojo-app-and-10-libraries-with-ai-agents
+
+## Distribution stance for this beta phase
+For these migrated DataBooth libraries, the recommendation is to consume the `0.9.1` beta line and avoid fallback to older 26.x-era community artefacts.
+
+In practice:
+- prefer DataBooth-hosted packages for these libraries,
+- pin versions explicitly (`==0.9.1` is the safest default),
+- use modular-community for other dependencies only where needed.
+
+## Current status
+This closes the current in-scope migration wave across:
 - `mojo-toml`
 - `mojo-ini`
 - `mojo-yaml`
 - `mojo-dotenv`
 - `mojo-asciichart`
+- `mojo-benchsuite`
+- `mojo-data-star`
+- `mojo-fireplace`
 
-## 2) Mojo 1.0 compatibility fixes
-The recurring upgrade pattern was:
-- move legacy imports to `std.*` where needed,
-- remove or replace APIs removed in 1.0 beta,
-- align tests with checked-raises semantics (`raises` where assertion helpers may raise),
-- and tighten task definitions so local validation matches real usage.
+## What happens next
+Near term, the plan stays simple and low-risk:
+- keep the `0.9.1` beta line clean,
+- keep release mechanics repeatable,
+- revisit packaging strategy once the ecosystem settles further.
 
-## 3) Validation discipline
-Every repo was migrated with repo-native validation, not assumptions. Typical command sets included:
-- `pixi run test-all` (or equivalent),
-- targeted benchmark/example smoke runs where tests are limited,
-- `pixi run validate-recipe` for packaging repos,
-- and Python syntax checks where checklist scripts changed.
+## Appendix A: Repo-level technical notes
+### `mojo-ini`, `mojo-yaml`, `mojo-dotenv`, `mojo-asciichart`
+- Consolidated recipe-path handling and pre-submit flow.
+- Synced migration-sensitive docs with the operational command path.
+- Retained passing validation with only non-blocking tool warnings.
 
-## Repo-by-repo findings
-## mojo-ini / mojo-yaml / mojo-dotenv / mojo-asciichart
-These four were the cleanest high-leverage wins:
-- recipe-path drift resolved end-to-end,
-- pre-submit scripts aligned,
-- docs updated in the same change set,
-- validations passed with only non-blocking pixi/lock-format warnings.
+### `mojo-benchsuite`
+- Updated compatibility in benchmark plumbing.
+- Removed brittle subprocess-based version probing.
+- Confirmed benchmark task execution after migration.
 
-The important lesson: fixing operational path drift early removes most migration friction.
+### `mojo-data-star`
+- Reworked the most brittle 1.0 beta interop surface.
+- Simplified data-shape handling to reduce API churn exposure.
+- Brought Mojo/Python test paths back into a stable green state.
 
-## mojo-benchsuite
-Primary issue was framework-level Mojo compatibility in benchmark plumbing:
-- modernised collection imports,
-- removed brittle Python subprocess pattern used for version probing,
-- confirmed benchmark tasks (`run-example`, `bench-adaptive`, `bench-comprehensive`) still execute.
+### `mojo-fireplace`
+- Stabilised Mojo test flow and environment assumptions.
+- Updated test patterns for checked raises and current stdlib usage.
+- Fixed practical runtime and test-path issues that blocked reliable local validation.
 
-This repo highlighted that benchmark frameworks are often more API-sensitive than the benchmark kernels themselves.
+## Appendix B: Practical migration sequence used
+1. Create or switch to `feature/mojo-1.0b1-migration`.
+2. Resolve packaging and tooling path consistency first.
+3. Run repo-native tests and validation.
+4. Fix compiler and runtime issues in clusters.
+5. Update docs in the same change set.
+6. Re-run full validation before push.
 
-## mojo-data-star
-This was the sharpest 1.0 API delta in the wave:
-- old tensor/layout + PythonObject conversion paths no longer compiled cleanly,
-- migrated to a simpler `MandelbrotGrid` representation for native Mojo tests,
-- updated checked-raises usage in Mojo tests,
-- rebased pixi constraints to the MAX 26.x line.
-
-Key takeaway: where interop APIs are still moving, simpler data models reduce upgrade risk substantially.
-
-## mojo-fireplace
-This repo needed a pragmatic test-flow stabilisation rather than full code modernisation:
-- ensured Mojo CLI availability in pixi env via MAX channel/dependency,
-- migrated Mojo test files to `std.testing` + checked-raises signatures,
-- fixed AoC string parsing that relied on deprecated slicing behaviour,
-- removed obsolete `Stringable` trait usage in Game of Life `gridv1`,
-- fixed Python interop test collection by setting `PYTHONPATH` in task execution.
-
-Outcome: the consolidated `pixi run test` path now passes on the migrated branch for the covered matrix.
-
-## The patterns that repeatedly bit us
-1. **Checked raises in tests**
-   Assertion helpers can raise; test functions and `main()` often need `raises` now.
-2. **String and conversion API drift**
-   Legacy convenience idioms (for example old slicing/conversion shortcuts) are now stricter.
-3. **Tooling path drift beats code drift**
-   More breakage came from scripts/hooks/workflows disagreeing than from core algorithms.
-4. **Interop wrappers age faster than core logic**
-   The pure compute kernels were usually fine; wrapper layers were where most compile churn appeared.
-
-## Practical migration playbook (kept short)
-1. Branch: `feature/mojo-1.0b1-migration`
-2. Fix packaging/tooling path consistency first.
-3. Run tests, then fix compile/runtime issues in clusters.
-4. Update docs in the same commit range.
-5. Re-run full validation commands before push.
-## Distribution policy for the 1.0 beta line
-To avoid users accidentally resolving to older modular-community builds, we are treating the DataBooth `0.9.1` line as the canonical Mojo 1.0 beta release stream.
-
-Pragmatic rule for now:
-- prefer DataBooth-hosted `0.9.1` packages for the migrated `mojo-*` libraries,
-- pin versions to `>=0.9.1,<0.10`,
-- and do not rely on older modular-community artefacts for these packages.
-
-Example consumer setup:
+## Appendix C: Consumer install policy example
+For projects consuming the DataBooth beta-line releases:
 
 ```toml
 [project]
@@ -113,23 +104,11 @@ channels = [
 ]
 
 [dependencies]
-mojo-toml = ">=0.9.1,<0.10"
-mojo-ini = ">=0.9.1,<0.10"
-mojo-yaml = ">=0.9.1,<0.10"
-mojo-dotenv = ">=0.9.1,<0.10"
-mojo-asciichart = ">=0.9.1,<0.10"
+mojo-toml = "==0.9.1"
+mojo-ini = "==0.9.1"
+mojo-yaml = "==0.9.1"
+mojo-dotenv = "==0.9.1"
+mojo-asciichart = "==0.9.1"
 ```
 
-If modular-community remains in a project for other packages, keep explicit version pins for these DataBooth libraries so old 26.x-era builds are not selected.
-
-## Current status
-Migration commits are pushed on `feature/mojo-1.0b1-migration` for:
-- `mojo-ini`
-- `mojo-yaml`
-- `mojo-dotenv`
-- `mojo-asciichart`
-- `mojo-benchsuite`
-- `mojo-data-star`
-- `mojo-fireplace`
-
-Alongside the earlier `mojo-toml` completion work, this closes the current in-scope migration wave.
+If modular-community is present for other packages, explicit pins prevent accidental resolution to older incompatible builds for these libraries.
