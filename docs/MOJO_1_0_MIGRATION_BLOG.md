@@ -1,79 +1,161 @@
-# mojo-toml migration notes: moving towards Mojo 1.0.0b1
-This post captures the first migration tranche for `mojo-toml`: aligning packaging/tooling and modernising standard-library imports so the repository is easier to keep compatible on the 1.0 beta line.
++++
+title = "Mojo 1.0 beta migration wave: what changed, what worked, and what’s next"
+date = "2026-05-30"
+draft = false
+[taxonomies]
+tags = [
+  "Mojo 🔥",
+  "Mojo 1.0 Beta",
+  "Library Migration",
+  "Release Engineering",
+  "Open Source",
+  "Packaging",
+  "Testing",
+  "Refactoring"
+]
+[extra]
+comment = true
++++
+# Mojo 1.0 beta migration wave: what changed, what worked, and what’s next
+## Exec summary
+Over this migration wave, I moved my `mojo-*` libraries onto one consistent Mojo 1.0 beta baseline.
 
-## Why this migration was started
-The project had started moving to a 1.0-era toolchain, but some repository flows were still mixed between old and new conventions. The main risks were:
-- hidden CI/local breakage due to inconsistent recipe path assumptions,
-- ongoing migration friction across sibling `mojo-*` repositories,
-- stale docs and hooks teaching contributors the wrong command flow.
+The goal was practical: reduce release friction, keep each package usable, and stop the “works in repo A, breaks in repo B” cycle.
 
-## What was changed in this tranche
-### 1) Canonical recipe path and flow
-We standardised on `packaging/recipe.yaml` as the single recipe source and aligned the operational paths around it:
-- `pixi.toml` task `validate-recipe`,
-- `scripts/validate-recipe.sh`,
-- `scripts/build-recipe.sh`,
-- `scripts/pre_submit_checklist.py`,
-- `.github/workflows/pre-submit-validation.yml`,
-- `.github/workflows/validate-recipe.yml`,
-- `.pre-commit-config.yaml`,
-- docs that describe validation and pre-submit.
+The result is a cleaner operational path, better cross-repo consistency, and a clear public release set on the `0.9.1` beta line.
 
-### 2) Mojo stdlib import modernisation
-We migrated maintained `.mojo` files from legacy imports to `std.*` paths:
-- `from collections import ...` → `from std.collections import ...`
-- `from pathlib import Path` → `from std.pathlib import Path`
+This post keeps the main story concise. Full technical notes are in the appendices.
 
-Applied across core modules, key tests, examples, benchmarks, and dev helper tests.
+## Why this migration now
+The ecosystem has been moving quickly, and the repos had drifted in small but painful ways: packaging paths, validation assumptions, and compatibility handling.
 
-### 3) Documentation alignment
-We updated migration-sensitive docs to reflect the current packaging layout and toolchain assumptions, reducing copy/paste drift for future repos.
+None of those issues was huge on its own. Together, they created avoidable drag in day-to-day delivery.
 
-## Pitfalls encountered (and how to avoid them)
-1. **Path drift between scripts and workflows**
-   Scripts were not always using the same recipe location as workflows. Fix by setting one canonical recipe path and threading it through every entry point.
-2. **Package installation assertions can silently rot**
-   One workflow checked the wrong install directory shape for this package. Keep install assertions based on actual package layout (`lib/mojo/toml` here), not package name guesswork.
-3. **Docs can lag after operational refactors**
-   Validation docs and quick-start snippets often become stale first. Treat docs updates as required in the same PR as tooling changes.
+So the migration focused on three things:
+- one release approach across repos,
+- one repeatable validation posture,
+- and one version line for this beta phase.
 
-## Repeatable checklist for other repositories
-Use this for:
-- `mojo-asciichart`
-- `mojo-benchsuite`
-- `mojo-data-star`
-- `mojo-dotenv`
-- `mojo-fireplace`
+## What was delivered
+### 1) Operational consistency
+For package-oriented repos, recipe handling and validation flow were aligned so local scripts, CI, and docs all reference the same source of truth.
+
+### 2) Compatibility uplift
+The key Mojo 1.0 beta breakpoints were addressed, including stricter API surfaces and checked-raises related test stabilisation.
+
+### 3) Release alignment
+All migrated repos now sit on a shared `0.9.1` beta line with corresponding tags, so consumers can target a coherent set of builds.
+
+## Alignment with agentic engineering practice
+This migration broadly followed the pattern in Modular’s write-up on building Mojo projects with AI agents:
+- human-led architecture and product judgement,
+- agent-led execution for repetitive, cross-repo, and boilerplate-heavy work.
+
+Where I deliberately diverged: distribution policy. Because packaging is still evolving, the practical choice for now is controlled `0.9.1` beta releases with explicit consumer pinning.
+
+Reference:
+- https://www.modular.com/blog/how-i-built-a-pure-mojo-app-and-10-libraries-with-ai-agents
+
+## Distribution stance for this beta phase
+For these migrated DataBooth libraries, the recommendation is to consume the `0.9.1` beta line and avoid fallback to older 26.x-era community artefacts.
+
+In practice:
+- prefer DataBooth-hosted packages for these libraries,
+- pin versions explicitly (`==0.9.1` is the safest default),
+- use modular-community for other dependencies only where needed.
+
+## Public release scope for this wave
+This public release now focuses on five libraries:
+- `mojo-toml`
 - `mojo-ini`
 - `mojo-yaml`
+- `mojo-dotenv`
+- `mojo-asciichart`
 
-1. **Create a migration branch**
-   - `git checkout -b feature/mojo-1.0b1-migration`
-2. **Pick one canonical recipe path**
-   - Prefer `packaging/recipe.yaml` (or explicitly decide otherwise), then update all scripts/workflows/hooks/docs to match.
-3. **Update Mojo import paths in `.mojo` files**
-   - Migrate `collections`/`pathlib` imports to `std.collections`/`std.pathlib` as applicable.
-4. **Run baseline validation**
-   - `pixi run mojo-version`
-   - `pixi run test-all`
-   - `pixi run examples-all` (if present)
-   - `pixi run validate-recipe`
-   - `pixi run pre-submit -- --skip-modular-community` (or project equivalent)
-5. **Fix failures by cluster**
-   - Tooling path issues first, then import/syntax issues, then behavioural regressions.
-6. **Update docs in same change set**
-   - Any file containing migration-sensitive commands should be updated before merge.
-7. **Capture repo-specific deltas**
-   - Record exceptions (for example package install layout differences) so the next repo migration is faster.
+## Current status
+This closes the current migration execution wave across:
+- `mojo-toml`
+- `mojo-ini`
+- `mojo-yaml`
+- `mojo-dotenv`
+- `mojo-asciichart`
 
-## Current status (post-tranche update)
-- Migration-to-beta validation for `mojo-toml` is complete and green.
-- Version progression metadata has been aligned to `0.9.1`.
-- `scripts/pre_submit_checklist.py` now supports both `context.version` and `package.version` recipe layouts.
-- Operational docs were synchronised in both `docs/*.md` and `docs/planning/*.md`, while preserving intentionally historical release artefacts.
+## What happens next
+Near term, the plan stays simple and low-risk:
+- publish and support the five-library `0.9.1` release cleanly,
+- keep release mechanics repeatable,
+- revisit packaging strategy once the ecosystem settles further.
 
-## Next tranche for mojo-toml
-The next tranche should focus on optional warning-reduction and syntax modernisation polish (`fn`→`def` where required by target compiler behaviour), then re-run the full validation flow and fold findings back into this playbook.
+## Appendix A: Repo-level technical notes
+### `mojo-ini`, `mojo-yaml`, `mojo-dotenv`, `mojo-asciichart`
+- Consolidated recipe-path handling and pre-submit flow.
+- Synced migration-sensitive docs with the operational command path.
+- Retained passing validation with only non-blocking tool warnings.
 
-## Next execution focus across sibling repos
-The migration queue starts with repos that are closest to the completed `mojo-toml` pattern (`mojo-ini`, `mojo-yaml`, `mojo-dotenv`, `mojo-asciichart`) before moving to higher-variance repos (`mojo-benchsuite`, `mojo-data-star`, `mojo-fireplace`).
+### `mojo-benchsuite`
+- Updated compatibility in benchmark plumbing.
+- Removed brittle subprocess-based version probing.
+- Confirmed benchmark task execution after migration.
+
+### `mojo-data-star`
+- Reworked the most brittle 1.0 beta interop surface.
+- Simplified data-shape handling to reduce API churn exposure.
+- Brought Mojo/Python test paths back into a stable green state.
+
+### `mojo-fireplace`
+- Stabilised Mojo test flow and environment assumptions.
+- Updated test patterns for checked raises and current stdlib usage.
+- Fixed practical runtime and test-path issues that blocked reliable local validation.
+
+## Appendix B: Practical migration sequence used
+1. Create or switch to `feature/mojo-1.0b1-migration`.
+2. Resolve packaging and tooling path consistency first.
+3. Run repo-native tests and validation.
+4. Fix compiler and runtime issues in clusters.
+5. Update docs in the same change set.
+6. Re-run full validation before push.
+
+## Appendix C: Consumer install policy examples
+### Option 1: Packaged installs via a DataBooth channel (recommended)
+For packaged releases, use one package channel URL plus explicit pins:
+
+```toml
+[project]
+channels = [
+  "conda-forge",
+  "https://conda.modular.com/max",
+  "<DATABOOTH_CONDA_CHANNEL_URL>"
+]
+
+[dependencies]
+mojo-toml = "==0.9.1"
+mojo-ini = "==0.9.1"
+mojo-yaml = "==0.9.1"
+mojo-dotenv = "==0.9.1"
+mojo-asciichart = "==0.9.1"
+```
+
+Important: `<DATABOOTH_CONDA_CHANNEL_URL>` is the package index/channel endpoint, not individual GitHub repository URLs.
+
+If modular-community is present for other packages, explicit pins prevent accidental resolution to older incompatible builds for these libraries.
+
+### Option 2: Source consumption from GitHub repos (follow-up or experimental)
+If you want to consume directly from source, add each library repo and include its `src` path when running Mojo:
+
+```bash
+git submodule add https://github.com/databooth/mojo-toml vendor/mojo-toml
+git submodule add https://github.com/databooth/mojo-ini vendor/mojo-ini
+git submodule add https://github.com/databooth/mojo-yaml vendor/mojo-yaml
+git submodule add https://github.com/databooth/mojo-dotenv vendor/mojo-dotenv
+git submodule add https://github.com/databooth/mojo-asciichart vendor/mojo-asciichart
+```
+
+```bash
+mojo \
+  -I vendor/mojo-toml/src \
+  -I vendor/mojo-ini/src \
+  -I vendor/mojo-yaml/src \
+  -I vendor/mojo-dotenv/src \
+  -I vendor/mojo-asciichart/src \
+  your_app.mojo
+```
