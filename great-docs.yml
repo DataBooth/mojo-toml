@@ -1,0 +1,20 @@
+display_name: mojo-toml
+repo: https://github.com/databooth/mojo-toml
+site_url: https://databooth.github.io/mojo-toml/
+github_style: widget
+pypi: false
+parser: numpy
+dynamic: false
+dark_mode_toggle: true
+
+source:
+  enabled: true
+  branch: main
+
+user_guide: docs
+
+sections:
+  - title: Blog
+    dir: blog
+    type: blog
+    navbar_after: Reference
