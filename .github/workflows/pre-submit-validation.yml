@@ -77,13 +77,15 @@ jobs:
 
         pixi init "$TEST_PROJECT"
 
+        # Add channels to test project
+        pixi workspace channel add --manifest-path "$TEST_PROJECT/pixi.toml" "file://$(pwd)/output" --prepend
+        pixi workspace channel add --manifest-path "$TEST_PROJECT/pixi.toml" conda-forge
+        pixi workspace channel add --manifest-path "$TEST_PROJECT/pixi.toml" https://conda.modular.com/max
+        pixi workspace channel add --manifest-path "$TEST_PROJECT/pixi.toml" https://prefix.dev/modular-community
+
         # Add package from local build
         pixi add \
           --manifest-path "$TEST_PROJECT/pixi.toml" \
-          --channel "file://$(pwd)/output" \
-          --channel conda-forge \
-          --channel https://conda.modular.com/max \
-          --channel https://prefix.dev/modular-community \
           mojo-toml
 
         # Verify installation
