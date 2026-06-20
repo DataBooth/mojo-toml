@@ -1,0 +1,11 @@
+# mojo-toml
+> Native TOML 1.0 parser and writer for Mojo with zero Python runtime dependencies.
+## Documentation
+- [Home](https://databooth.github.io/mojo-toml/): Project overview, quickstart, installation, and usage.
+- [Changelog](https://databooth.github.io/mojo-toml/changelog.html): Release history and version notes.
+- [Performance](https://databooth.github.io/mojo-toml/user-guide/PERFORMANCE.html): Benchmark methodology and results.
+- [Platform Builds](https://databooth.github.io/mojo-toml/user-guide/PLATFORM_BUILDS.html): Packaging and platform build considerations.
+- [Roadmap](https://databooth.github.io/mojo-toml/roadmap.html): Planned improvements and future work.
+- [Blog Findings](https://databooth.github.io/mojo-toml/blog/2026-06-20-great-docs-mojo-findings.html): Great Docs rollout findings for this repository.
+## Source
+- [Repository](https://github.com/DataBooth/mojo-toml)

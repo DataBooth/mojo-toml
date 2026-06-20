@@ -1,0 +1,21 @@
+# mojo-toml
+> Native TOML 1.0 parser and writer for Mojo with zero Python runtime dependencies.
+## Project Summary
+mojo-toml provides parsing and writing support for TOML configuration files in Mojo.
+The library targets TOML 1.0 compliance and includes partial TOML 1.1 support.
+## Core Features
+- TOML 1.0 parser support, including nested tables, dotted keys, arrays, and inline tables.
+- TOML writer support with semantic round-trip fidelity.
+- Validation for duplicates and malformed structures with line and column error context.
+- Support for additional numeric bases (`0x`, `0o`, `0b`) and selected TOML 1.1 escapes.
+## Primary Docs
+- Home: https://databooth.github.io/mojo-toml/
+- Changelog: https://databooth.github.io/mojo-toml/changelog.html
+- Performance: https://databooth.github.io/mojo-toml/user-guide/PERFORMANCE.html
+- Platform builds: https://databooth.github.io/mojo-toml/user-guide/PLATFORM_BUILDS.html
+- Roadmap: https://databooth.github.io/mojo-toml/roadmap.html
+## Install Guidance
+- Recommended packaging and release consumption is documented in the home page and user guide pages.
+- For source-based consumption, use the repository and include `src` in Mojo include paths.
+## Repository
+- GitHub: https://github.com/DataBooth/mojo-toml

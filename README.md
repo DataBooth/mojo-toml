@@ -11,6 +11,7 @@
 `mojo-toml` enables native TOML parsing in Mojo without Python dependencies. Parse configuration files, project settings, and structured data with a clean, type-safe API.
 
 **Key features:**
+
 - ✅ **TOML 1.0 compliant** - full specification support
 - ✅ **Array of tables** - `[[section]]` syntax for repeated table arrays
 - ✅ **Alternative number bases** - hex (`0xDEAD`), octal (`0o755`), binary (`0b1101`)
@@ -200,10 +201,12 @@ pixi add mojo-toml
 ### 🔮 TOML 1.1 (Partial Support)
 
 TOML 1.1 features implemented:
+
 - ✅ `\\xHH` escape sequences for codepoints 0-255 (e.g., `\\x00`, `\\x61`)
 - ✅ `\\e` escape for escape character (U+001B)
 
 TOML 1.1 features not yet implemented:
+
 - Multiline inline tables with trailing commas
 - Optional seconds in datetime/time values
 
@@ -264,6 +267,7 @@ pixi run benchmark-python
 ```
 
 Both benchmarks generate markdown reports in `benchmarks/reports/` with:
+
 - System specifications (OS, CPU, GPU, RAM, Mojo/Python versions)
 - Performance tables with throughput and latency
 - Timestamp and machine configuration
@@ -292,15 +296,18 @@ See [ROADMAP.md](docs/planning/ROADMAP.md) for areas where contributions would b
 ## Related Projects
 
 **Other Mojo Config Libraries:**
+
 - **[mojo-ini](https://github.com/databooth/mojo-ini)** - INI file parser with Python configparser compatibility
 - **[mojo-dotenv](https://github.com/databooth/mojo-dotenv)** - Load environment variables from .env files
 
 **Other TOML Parsers in Mojo:**
+
 - **[decimojo/tomlmojo](https://github.com/forfudan/decimojo/tree/main/src/tomlmojo)** - Lightweight TOML parser (~900 LOC, parser-only) embedded in the decimojo library. Good choice if you only need basic config reading for tests and don't need a standalone package or TOML 1.0 features.
 
 ## Acknowledgements
 
 Special thanks to:
+
 - **[DataBooth](https://www.databooth.com.au/posts/mojo)** - Project sponsor, building high-performance data and AI services with Mojo
 - **[Python tomli](https://github.com/hukkin/tomli)** - Reference implementation for validation
 - **[TOML Specification](https://toml.io/en/v1.0.0)** - Tom Preston-Werner's excellent config format
