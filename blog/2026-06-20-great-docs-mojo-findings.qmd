@@ -1,0 +1,47 @@
+---
+title: "Great Docs on a Mojo-first repository: early findings"
+date: 2026-06-20
+description: "Initial findings from trialling Great Docs in the mojo-toml project."
+---
+
+## What we tested
+- Ran `great-docs init` in a Mojo-first repository.
+- Reviewed generated configuration behaviour for non-Python package layout.
+- Prepared a first-pass `great-docs.yml` that prioritises narrative docs and blog content.
+- Ran `great-docs build` and `great-docs build --no-refresh` after configuration updates.
+
+## Early findings
+- Initialisation succeeds, but package auto-discovery cannot infer a Python API surface.
+- Great Docs is still useful for polished site generation around Markdown/QMD documentation.
+- A custom docs-first configuration works as a practical starting point for Mojo projects.
+
+## Build findings
+- Build completed successfully: `19/19` steps, with `10` skipped and `11` warnings.
+- Output site was generated at `great-docs/_site/index.html`.
+- User Guide processing picked up `31` pages from `docs/`.
+- Blog processing picked up this post from `blog/`.
+- The most common warnings were unresolved README relative links after content was re-rooted for rendering.
+- A skills-page warning indicated `site_url` is not yet configured in `great-docs.yml`.
+
+## Tooling migration: pre-commit to prek
+- Repository automation was migrated from `pre-commit` commands to `prek`.
+- `pixi.toml` now exposes `prek` and `prek-install` tasks.
+- Project dependency changed from `pre-commit` to `prek`.
+- Existing `.pre-commit-config.yaml` remains valid and is used by `prek`.
+- Supporting docs were updated so local quality checks consistently reference `prek`.
+
+## Warning details worth addressing
+- Unresolved links to:
+  - `README.md`
+  - `CHANGELOG.md`
+  - `docs/PLATFORM_BUILDS.md`
+  - `docs/planning/REFLECTION_SERIALIZATION.md`
+  - `docs/planning/ROADMAP.md`
+  - `docs/PERFORMANCE.md`
+- Missing site URL for generated skills metadata.
+
+## Next validation steps
+- Add `site_url` once docs hosting URL is finalised.
+- Normalise cross-links in `README.md` and docs pages for Quarto-rendered paths.
+- Decide whether to keep `docs/planning/` in published navigation.
+- Decide whether to add a manual API section for Mojo symbols.

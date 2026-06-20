@@ -30,9 +30,8 @@ jobs:
 
     - name: Run examples
       run: |
-        pixi run example-simple
-        pixi run example-pixi
+        pixi run examples-all
 
     - name: Test summary
       if: always()
-      run: echo "✅ All 79 tests passed"
+      run: echo "✅ Test workflow completed"
