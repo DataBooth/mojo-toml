@@ -31,13 +31,6 @@ jobs:
       - name: Build docs
         run: uvx great-docs build
 
-      - name: Add llms text files
-        run: |
-          cp llms.txt llms-full.txt great-docs/_site/
-          mkdir -p great-docs/_site/.well-known
-          cp llms.txt great-docs/_site/.well-known/llms.txt
-          cp llms-full.txt great-docs/_site/.well-known/llms-full.txt
-
       - name: Save docs artifact
         uses: actions/upload-artifact@v7
         with:
