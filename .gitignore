@@ -10,6 +10,7 @@ benchmarks/reports/
 # Generated/temporary files
 *.time-trace
 *_output.toml
+blog/.Rhistory
 
 # Compiled binaries
 parse_pixi
