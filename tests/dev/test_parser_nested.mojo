@@ -2,7 +2,7 @@
 
 from toml import parse
 
-fn main() raises:
+def main() raises:
     print("Testing nested table parsing:")
     print()
 

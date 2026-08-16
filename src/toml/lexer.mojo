@@ -45,7 +45,7 @@ struct Position(Copyable, Movable):
     var line: Int
     var column: Int
 
-    fn __init__(out self, line: Int, column: Int):
+    def __init__(out self, line: Int, column: Int):
         self.line = line
         self.column = column
 
@@ -58,102 +58,102 @@ struct TokenKind(Copyable, Movable):
     """
     var _value: Int
 
-    fn __init__(out self, value: Int):
+    def __init__(out self, value: Int):
         self._value = value
 
     # Special tokens
     @staticmethod
-    fn EOF() -> TokenKind:
+    def EOF() -> TokenKind:
         """End of file marker."""
         return TokenKind(0)
 
     @staticmethod
-    fn NEWLINE() -> TokenKind:
+    def NEWLINE() -> TokenKind:
         """Line break (significant in TOML for separating key-value pairs)."""
         return TokenKind(1)
 
     @staticmethod
-    fn WHITESPACE() -> TokenKind:
+    def WHITESPACE() -> TokenKind:
         """Spaces and tabs (usually skipped)."""
         return TokenKind(2)
 
     @staticmethod
-    fn COMMENT() -> TokenKind:
+    def COMMENT() -> TokenKind:
         """Comment text after # symbol."""
         return TokenKind(3)
 
     # Literal values
     @staticmethod
-    fn STRING() -> TokenKind:
+    def STRING() -> TokenKind:
         """String literal: "basic" or 'literal'."""
         return TokenKind(10)
 
     @staticmethod
-    fn INTEGER() -> TokenKind:
+    def INTEGER() -> TokenKind:
         """Integer: 42, +17, -5, 1_000."""
         return TokenKind(11)
 
     @staticmethod
-    fn FLOAT() -> TokenKind:
+    def FLOAT() -> TokenKind:
         """Float: 3.14, 1e10, inf, nan."""
         return TokenKind(12)
 
     @staticmethod
-    fn BOOLEAN() -> TokenKind:
+    def BOOLEAN() -> TokenKind:
         """Boolean: true or false."""
         return TokenKind(13)
 
     @staticmethod
-    fn DATETIME() -> TokenKind:
+    def DATETIME() -> TokenKind:
         """ISO 8601 datetime (parsed as string in v0.1.0)."""
         return TokenKind(14)
 
     # Identifiers
     @staticmethod
-    fn KEY() -> TokenKind:
+    def KEY() -> TokenKind:
         """Unquoted key name."""
         return TokenKind(20)
 
     # Punctuation (structural elements)
     @staticmethod
-    fn EQUALS() -> TokenKind:
+    def EQUALS() -> TokenKind:
         """Assignment operator: =."""
         return TokenKind(30)
 
     @staticmethod
-    fn DOT() -> TokenKind:
+    def DOT() -> TokenKind:
         """Dotted key separator: a.b.c."""
         return TokenKind(31)
 
     @staticmethod
-    fn COMMA() -> TokenKind:
+    def COMMA() -> TokenKind:
         """Array/inline table separator: ,."""
         return TokenKind(32)
 
     @staticmethod
-    fn LEFT_BRACKET() -> TokenKind:
+    def LEFT_BRACKET() -> TokenKind:
         """Array start or table header: [."""
         return TokenKind(33)
 
     @staticmethod
-    fn RIGHT_BRACKET() -> TokenKind:
+    def RIGHT_BRACKET() -> TokenKind:
         """Array end or table header close: ]."""
         return TokenKind(34)
 
     @staticmethod
-    fn LEFT_BRACE() -> TokenKind:
+    def LEFT_BRACE() -> TokenKind:
         """Inline table start: {."""
         return TokenKind(35)
 
     @staticmethod
-    fn RIGHT_BRACE() -> TokenKind:
+    def RIGHT_BRACE() -> TokenKind:
         """Inline table end: }."""
         return TokenKind(36)
 
-    fn __eq__(self, other: TokenKind) -> Bool:
+    def __eq__(self, other: TokenKind) -> Bool:
         return self._value == other._value
 
-    fn __ne__(self, other: TokenKind) -> Bool:
+    def __ne__(self, other: TokenKind) -> Bool:
         return self._value != other._value
 
 
@@ -167,7 +167,7 @@ struct Token(Copyable, Movable):
     var value: String  # The actual text content
     var pos: Position  # Where it appears in the file
 
-    fn __init__(out self, kind: TokenKind, value: String, pos: Position):
+    def __init__(out self, kind: TokenKind, value: String, pos: Position):
         self.kind = kind.copy()
         self.value = value
         self.pos = pos.copy()
@@ -195,7 +195,7 @@ struct Lexer:
     var line: Int     # Current line number (1-indexed)
     var column: Int   # Current column number (1-indexed)
 
-    fn __init__(out self, input: String):
+    def __init__(out self, input: String):
         """Initialise lexer with TOML input.
 
         Args:
@@ -211,7 +211,7 @@ struct Lexer:
         self.line = 1
         self.column = 1
 
-    fn current(self) -> String:
+    def current(self) -> String:
         """Get current character without advancing.
 
         Returns:
@@ -221,7 +221,7 @@ struct Lexer:
             return ""
         return self.chars[self.pos]
 
-    fn peek(self, offset: Int = 1) -> String:
+    def peek(self, offset: Int = 1) -> String:
         """Look ahead at character without consuming it.
 
         Used for lookahead decisions, e.g. detecting triple quotes.
@@ -237,7 +237,7 @@ struct Lexer:
             return ""
         return self.chars[peek_pos]
 
-    fn advance(mut self) -> String:
+    def advance(mut self) -> String:
         """Consume and return current character.
 
         Advances position and updates line/column tracking for error messages.
@@ -259,7 +259,7 @@ struct Lexer:
 
         return c
 
-    fn skip_whitespace(mut self):
+    def skip_whitespace(mut self):
         """Skip whitespace characters (space, tab) but not newlines.
 
         Newlines are significant in TOML for separating key-value pairs,
@@ -272,7 +272,7 @@ struct Lexer:
             else:
                 break
 
-    fn read_comment(mut self) raises -> Token:
+    def read_comment(mut self) raises -> Token:
         """Read a comment starting with #.
 
         Comments run from # to end of line. They can appear after values:
@@ -293,7 +293,7 @@ struct Lexer:
 
         return Token(TokenKind.COMMENT(), comment, start_pos)
 
-    fn read_string(mut self) raises -> Token:
+    def read_string(mut self) raises -> Token:
         """Read a quoted string (basic or literal).
 
         TOML supports two string types:
@@ -385,7 +385,7 @@ struct Lexer:
 
         return Token(TokenKind.STRING(), value, start_pos)
 
-    fn read_number(mut self) raises -> Token:
+    def read_number(mut self) raises -> Token:
         """Read a number (integer or float).
 
         TOML supports rich number formats:
@@ -497,7 +497,7 @@ struct Lexer:
         else:
             return Token(TokenKind.INTEGER(), value, start_pos)
 
-    fn read_key(mut self) raises -> Token:
+    def read_key(mut self) raises -> Token:
         """Read an unquoted key or boolean/datetime value.
 
         Unquoted keys can contain: a-z, A-Z, 0-9, _, -
@@ -528,7 +528,7 @@ struct Lexer:
 
         return Token(TokenKind.KEY(), value, start_pos)
 
-    fn next_token(mut self) raises -> Token:
+    def next_token(mut self) raises -> Token:
         """Get the next token from the input.
 
         This is the main lexer logic that dispatches to specific readers
@@ -605,7 +605,7 @@ struct Lexer:
         # Unquoted key or boolean
         return self.read_key()
 
-    fn is_hex_digit(self, c: String) -> Bool:
+    def is_hex_digit(self, c: String) -> Bool:
         """Check if character is a hexadecimal digit (0-9, a-f, A-F).
 
         Args:
@@ -616,7 +616,7 @@ struct Lexer:
         """
         return (c >= "0" and c <= "9") or (c >= "a" and c <= "f") or (c >= "A" and c <= "F")
 
-    fn hex_to_int(self, hex_str: String) -> Int:
+    def hex_to_int(self, hex_str: String) -> Int:
         """Convert a 2-character hex string to integer.
 
         Args:
@@ -645,7 +645,7 @@ struct Lexer:
             result = result * 16 + digit_value
         return result
 
-    fn tokenize(mut self) raises -> List[Token]:
+    def tokenize(mut self) raises -> List[Token]:
         """Tokenise entire input into list of tokens.
 
         This is the main public API for the lexer. It produces a complete

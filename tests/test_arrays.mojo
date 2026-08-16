@@ -4,11 +4,11 @@ Tests TOML array parsing including homogeneous and heterogeneous arrays,
 nested arrays, multiline arrays, and arrays with trailing commas.
 """
 
-from testing import assert_equal, assert_true, assert_false, TestSuite
+from std.testing import assert_equal, assert_true, assert_false, TestSuite
 from toml import parse
 
 
-fn test_empty_array() raises:
+def test_empty_array() raises:
     """Test parsing empty array."""
     var data = parse("items = []")
 
@@ -19,7 +19,7 @@ fn test_empty_array() raises:
     assert_equal(len(arr), 0)
 
 
-fn test_integer_array() raises:
+def test_integer_array() raises:
     """Test parsing array of integers."""
     var data = parse("numbers = [1, 2, 3, 4, 5]")
 
@@ -34,7 +34,7 @@ fn test_integer_array() raises:
     assert_equal(arr[4].as_int(), 5)
 
 
-fn test_string_array() raises:
+def test_string_array() raises:
     """Test parsing array of strings."""
     var data = parse('colors = ["red", "green", "blue"]')
 
@@ -47,7 +47,7 @@ fn test_string_array() raises:
     assert_equal(arr[2].as_string(), "blue")
 
 
-fn test_float_array() raises:
+def test_float_array() raises:
     """Test parsing array of floats."""
     var data = parse("values = [1.0, 2.5, 3.14]")
 
@@ -60,7 +60,7 @@ fn test_float_array() raises:
     assert_equal(arr[2].as_float(), 3.14)
 
 
-fn test_boolean_array() raises:
+def test_boolean_array() raises:
     """Test parsing array of booleans."""
     var data = parse("flags = [true, false, true]")
 
@@ -73,7 +73,7 @@ fn test_boolean_array() raises:
     assert_true(arr[2].as_bool())
 
 
-fn test_mixed_type_array() raises:
+def test_mixed_type_array() raises:
     """Test parsing array with mixed types (valid in TOML)."""
     var data = parse('mixed = [1, "two", 3.0, true]')
 
@@ -92,7 +92,7 @@ fn test_mixed_type_array() raises:
     assert_true(arr[3].as_bool())
 
 
-fn test_nested_array() raises:
+def test_nested_array() raises:
     """Test parsing nested arrays."""
     var data = parse("matrix = [[1, 2], [3, 4], [5, 6]]")
 
@@ -119,7 +119,7 @@ fn test_nested_array() raises:
     assert_equal(row3[1].as_int(), 6)
 
 
-fn test_array_with_trailing_comma() raises:
+def test_array_with_trailing_comma() raises:
     """Test parsing array with trailing comma."""
     var data = parse("items = [1, 2, 3,]")
 
@@ -132,7 +132,7 @@ fn test_array_with_trailing_comma() raises:
     assert_equal(arr[2].as_int(), 3)
 
 
-fn test_multiline_array() raises:
+def test_multiline_array() raises:
     """Test parsing multiline array."""
     var data = parse("""items = [
     1,
@@ -149,7 +149,7 @@ fn test_multiline_array() raises:
     assert_equal(arr[2].as_int(), 3)
 
 
-fn test_array_with_comments() raises:
+def test_array_with_comments() raises:
     """Test parsing array with comments."""
     var data = parse("""items = [
     1,  # first item
@@ -166,7 +166,7 @@ fn test_array_with_comments() raises:
     assert_equal(arr[2].as_int(), 3)
 
 
-fn test_array_single_element() raises:
+def test_array_single_element() raises:
     """Test parsing single-element array."""
     var data = parse("singleton = [42]")
 
@@ -177,7 +177,7 @@ fn test_array_single_element() raises:
     assert_equal(arr[0].as_int(), 42)
 
 
-fn test_array_with_whitespace() raises:
+def test_array_with_whitespace() raises:
     """Test parsing array with extra whitespace."""
     var data = parse("spaced = [  1  ,  2  ,  3  ]")
 
@@ -190,7 +190,7 @@ fn test_array_with_whitespace() raises:
     assert_equal(arr[2].as_int(), 3)
 
 
-fn test_deeply_nested_array() raises:
+def test_deeply_nested_array() raises:
     """Test parsing deeply nested arrays."""
     var data = parse("deep = [[[1, 2], [3, 4]], [[5, 6], [7, 8]]]")
 
@@ -211,7 +211,7 @@ fn test_deeply_nested_array() raises:
     assert_equal(level3_2[1].as_int(), 4)
 
 
-fn test_multiple_arrays() raises:
+def test_multiple_arrays() raises:
     """Test parsing multiple arrays in one document."""
     var data = parse("""
 first = [1, 2, 3]

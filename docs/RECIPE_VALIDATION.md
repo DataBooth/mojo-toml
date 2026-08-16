@@ -114,7 +114,7 @@ tests:
 
 ## Integration with Your Workflow
 
-### Pre-commit Hook
+### Prek Hook
 
 Add to `.pre-commit-config.yaml`:
 
@@ -130,7 +130,7 @@ repos:
         pass_filenames: false
 ```
 
-Then install: `pre-commit install`
+Then install: `prek install -f`
 
 ### Just Recipe
 

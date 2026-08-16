@@ -3,12 +3,12 @@
 Tests the serialisation of tables with [section] headers and nested structures.
 """
 
-from testing import assert_equal, assert_true, TestSuite
+from std.testing import assert_equal, assert_true, TestSuite
 from toml import TomlValue, to_toml
 from std.collections import Dict, List
 
 
-fn test_write_simple_table() raises:
+def test_write_simple_table() raises:
     """Test writing a simple table with [section] header."""
     var config = Dict[String, TomlValue]()
 
@@ -29,7 +29,7 @@ fn test_write_simple_table() raises:
     assert_true(output.find("enabled = true") != -1)
 
 
-fn test_write_multiple_tables() raises:
+def test_write_multiple_tables() raises:
     """Test writing multiple tables."""
     var config = Dict[String, TomlValue]()
 
@@ -55,7 +55,7 @@ fn test_write_multiple_tables() raises:
     assert_true(output.find("[database]") != -1)
 
 
-fn test_write_nested_table() raises:
+def test_write_nested_table() raises:
     """Test writing nested tables."""
     var config = Dict[String, TomlValue]()
 
@@ -76,7 +76,7 @@ fn test_write_nested_table() raises:
     assert_true(output.find("port = 5432") != -1)
 
 
-fn test_write_deeply_nested_tables() raises:
+def test_write_deeply_nested_tables() raises:
     """Test writing deeply nested tables (3 levels)."""
     var config = Dict[String, TomlValue]()
 
@@ -100,7 +100,7 @@ fn test_write_deeply_nested_tables() raises:
     assert_true(output.find("[database.primary.replica]") != -1)
 
 
-fn test_write_table_with_root_keys() raises:
+def test_write_table_with_root_keys() raises:
     """Test writing mix of root keys and tables."""
     var config = Dict[String, TomlValue]()
 
@@ -128,7 +128,7 @@ fn test_write_table_with_root_keys() raises:
     assert_true(output.find("host = \"localhost\"") != -1)
 
 
-fn test_write_small_section_table() raises:
+def test_write_small_section_table() raises:
     """Test that 2-key tables use section format at root level."""
     var config = Dict[String, TomlValue]()
 
@@ -146,7 +146,7 @@ fn test_write_small_section_table() raises:
     assert_true(output.find("y = 20") != -1)
 
 
-fn test_write_table_with_array() raises:
+def test_write_table_with_array() raises:
     """Test writing table containing arrays."""
     var config = Dict[String, TomlValue]()
 
@@ -170,7 +170,7 @@ fn test_write_table_with_array() raises:
     assert_true(output.find("ports = [8080, 8081, 8082]") != -1)
 
 
-fn test_write_mixed_nested_structure() raises:
+def test_write_mixed_nested_structure() raises:
     """Test complex structure with root keys and nested tables."""
     var config = Dict[String, TomlValue]()
 
@@ -207,7 +207,7 @@ fn test_write_mixed_nested_structure() raises:
     assert_true(output.find("[database.replica]") != -1)
 
 
-fn test_write_table_with_nested_section() raises:
+def test_write_table_with_nested_section() raises:
     """Test table containing a nested section table."""
     var config = Dict[String, TomlValue]()
 
@@ -235,7 +235,7 @@ fn test_write_table_with_nested_section() raises:
     assert_true(output.find("[database.credentials]") != -1)
 
 
-fn test_write_empty_table() raises:
+def test_write_empty_table() raises:
     """Test writing an empty table."""
     var config = Dict[String, TomlValue]()
 
@@ -248,7 +248,7 @@ fn test_write_empty_table() raises:
     assert_equal(output, "empty = { }\n")
 
 
-fn test_write_table_hierarchy() raises:
+def test_write_table_hierarchy() raises:
     """Test proper hierarchy in nested tables."""
     var config = Dict[String, TomlValue]()
 

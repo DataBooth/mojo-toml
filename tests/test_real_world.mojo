@@ -4,12 +4,12 @@ Tests parsing actual TOML files like pixi.toml to validate against real-world us
 This is "dogfooding" - using our own project's config files to test the parser.
 """
 
-from testing import assert_equal, assert_true, TestSuite
+from std.testing import assert_equal, assert_true, TestSuite
 from toml import parse
 from std.pathlib import Path
 
 
-fn test_parse_pixi_toml() raises:
+def test_parse_pixi_toml() raises:
     """Test parsing our own pixi.toml file.
 
     This validates that the parser can handle a real-world TOML file
@@ -33,7 +33,7 @@ fn test_parse_pixi_toml() raises:
     print("Number of top-level keys:", len(data))
 
 
-fn test_parse_simple_toml_file() raises:
+def test_parse_simple_toml_file() raises:
     """Test parsing a simple TOML file we create."""
     # Create a simple test TOML file
     var simple_toml = """
@@ -73,7 +73,7 @@ timeout = 30.0
     assert_true(timeout_val > 29.9 and timeout_val < 30.1)
 
 
-fn test_parse_config_with_comments() raises:
+def test_parse_config_with_comments() raises:
     """Test parsing TOML with extensive comments."""
     var config = """
 # Application Configuration
@@ -118,7 +118,7 @@ timeout_seconds = 30.5
     assert_true(timeout > 30.4 and timeout < 30.6)
 
 
-fn test_parse_multiline_strings() raises:
+def test_parse_multiline_strings() raises:
     """Test parsing TOML with multiline string values."""
     var toml_with_multiline = '''
 description = """
@@ -141,7 +141,7 @@ single_line = "This is just one line"
     assert_equal(data["single_line"].as_string(), "This is just one line")
 
 
-fn test_parse_numbers_variations() raises:
+def test_parse_numbers_variations() raises:
     """Test various number formats supported by TOML."""
     var numbers_toml = """
 # Integer variations

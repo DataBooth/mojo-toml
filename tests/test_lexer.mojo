@@ -4,11 +4,11 @@ Comprehensive tests for the tokenisation of TOML input into token streams.
 Covers all token types, syntax elements, and lexer functionality.
 """
 
-from testing import assert_equal, assert_true, TestSuite
+from std.testing import assert_equal, assert_true, TestSuite
 from toml.lexer import Lexer, TokenKind
 
 
-fn test_empty_input() raises:
+def test_empty_input() raises:
     """Test lexing empty input."""
     var lexer = Lexer("")
     var tokens = lexer.tokenize()
@@ -17,7 +17,7 @@ fn test_empty_input() raises:
     assert_true(tokens[0].kind == TokenKind.EOF())
 
 
-fn test_simple_key_value() raises:
+def test_simple_key_value() raises:
     """Test basic key = value tokenisation."""
     var lexer = Lexer("name = \"mojo-toml\"")
     var tokens = lexer.tokenize()
@@ -32,7 +32,7 @@ fn test_simple_key_value() raises:
     assert_true(tokens[3].kind == TokenKind.EOF())
 
 
-fn test_integers() raises:
+def test_integers() raises:
     """Test integer tokenisation."""
     var test_cases = List[String]()
     test_cases.append("42")
@@ -47,7 +47,7 @@ fn test_integers() raises:
         assert_true(tokens[0].kind == TokenKind.INTEGER(), msg="Expected INTEGER token")
 
 
-fn test_floats() raises:
+def test_floats() raises:
     """Test float tokenisation."""
     var test_cases = List[String]()
     test_cases.append("3.14")
@@ -62,7 +62,7 @@ fn test_floats() raises:
         assert_true(tokens[0].kind == TokenKind.FLOAT(), msg="Expected FLOAT token")
 
 
-fn test_special_floats() raises:
+def test_special_floats() raises:
     """Test special float values (inf, nan)."""
     var lexer1 = Lexer("inf")
     var tokens1 = lexer1.tokenize()
@@ -80,7 +80,7 @@ fn test_special_floats() raises:
     assert_equal(tokens3[0].value, "nan")
 
 
-fn test_booleans() raises:
+def test_booleans() raises:
     """Test boolean tokenisation."""
     var lexer1 = Lexer("true")
     var tokens1 = lexer1.tokenize()
@@ -93,7 +93,7 @@ fn test_booleans() raises:
     assert_equal(tokens2[0].value, "false")
 
 
-fn test_basic_string() raises:
+def test_basic_string() raises:
     """Test basic string with escape sequences."""
     var lexer = Lexer('"hello world"')
     var tokens = lexer.tokenize()
@@ -101,7 +101,7 @@ fn test_basic_string() raises:
     assert_equal(tokens[0].value, "hello world")
 
 
-fn test_literal_string() raises:
+def test_literal_string() raises:
     """Test literal string (no escape processing)."""
     var lexer = Lexer("'C:\\\\Users\\\\name'")
     var tokens = lexer.tokenize()
@@ -110,7 +110,7 @@ fn test_literal_string() raises:
     assert_equal(tokens[0].value, "C:\\\\Users\\\\name")
 
 
-fn test_string_escapes() raises:
+def test_string_escapes() raises:
     """Test escape sequences in basic strings."""
     var lexer = Lexer('"line1\\nline2\\ttab"')
     var tokens = lexer.tokenize()
@@ -118,7 +118,7 @@ fn test_string_escapes() raises:
     assert_equal(tokens[0].value, "line1\nline2\ttab")
 
 
-fn test_multiline_basic_string() raises:
+def test_multiline_basic_string() raises:
     """Test multiline basic string with triple quotes."""
     var input = '"""line 1\nline 2\nline 3"""'
     var lexer = Lexer(input)
@@ -127,7 +127,7 @@ fn test_multiline_basic_string() raises:
     assert_equal(tokens[0].value, "line 1\nline 2\nline 3")
 
 
-fn test_comments() raises:
+def test_comments() raises:
     """Test comment tokenisation."""
     var lexer = Lexer("# This is a comment")
     var tokens = lexer.tokenize()
@@ -135,7 +135,7 @@ fn test_comments() raises:
     assert_equal(tokens[0].value, " This is a comment")
 
 
-fn test_inline_comment() raises:
+def test_inline_comment() raises:
     """Test inline comment after value."""
     var lexer = Lexer('name = "value"  # comment')
     var tokens = lexer.tokenize()
@@ -149,7 +149,7 @@ fn test_inline_comment() raises:
     assert_equal(tokens[3].value, " comment")
 
 
-fn test_punctuation() raises:
+def test_punctuation() raises:
     """Test all punctuation tokens."""
     var lexer = Lexer("= . , [ ] { }")
     var tokens = lexer.tokenize()
@@ -164,7 +164,7 @@ fn test_punctuation() raises:
     assert_true(tokens[7].kind == TokenKind.EOF())
 
 
-fn test_array_syntax() raises:
+def test_array_syntax() raises:
     """Test array tokenisation."""
     var lexer = Lexer("[1, 2, 3]")
     var tokens = lexer.tokenize()
@@ -179,7 +179,7 @@ fn test_array_syntax() raises:
     assert_true(tokens[6].kind == TokenKind.RIGHT_BRACKET())
 
 
-fn test_inline_table_syntax() raises:
+def test_inline_table_syntax() raises:
     """Test inline table tokenisation."""
     var lexer = Lexer('{name = "value"}')
     var tokens = lexer.tokenize()
@@ -192,7 +192,7 @@ fn test_inline_table_syntax() raises:
     assert_true(tokens[4].kind == TokenKind.RIGHT_BRACE())
 
 
-fn test_table_header() raises:
+def test_table_header() raises:
     """Test table header tokenisation."""
     var lexer = Lexer("[package]")
     var tokens = lexer.tokenize()
@@ -204,7 +204,7 @@ fn test_table_header() raises:
     assert_true(tokens[2].kind == TokenKind.RIGHT_BRACKET())
 
 
-fn test_dotted_key() raises:
+def test_dotted_key() raises:
     """Test dotted key tokenisation."""
     var lexer = Lexer("a.b.c = 1")
     var tokens = lexer.tokenize()
@@ -222,7 +222,7 @@ fn test_dotted_key() raises:
     assert_true(tokens[6].kind == TokenKind.INTEGER())
 
 
-fn test_newlines() raises:
+def test_newlines() raises:
     """Test newline handling."""
     var lexer = Lexer("key1 = 1\nkey2 = 2")
     var tokens = lexer.tokenize()
@@ -235,7 +235,7 @@ fn test_newlines() raises:
     assert_true(tokens[4].kind == TokenKind.KEY())
 
 
-fn test_whitespace_handling() raises:
+def test_whitespace_handling() raises:
     """Test whitespace is properly skipped."""
     var lexer = Lexer("  key  =  \"value\"  ")
     var tokens = lexer.tokenize()
@@ -247,7 +247,7 @@ fn test_whitespace_handling() raises:
     assert_true(tokens[3].kind == TokenKind.EOF())
 
 
-fn test_position_tracking() raises:
+def test_position_tracking() raises:
     """Test that tokens track their position correctly."""
     var lexer = Lexer("key = 1\nname = \"value\"")
     var tokens = lexer.tokenize()
@@ -260,7 +260,7 @@ fn test_position_tracking() raises:
     assert_equal(tokens[4].pos.line, 2)
 
 
-fn test_unquoted_keys() raises:
+def test_unquoted_keys() raises:
     """Test various unquoted key formats."""
     var test_cases = List[String]()
     test_cases.append("simple")
@@ -276,7 +276,7 @@ fn test_unquoted_keys() raises:
         assert_equal(tokens[0].value, test_cases[i])
 
 
-fn test_quoted_keys() raises:
+def test_quoted_keys() raises:
     """Test quoted keys (allows any characters)."""
     var lexer = Lexer('"127.0.0.1" = "localhost"')
     var tokens = lexer.tokenize()
@@ -287,7 +287,7 @@ fn test_quoted_keys() raises:
     assert_true(tokens[2].kind == TokenKind.STRING())
 
 
-fn test_empty_string() raises:
+def test_empty_string() raises:
     """Test empty string parsing."""
     var lexer = Lexer('name = ""')
     var tokens = lexer.tokenize()
@@ -296,7 +296,7 @@ fn test_empty_string() raises:
     assert_equal(tokens[2].value, "")
 
 
-fn test_number_with_underscores() raises:
+def test_number_with_underscores() raises:
     """Test numbers with underscore separators."""
     var lexer = Lexer("big = 1_000_000")
     var tokens = lexer.tokenize()
@@ -306,7 +306,7 @@ fn test_number_with_underscores() raises:
     assert_equal(tokens[2].value, "1000000")
 
 
-fn test_complex_toml_line() raises:
+def test_complex_toml_line() raises:
     """Test a realistic TOML line."""
     var lexer = Lexer('[package]\nname = "mojo-toml"  # First TOML parser\nversion = "0.1.0"')
     var tokens = lexer.tokenize()

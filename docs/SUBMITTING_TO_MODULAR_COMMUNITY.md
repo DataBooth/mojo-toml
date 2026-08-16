@@ -496,7 +496,7 @@ about:
 
 1. Add validation script: [`scripts/validate-recipe.sh`](../scripts/validate-recipe.sh)
 2. Add GitHub Actions: [`.github/workflows/validate-recipe.yml`](../.github/workflows/validate-recipe.yml)
-3. Add to pre-commit:
+3. Add to prek:
    ```yaml
    - repo: local
      hooks:
@@ -545,26 +545,26 @@ requirements:
 
 **When to update:** When new stable Mojo releases (check [Mojo changelog](https://docs.modular.com/mojo/changelog/))
 
-### ✅ Pre-commit Hygiene
+### ✅ Prek hygiene
 
 **Issue:** Trailing whitespace, incorrect line endings cause CI failures.
 
-**Solution:** Install and run pre-commit in your package repos.
+**Solution:** Install and run prek in your package repos.
 
 **Setup:**
 ```bash
 cd your-package-repo
-pixi run bash -c "pre-commit install"
-pixi run bash -c "pre-commit run --all-files"
+pixi run bash -c "prek install -f"
+pixi run bash -c "prek run --all-files"
 ```
 
-**Common fixes pre-commit catches:**
+**Common fixes prek catches:**
 - Trailing whitespace
 - Missing final newlines
 - YAML/TOML syntax errors
 - Mixed line endings
 
-**Automate:** Pre-commit runs on every `git commit` once installed.
+**Automate:** Prek runs on every `git commit` once installed.
 
 ### ✅ Git Tag Management
 
@@ -660,7 +660,7 @@ Use this checklist before creating your PR:
 **Your Package Repo:**
 - [ ] Git tag exists and pushed (e.g., `v0.9.1`)
 - [ ] CodeQL enabled with badge in README
-- [ ] Pre-commit hooks installed and passing
+- [ ] Prek hooks installed and passing
 - [ ] Tests pass locally
 - [ ] LICENSE file exists
 - [ ] Package image created (512×512 PNG)

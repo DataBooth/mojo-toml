@@ -59,7 +59,7 @@ The GitHub Actions workflow runs automatically when `packaging/recipe.yaml` chan
 
 ## 📋 Integration Options
 
-### Option 1: Pre-commit Hook (Recommended)
+### Option 1: Prek Hook (Recommended)
 
 Add to `.pre-commit-config.yaml`:
 
@@ -74,7 +74,7 @@ Add to `.pre-commit-config.yaml`:
         pass_filenames: false
 ```
 
-Then: `pre-commit install`
+Then: `prek install -f`
 
 ### Option 2: Just Recipe
 
@@ -125,6 +125,6 @@ See `docs/RECIPE_VALIDATION.md` for:
 ## 🔗 Next Steps
 
 1. Test validation: `./scripts/validate-recipe.sh packaging/recipe.yaml`
-2. Add to pre-commit: Edit `.pre-commit-config.yaml`
+2. Add to prek: Edit `.pre-commit-config.yaml`
 3. Replicate to other packages: Copy files as shown above
 4. Read full guide: `docs/RECIPE_VALIDATION.md`

@@ -1,6 +1,6 @@
 from toml import parse
 
-fn main() raises:
+def main() raises:
     var d1 = parse("a = inf\nb = nan")
     print("Test 1 passed")
 

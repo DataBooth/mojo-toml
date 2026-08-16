@@ -10,7 +10,7 @@ from toml import parse, to_toml, TomlValue
 from std.collections import Dict
 
 
-fn main() raises:
+def main() raises:
     print("🔥 mojo-toml - Round-trip Example")
     print("=" * 50)
     print()

@@ -8,7 +8,7 @@ from testing import assert_equal, assert_true, TestSuite
 from toml import parse
 
 
-fn test_quickstart_app() raises:
+def test_quickstart_app() raises:
     """Test parsing app section from quickstart.toml."""
     var content: String
     with open("examples/quickstart.toml", "r") as f:
@@ -22,7 +22,7 @@ fn test_quickstart_app() raises:
     assert_equal(app["debug"].as_bool(), False)
 
 
-fn test_quickstart_database() raises:
+def test_quickstart_database() raises:
     """Test parsing database section from quickstart.toml."""
     var content: String
     with open("examples/quickstart.toml", "r") as f:
@@ -36,7 +36,7 @@ fn test_quickstart_database() raises:
     assert_equal(db["timeout"].as_float(), 30.5)
 
 
-fn test_quickstart_features() raises:
+def test_quickstart_features() raises:
     """Test parsing features array from quickstart.toml."""
     var content: String
     with open("examples/quickstart.toml", "r") as f:
@@ -51,7 +51,7 @@ fn test_quickstart_features() raises:
     assert_equal(features[2].as_string(), "metrics")
 
 
-fn test_quickstart_complete() raises:
+def test_quickstart_complete() raises:
     """Test complete parsing of quickstart.toml."""
     var content: String
     with open("examples/quickstart.toml", "r") as f:

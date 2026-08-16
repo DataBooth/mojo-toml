@@ -5,10 +5,10 @@ across various domains: apps, builds, ML, APIs, and games.
 """
 
 from toml import parse
-from testing import assert_equal, assert_true, assert_false, TestSuite
+from std.testing import assert_equal, assert_true, assert_false, TestSuite
 
 
-fn read_fixture(filename: String) raises -> String:
+def read_fixture(filename: String) raises -> String:
     """Read a fixture file from the fixtures directory."""
     var path = "fixtures/" + filename
 
@@ -16,7 +16,7 @@ fn read_fixture(filename: String) raises -> String:
         return f.read()
 
 
-fn test_app_config() raises:
+def test_app_config() raises:
     """Test parsing a typical application configuration file."""
     var content = read_fixture("app_config.toml")
     var config = parse(content)
@@ -51,7 +51,7 @@ fn test_app_config() raises:
     assert_equal(config["cache_size"].as_int(), 1024)
 
 
-fn test_build_config() raises:
+def test_build_config() raises:
     """Test parsing a build configuration file."""
     var content = read_fixture("build_config.toml")
     var config = parse(content)
@@ -79,7 +79,7 @@ fn test_build_config() raises:
     assert_equal(config["coverage_threshold"].as_float(), 80.0)
 
 
-fn test_ml_config() raises:
+def test_ml_config() raises:
     """Test parsing a machine learning model configuration file."""
     var content = read_fixture("ml_config.toml")
     var config = parse(content)
@@ -120,7 +120,7 @@ fn test_ml_config() raises:
     assert_equal(config["scale_method"].as_string(), "standard")
 
 
-fn test_api_config() raises:
+def test_api_config() raises:
     """Test parsing a REST API configuration file."""
     var content = read_fixture("api_config.toml")
     var config = parse(content)
@@ -160,7 +160,7 @@ fn test_api_config() raises:
     assert_equal(config["session_timeout"].as_float(), 3600.0)
 
 
-fn test_game_settings() raises:
+def test_game_settings() raises:
     """Test parsing a game engine settings file."""
     var content = read_fixture("game_settings.toml")
     var config = parse(content)

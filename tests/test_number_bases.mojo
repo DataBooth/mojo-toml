@@ -6,11 +6,11 @@ Tests TOML 1.0 alternative integer formats:
 - Binary: 0b1101, 0b1111_0000
 """
 
-from testing import assert_equal, TestSuite
+from std.testing import assert_equal, TestSuite
 from toml import parse
 
 
-fn test_hex_lowercase() raises:
+def test_hex_lowercase() raises:
     """Test lowercase hexadecimal integers."""
     var toml = "value = 0xdead"
     var data = parse(toml)
@@ -19,7 +19,7 @@ fn test_hex_lowercase() raises:
     assert_equal(value, 57005)
 
 
-fn test_hex_uppercase() raises:
+def test_hex_uppercase() raises:
     """Test uppercase hexadecimal integers."""
     var toml = "value = 0xDEAD"
     var data = parse(toml)
@@ -27,7 +27,7 @@ fn test_hex_uppercase() raises:
     assert_equal(value, 57005)
 
 
-fn test_hex_mixed_case() raises:
+def test_hex_mixed_case() raises:
     """Test mixed case hexadecimal integers."""
     var toml = "value = 0xDeAd"
     var data = parse(toml)
@@ -35,7 +35,7 @@ fn test_hex_mixed_case() raises:
     assert_equal(value, 57005)
 
 
-fn test_hex_with_underscores() raises:
+def test_hex_with_underscores() raises:
     """Test hexadecimal with underscores for readability."""
     var toml = "value = 0xdead_beef"
     var data = parse(toml)
@@ -44,7 +44,7 @@ fn test_hex_with_underscores() raises:
     assert_equal(value, 3735928559)
 
 
-fn test_hex_simple() raises:
+def test_hex_simple() raises:
     """Test simple hexadecimal values."""
     var toml = "a = 0xFF\nb = 0x00\nc = 0x10"
     var data = parse(toml)
@@ -53,7 +53,7 @@ fn test_hex_simple() raises:
     assert_equal(data["c"].as_int(), 16)
 
 
-fn test_octal_basic() raises:
+def test_octal_basic() raises:
     """Test basic octal integers."""
     var toml = "value = 0o755"
     var data = parse(toml)
@@ -62,7 +62,7 @@ fn test_octal_basic() raises:
     assert_equal(value, 493)
 
 
-fn test_octal_with_leading_zero() raises:
+def test_octal_with_leading_zero() raises:
     """Test octal with leading zero."""
     var toml = "value = 0o0755"
     var data = parse(toml)
@@ -70,7 +70,7 @@ fn test_octal_with_leading_zero() raises:
     assert_equal(value, 493)
 
 
-fn test_octal_with_underscores() raises:
+def test_octal_with_underscores() raises:
     """Test octal with underscores."""
     var toml = "value = 0o7_5_5"
     var data = parse(toml)
@@ -78,7 +78,7 @@ fn test_octal_with_underscores() raises:
     assert_equal(value, 493)
 
 
-fn test_octal_zero() raises:
+def test_octal_zero() raises:
     """Test octal zero."""
     var toml = "value = 0o0"
     var data = parse(toml)
@@ -86,7 +86,7 @@ fn test_octal_zero() raises:
     assert_equal(value, 0)
 
 
-fn test_binary_basic() raises:
+def test_binary_basic() raises:
     """Test basic binary integers."""
     var toml = "value = 0b1101"
     var data = parse(toml)
@@ -95,7 +95,7 @@ fn test_binary_basic() raises:
     assert_equal(value, 13)
 
 
-fn test_binary_with_underscores() raises:
+def test_binary_with_underscores() raises:
     """Test binary with underscores."""
     var toml = "value = 0b1111_0000"
     var data = parse(toml)
@@ -104,7 +104,7 @@ fn test_binary_with_underscores() raises:
     assert_equal(value, 240)
 
 
-fn test_binary_byte() raises:
+def test_binary_byte() raises:
     """Test binary byte values."""
     var toml = "a = 0b11111111\nb = 0b00000000\nc = 0b10101010"
     var data = parse(toml)
@@ -113,7 +113,7 @@ fn test_binary_byte() raises:
     assert_equal(data["c"].as_int(), 170)
 
 
-fn test_mixed_bases() raises:
+def test_mixed_bases() raises:
     """Test document with mixed number bases."""
     var toml = """
     decimal = 42
@@ -128,7 +128,7 @@ fn test_mixed_bases() raises:
     assert_equal(data["binary"].as_int(), 10)
 
 
-fn test_bases_in_array() raises:
+def test_bases_in_array() raises:
     """Test alternative bases in arrays."""
     var toml = "values = [0xFF, 0o77, 0b11, 42]"
     var data = parse(toml)

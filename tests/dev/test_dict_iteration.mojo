@@ -2,7 +2,7 @@
 
 from std.collections import Dict
 
-fn main() raises:
+def main() raises:
     var data = Dict[String, String]()
     data["name"] = "Alice"
     data["age"] = "30"

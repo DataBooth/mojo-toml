@@ -4,11 +4,11 @@ Tests TOML inline table parsing including simple tables, nested tables,
 tables with various value types, and tables within arrays.
 """
 
-from testing import assert_equal, assert_true, assert_false, TestSuite
+from std.testing import assert_equal, assert_true, assert_false, TestSuite
 from toml import parse
 
 
-fn test_empty_inline_table() raises:
+def test_empty_inline_table() raises:
     """Test parsing empty inline table."""
     var data = parse("empty = {}")
 
@@ -19,7 +19,7 @@ fn test_empty_inline_table() raises:
     assert_equal(len(table), 0)
 
 
-fn test_simple_inline_table() raises:
+def test_simple_inline_table() raises:
     """Test parsing simple inline table."""
     var data = parse('point = {x = 1, y = 2}')
 
@@ -33,7 +33,7 @@ fn test_simple_inline_table() raises:
     assert_equal(table["y"].as_int(), 2)
 
 
-fn test_inline_table_strings() raises:
+def test_inline_table_strings() raises:
     """Test inline table with string values."""
     var data = parse('person = {name = "Alice", role = "Engineer"}')
 
@@ -45,7 +45,7 @@ fn test_inline_table_strings() raises:
     assert_equal(table["role"].as_string(), "Engineer")
 
 
-fn test_inline_table_mixed_types() raises:
+def test_inline_table_mixed_types() raises:
     """Test inline table with mixed value types."""
     var data = parse('config = {port = 8080, host = "localhost", debug = true, timeout = 30.5}')
 
@@ -59,7 +59,7 @@ fn test_inline_table_mixed_types() raises:
     assert_equal(table["timeout"].as_float(), 30.5)
 
 
-fn test_inline_table_with_array() raises:
+def test_inline_table_with_array() raises:
     """Test inline table containing an array."""
     var data = parse('data = {values = [1, 2, 3], name = "test"}')
 
@@ -78,7 +78,7 @@ fn test_inline_table_with_array() raises:
     assert_equal(table["name"].as_string(), "test")
 
 
-fn test_nested_inline_table() raises:
+def test_nested_inline_table() raises:
     """Test inline table containing another inline table."""
     var data = parse('server = {address = {host = "localhost", port = 8080}, name = "main"}')
 
@@ -96,7 +96,7 @@ fn test_nested_inline_table() raises:
     assert_equal(address["port"].as_int(), 8080)
 
 
-fn test_array_of_inline_tables() raises:
+def test_array_of_inline_tables() raises:
     """Test array containing inline tables."""
     var data = parse('users = [{name = "Alice", age = 30}, {name = "Bob", age = 25}]')
 
@@ -118,7 +118,7 @@ fn test_array_of_inline_tables() raises:
     assert_equal(user2["age"].as_int(), 25)
 
 
-fn test_inline_table_single_pair() raises:
+def test_inline_table_single_pair() raises:
     """Test inline table with single key-value pair."""
     var data = parse('singleton = {key = "value"}')
 
@@ -129,7 +129,7 @@ fn test_inline_table_single_pair() raises:
     assert_equal(table["key"].as_string(), "value")
 
 
-fn test_inline_table_with_spaces() raises:
+def test_inline_table_with_spaces() raises:
     """Test inline table with extra spacing."""
     var data = parse('spaced = {  a = 1  ,  b = 2  }')
 
@@ -141,7 +141,7 @@ fn test_inline_table_with_spaces() raises:
     assert_equal(table["b"].as_int(), 2)
 
 
-fn test_multiple_inline_tables() raises:
+def test_multiple_inline_tables() raises:
     """Test parsing multiple inline tables."""
     var data = parse("""
 point1 = {x = 1, y = 2}
@@ -166,7 +166,7 @@ point3 = {x = 5, y = 6}
     assert_equal(p3["y"].as_int(), 6)
 
 
-fn test_inline_table_with_quoted_keys() raises:
+def test_inline_table_with_quoted_keys() raises:
     """Test inline table with quoted keys."""
     var data = parse('data = {"127.0.0.1" = "localhost", "special-key" = "value"}')
 
@@ -178,7 +178,7 @@ fn test_inline_table_with_quoted_keys() raises:
     assert_equal(table["special-key"].as_string(), "value")
 
 
-fn test_inline_table_booleans() raises:
+def test_inline_table_booleans() raises:
     """Test inline table with boolean values."""
     var data = parse('flags = {enabled = true, debug = false, verbose = true}')
 
@@ -191,7 +191,7 @@ fn test_inline_table_booleans() raises:
     assert_true(table["verbose"].as_bool())
 
 
-fn test_deeply_nested_inline_table() raises:
+def test_deeply_nested_inline_table() raises:
     """Test deeply nested inline tables."""
     var data = parse('root = {a = {b = {c = {value = 42}}}}')
 
