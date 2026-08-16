@@ -4,7 +4,7 @@ This validates that the quickstart example works correctly
 and demonstrates testing TOML parsing.
 """
 
-from testing import assert_equal, assert_true, TestSuite
+from std.testing import assert_equal, assert_true, TestSuite
 from toml import parse
 
 
