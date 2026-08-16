@@ -3,11 +3,11 @@
 Tests TOML table header parsing [section] and nested table structures.
 """
 
-from testing import assert_equal, assert_true, TestSuite
+from std.testing import assert_equal, assert_true, TestSuite
 from toml import parse
 
 
-fn test_simple_table() raises:
+def test_simple_table() raises:
     """Test parsing simple table header."""
     var data = parse("""
 [database]
@@ -23,7 +23,7 @@ port = 5432
     assert_equal(db["port"].as_int(), 5432)
 
 
-fn test_multiple_tables() raises:
+def test_multiple_tables() raises:
     """Test parsing multiple table headers."""
     var data = parse("""
 [server]
@@ -47,7 +47,7 @@ port = 5432
     assert_equal(db["port"].as_int(), 5432)
 
 
-fn test_nested_table() raises:
+def test_nested_table() raises:
     """Test parsing nested table with dotted header."""
     var data = parse("""
 [database.primary]
@@ -65,7 +65,7 @@ port = 5432
     assert_equal(primary["port"].as_int(), 5432)
 
 
-fn test_root_and_table() raises:
+def test_root_and_table() raises:
     """Test mixing root-level keys with table headers."""
     var data = parse("""
 title = "MyApp"
@@ -83,7 +83,7 @@ port = 8080
     assert_equal(server["port"].as_int(), 8080)
 
 
-fn test_deeply_nested_table() raises:
+def test_deeply_nested_table() raises:
     """Test deeply nested table structure."""
     var data = parse("""
 [a.b.c.d]
@@ -98,7 +98,7 @@ value = 42
     assert_equal(d["value"].as_int(), 42)
 
 
-fn test_table_with_arrays() raises:
+def test_table_with_arrays() raises:
     """Test table containing arrays."""
     var data = parse("""
 [config]
@@ -117,7 +117,7 @@ hosts = ["localhost", "127.0.0.1"]
     assert_equal(hosts[0].as_string(), "localhost")
 
 
-fn test_table_with_inline_table() raises:
+def test_table_with_inline_table() raises:
     """Test table containing inline table."""
     var data = parse("""
 [server]
@@ -135,7 +135,7 @@ timeout = 30
     assert_equal(server["timeout"].as_int(), 30)
 
 
-fn test_multiple_nested_tables() raises:
+def test_multiple_nested_tables() raises:
     """Test multiple nested table sections."""
     var data = parse("""
 [database.primary]

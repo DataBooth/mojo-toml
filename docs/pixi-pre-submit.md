@@ -32,8 +32,8 @@ Individual `test-*` tasks may exist for focused development, but `test-all` is t
 
 ### Code quality
 
-- `pre-commit` – runs all pre-commit hooks for this repository.
-- `pre-commit-install` – installs the git hooks for local development.
+- `prek` – runs all prek hooks for this repository.
+- `prek-install` – installs git hook shims for local development.
 
 ### Pre-submit for modular-community
 
@@ -59,7 +59,7 @@ The shared core dependencies across the `mojo-*` libraries are:
 
 - `mojo` – the Modular toolchain (`==1.0.0b1`).
 - `python` – used for the test runner, benchmarks, and pre-submit tooling (`">=3.11,<4"`).
-- `pre-commit` – for local code quality checks (`">=4.5.1,<5"`).
+- `prek` – for local code quality checks (`">=0.4.5,<1"`).
 - `rattler-build` – for building conda packages (`">=0.55.1,<0.56"`).
 
 Each repository may add extra dependencies (for example benchmark counterparts such as `asciichartpy`, `python-dotenv`, `pyyaml`, or `tomli-w`) but the core tooling above is consistent.

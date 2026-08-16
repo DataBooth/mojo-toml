@@ -7,17 +7,17 @@ struct TomlValue(Movable, Copyable):
     var is_table: Bool
     var table: Dict[String, TomlValue]
 
-    fn __init__(out self, value: String):
+    def __init__(out self, value: String):
         self.data = value
         self.is_table = False
         self.table = Dict[String, TomlValue]()
 
-    fn __init__(out self, owned table: Dict[String, TomlValue]):
+    def __init__(out self, owned table: Dict[String, TomlValue]):
         self.data = ""
         self.is_table = True
         self.table = table^
 
-    fn __copyinit__(out self, existing: Self):
+    def __copyinit__(out self, existing: Self):
         self.data = existing.data
         self.is_table = existing.is_table
         self.table = Dict[String, TomlValue]()
@@ -25,22 +25,22 @@ struct TomlValue(Movable, Copyable):
             for entry in existing.table.items():
                 self.table[entry.key] = entry.value.copy()
 
-    fn __moveinit__(out self, owned existing: Self):
+    def __moveinit__(out self, owned existing: Self):
         self.data = existing.data^
         self.is_table = existing.is_table
         self.table = existing.table^
 
-    fn as_string(self) -> String:
+    def as_string(self) -> String:
         return self.data
 
-    fn as_table(self) -> Dict[String, TomlValue]:
+    def as_table(self) -> Dict[String, TomlValue]:
         var result = Dict[String, TomlValue]()
         for entry in self.table.items():
             result[entry.key] = entry.value.copy()
         return result^
 
 
-fn main() raises:
+def main() raises:
     print("Testing nested Dict structure building:")
     print()
 

@@ -3,11 +3,11 @@
 Tests the dotted key syntax (a.b.c = value) which creates nested table structures.
 """
 
-from testing import assert_equal, assert_true, TestSuite, assert_raises
+from std.testing import assert_equal, assert_true, TestSuite, assert_raises
 from toml import parse
 
 
-fn test_simple_dotted_key() raises:
+def test_simple_dotted_key() raises:
     """Test simple dotted key creates nested table."""
     var data = parse("""
 a.b = "value"
@@ -18,7 +18,7 @@ a.b = "value"
     assert_equal(a_table["b"].as_string(), "value")
 
 
-fn test_multiple_dotted_keys() raises:
+def test_multiple_dotted_keys() raises:
     """Test multiple dotted keys in same namespace."""
     var data = parse("""
 a.b = "value1"
@@ -30,7 +30,7 @@ a.c = "value2"
     assert_equal(a_table["c"].as_string(), "value2")
 
 
-fn test_deeply_dotted_key() raises:
+def test_deeply_dotted_key() raises:
     """Test deeply nested dotted key."""
     var data = parse("""
 a.b.c.d.e = 42
@@ -43,7 +43,7 @@ a.b.c.d.e = 42
     assert_equal(d["e"].as_int(), 42)
 
 
-fn test_dotted_key_with_table_header() raises:
+def test_dotted_key_with_table_header() raises:
     """Test dotted key combined with table header."""
     var data = parse("""
 [section]
@@ -58,7 +58,7 @@ c = "flat"
     assert_equal(a["b"].as_string(), "nested")
 
 
-fn test_dotted_key_mixed_values() raises:
+def test_dotted_key_mixed_values() raises:
     """Test dotted keys with different value types."""
     var data = parse("""
 server.host = "localhost"
@@ -72,7 +72,7 @@ server.enabled = true
     assert_equal(server["enabled"].as_bool(), True)
 
 
-fn test_dotted_key_with_inline_table() raises:
+def test_dotted_key_with_inline_table() raises:
     """Test dotted key with inline table value."""
     var data = parse("""
 a.b = {c = "value"}
@@ -83,7 +83,7 @@ a.b = {c = "value"}
     assert_equal(b["c"].as_string(), "value")
 
 
-fn test_dotted_key_array() raises:
+def test_dotted_key_array() raises:
     """Test dotted key with array value."""
     var data = parse("""
 a.b = [1, 2, 3]

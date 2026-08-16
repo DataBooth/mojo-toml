@@ -1,6 +1,6 @@
 from toml import parse, to_toml
 
-fn main() raises:
+def main() raises:
     # Parse a simple TOML document
     let config = parse("""
 [package]

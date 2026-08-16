@@ -3,11 +3,11 @@
 Tests the conversion of tokens into structured data.
 """
 
-from testing import assert_equal, assert_true, TestSuite
+from std.testing import assert_equal, assert_true, TestSuite
 from toml import parse, TomlValue
 
 
-fn test_parse_string_value() raises:
+def test_parse_string_value() raises:
     """Test parsing simple string value."""
     var data = parse('name = "mojo-toml"')
 
@@ -16,7 +16,7 @@ fn test_parse_string_value() raises:
     assert_equal(data["name"].as_string(), "mojo-toml")
 
 
-fn test_parse_integer_value() raises:
+def test_parse_integer_value() raises:
     """Test parsing integer value."""
     var data = parse("port = 8080")
 
@@ -25,7 +25,7 @@ fn test_parse_integer_value() raises:
     assert_equal(data["port"].as_int(), 8080)
 
 
-fn test_parse_float_value() raises:
+def test_parse_float_value() raises:
     """Test parsing float value."""
     var data = parse("pi = 3.14159")
 
@@ -36,7 +36,7 @@ fn test_parse_float_value() raises:
     assert_true(diff < 0.00001 and diff > -0.00001)
 
 
-fn test_parse_boolean_values() raises:
+def test_parse_boolean_values() raises:
     """Test parsing boolean values."""
     var data = parse("enabled = true\ndisabled = false")
 
@@ -49,7 +49,7 @@ fn test_parse_boolean_values() raises:
     assert_true(not data["disabled"].as_bool())
 
 
-fn test_parse_multiple_keys() raises:
+def test_parse_multiple_keys() raises:
     """Test parsing multiple key-value pairs."""
     var data = parse('name = "test"\nversion = "0.1.0"\nport = 8080')
 
@@ -62,7 +62,7 @@ fn test_parse_multiple_keys() raises:
     assert_equal(data["port"].as_int(), 8080)
 
 
-fn test_parse_with_comments() raises:
+def test_parse_with_comments() raises:
     """Test parsing with comments."""
     var data = parse('# This is a comment\nname = "value"  # inline comment')
 
@@ -70,7 +70,7 @@ fn test_parse_with_comments() raises:
     assert_equal(data["name"].as_string(), "value")
 
 
-fn test_parse_empty_string() raises:
+def test_parse_empty_string() raises:
     """Test parsing empty string value."""
     var data = parse('empty = ""')
 
@@ -78,7 +78,7 @@ fn test_parse_empty_string() raises:
     assert_equal(data["empty"].as_string(), "")
 
 
-fn test_parse_negative_numbers() raises:
+def test_parse_negative_numbers() raises:
     """Test parsing negative numbers."""
     var data = parse("negative_int = -42\nnegative_float = -3.14")
 
@@ -90,7 +90,7 @@ fn test_parse_negative_numbers() raises:
     assert_true(val < -3.13 and val > -3.15)
 
 
-fn test_parse_special_floats() raises:
+def test_parse_special_floats() raises:
     """Test parsing special float values (inf, nan)."""
     var data = parse("infinity = inf\nnot_a_number = nan")
 
@@ -105,7 +105,7 @@ fn test_parse_special_floats() raises:
     # nan != nan (standard floating point behavior)
 
 
-fn test_parse_quoted_keys() raises:
+def test_parse_quoted_keys() raises:
     """Test parsing with quoted keys."""
     var data = parse('"127.0.0.1" = "localhost"')
 

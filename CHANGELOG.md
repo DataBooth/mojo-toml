@@ -7,10 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
-- Bumped MAX / Mojo toolchain dependency to `max ">=26.1.0,<27"` and updated recipes to pin `mojo_version = "=0.26.1"`.
-- Updated lexer, parser, writer, and tests to use `codepoint_slices()` and explicit `List[String]` buffers instead of direct `String` indexing or iteration, matching Mojo 0.26.1 string and `__getitem__` semantics.
-- Adopted a "no warnings" policy for the core library and tests so future migrations surface only new issues.
-- Bumped project and packaging version metadata to `0.9.1` to mark progression towards the Mojo 1.0 beta migration milestone.
+- Aligned project dependency pinning to Mojo `1.0.0` in `pixi.toml`.
+- Updated packaging recipe compiler pins to `mojo-compiler =1.0.0` and aligned recipe metadata/license consistency.
+- Updated migration planning/docs framing from “1.0 beta migration” to a stable Mojo 1.0 migration wave.
+- Reworked `TomlValue` recursive storage for Mojo 1.0 compatibility by replacing direct `List[TomlValue]`/`Dict[String, TomlValue]` fields with boxed recursive values and explicit deep-copy/deinit handling.
+- Updated parser APIs for Mojo 1.0 stdlib changes (`std.math` import path and `String.byte_length()` for numeric prefix checks).
 
 ### Planned for v0.6.0 - Remaining TOML 1.1
 - Multiline inline tables with trailing commas

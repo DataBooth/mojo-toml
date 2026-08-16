@@ -3,12 +3,12 @@
 Verifies that Parser.reset() allows reusing the same parser instance.
 """
 
-from testing import assert_equal, assert_true, TestSuite
+from std.testing import assert_equal, assert_true, TestSuite
 from toml.lexer import Lexer
 from toml.parser import Parser
 
 
-fn test_parser_reset_simple() raises:
+def test_parser_reset_simple() raises:
     """Test that parser can be reset and reused."""
     # Parse first document
     var lexer1 = Lexer("name = \"first\"")
@@ -27,7 +27,7 @@ fn test_parser_reset_simple() raises:
     assert_equal(data2["name"].as_string(), "second")
 
 
-fn test_parser_reset_complex() raises:
+def test_parser_reset_complex() raises:
     """Test parser reset with complex TOML structures."""
     # First document with table
     var lexer1 = Lexer("""
@@ -56,7 +56,7 @@ port = 8080
     assert_equal(section2["port"].as_int(), 8080)
 
 
-fn test_parser_reset_multiple_times() raises:
+def test_parser_reset_multiple_times() raises:
     """Test resetting parser multiple times."""
     # Create initial parser
     var lexer0 = Lexer("count = 0")

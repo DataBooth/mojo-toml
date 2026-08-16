@@ -1,6 +1,6 @@
 from toml import parse
 
-fn main() raises:
+def main() raises:
     # Test exactly what the test has
     var data = parse("infinity = inf\nnot_a_number = nan")
     print("Has infinity:", data.__contains__("infinity"))

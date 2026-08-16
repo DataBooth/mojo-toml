@@ -39,11 +39,11 @@ struct Writer:
 
     var buffer: String
 
-    fn __init__(out self):
+    def __init__(out self):
         """Initialise writer with empty buffer."""
         self.buffer = ""
 
-    fn escape_string(self, s: String) -> String:
+    def escape_string(self, s: String) -> String:
         """Escape special characters in strings for TOML output.
 
         Handles:
@@ -91,7 +91,7 @@ struct Writer:
 
         return result
 
-    fn format_string(self, s: String) -> String:
+    def format_string(self, s: String) -> String:
         """Format a string value for TOML output.
 
         Args:
@@ -101,7 +101,7 @@ struct Writer:
         """
         return "\"" + self.escape_string(s) + "\""
 
-    fn format_integer(self, n: Int) -> String:
+    def format_integer(self, n: Int) -> String:
         """Format an integer value for TOML output.
 
         Args:
@@ -111,7 +111,7 @@ struct Writer:
         """
         return String(n)
 
-    fn format_float(self, f: Float64) -> String:
+    def format_float(self, f: Float64) -> String:
         """Format a float value for TOML output.
 
         Handles special values: inf, -inf, nan
@@ -135,7 +135,7 @@ struct Writer:
         else:
             return String(f)
 
-    fn format_boolean(self, b: Bool) -> String:
+    def format_boolean(self, b: Bool) -> String:
         """Format a boolean value for TOML output.
 
         Args:
@@ -145,7 +145,7 @@ struct Writer:
         """
         return "true" if b else "false"
 
-    fn format_array(self, arr: List[TomlValue]) raises -> String:
+    def format_array(self, arr: List[TomlValue]) raises -> String:
         """Format an array for TOML output.
 
         Args:
@@ -165,7 +165,7 @@ struct Writer:
         result += "]"
         return result
 
-    fn format_inline_table(self, table: Dict[String, TomlValue]) raises -> String:
+    def format_inline_table(self, table: Dict[String, TomlValue]) raises -> String:
         """Format an inline table for TOML output.
 
         Args:
@@ -191,7 +191,7 @@ struct Writer:
         result += " }"
         return result
 
-    fn format_value(self, value: TomlValue) raises -> String:
+    def format_value(self, value: TomlValue) raises -> String:
         """Format any TomlValue for TOML output.
 
         Args:
@@ -214,7 +214,7 @@ struct Writer:
         else:
             raise Error("Unknown value type")
 
-    fn should_use_inline(self, table: Dict[String, TomlValue]) -> Bool:
+    def should_use_inline(self, table: Dict[String, TomlValue]) -> Bool:
         """Determine if a table should be written as inline table.
 
         Heuristic:
@@ -243,7 +243,7 @@ struct Writer:
         # Very small table (0-1 keys) with only simple values: use inline
         return True
 
-    fn write_key_value(mut self, key: String, value: TomlValue) raises:
+    def write_key_value(mut self, key: String, value: TomlValue) raises:
         """Write a key-value pair to the buffer.
 
         Args:
@@ -254,7 +254,7 @@ struct Writer:
         self.buffer += self.format_value(value)
         self.buffer += "\n"
 
-    fn write_table_header(mut self, path: List[String]):
+    def write_table_header(mut self, path: List[String]):
         """Write a table header to the buffer.
 
         Args:
@@ -272,7 +272,7 @@ struct Writer:
 
         self.buffer += "]\n"
 
-    fn write_table(mut self, path: List[String], table: Dict[String, TomlValue]) raises:
+    def write_table(mut self, path: List[String], table: Dict[String, TomlValue]) raises:
         """Write a table with proper [section] header.
 
         Recursively handles nested tables.
@@ -329,14 +329,14 @@ struct Writer:
             # Recursively write nested table
             self.write_table(new_path, table[key].as_table())
 
-    fn to_string(self) -> String:
+    def to_string(self) -> String:
         """Get the final TOML string.
 
         Returns:
             Complete TOML document.
         """
         return self.buffer
-fn to_toml(config: Dict[String, TomlValue]) raises -> String:
+def to_toml(config: Dict[String, TomlValue]) raises -> String:
     """Convert a Dict[String, TomlValue] structure to TOML format string.
 
     This is the main public API for TOML serialisation. It takes a nested

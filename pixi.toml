@@ -61,12 +61,12 @@ benchmark-mojo = "python benchmarks/run_mojo_benchmark.py"
 benchmark-python = "python benchmarks/compare_python.py"
 
 # Code quality tasks
-pre-commit = "pre-commit run --all-files"
-pre-commit-install = "pre-commit install"
+prek = "prek run --all-files"
+prek-install = "prek install -f"
 
 [dependencies]
-mojo = "==1.0.0b1"
+mojo = "==1.0.0"
 python = ">=3.11,<4"  # Required for test runner and benchmarks
 tomli-w = ">=1.0.0,<2"  # For write benchmarks (tomllib is read-only)
-pre-commit = ">=4.5.1,<5"
+prek = ">=0.4.5,<1"
 rattler-build = ">=0.55.1,<0.56"

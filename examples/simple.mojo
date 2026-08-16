@@ -6,7 +6,7 @@ This example demonstrates how to parse TOML files and access values.
 from toml import parse
 
 
-fn main() raises:
+def main() raises:
     """Demonstrate basic TOML parsing with a simple configuration."""
 
     print("🔥 mojo-toml - Simple Example")

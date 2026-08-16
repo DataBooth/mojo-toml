@@ -3,12 +3,12 @@
 Tests that parse → write → parse produces semantically equivalent results.
 """
 
-from testing import assert_equal, assert_true, TestSuite
+from std.testing import assert_equal, assert_true, TestSuite
 from toml import TomlValue, parse, to_toml
 from std.collections import Dict, List
 
 
-fn compare_toml_values(left: TomlValue, right: TomlValue) raises -> Bool:
+def compare_toml_values(left: TomlValue, right: TomlValue) raises -> Bool:
     """Compare two TomlValue instances for semantic equality.
 
     Returns True if values are semantically equal (same type and value).
@@ -54,7 +54,7 @@ fn compare_toml_values(left: TomlValue, right: TomlValue) raises -> Bool:
         return False
 
 
-fn compare_toml_dicts(left: Dict[String, TomlValue], right: Dict[String, TomlValue]) raises -> Bool:
+def compare_toml_dicts(left: Dict[String, TomlValue], right: Dict[String, TomlValue]) raises -> Bool:
     """Compare two TOML dictionaries for semantic equality."""
     if len(left) != len(right):
         return False
@@ -68,7 +68,7 @@ fn compare_toml_dicts(left: Dict[String, TomlValue], right: Dict[String, TomlVal
     return True
 
 
-fn test_roundtrip_simple() raises:
+def test_roundtrip_simple() raises:
     """Test round-trip with simple key-value pairs."""
     var original_toml = """
 name = "test-app"
@@ -84,7 +84,7 @@ debug = false
     assert_true(compare_toml_dicts(parsed1, parsed2))
 
 
-fn test_roundtrip_with_arrays() raises:
+def test_roundtrip_with_arrays() raises:
     """Test round-trip with arrays."""
     var original_toml = """
 numbers = [1, 2, 3, 4, 5]
@@ -99,7 +99,7 @@ mixed = [1, "two", 3.0, true]
     assert_true(compare_toml_dicts(parsed1, parsed2))
 
 
-fn test_roundtrip_with_table() raises:
+def test_roundtrip_with_table() raises:
     """Test round-trip with a simple table."""
     var original_toml = """
 title = "My App"
@@ -118,7 +118,7 @@ enabled = true
     assert_true(compare_toml_dicts(parsed1, parsed2))
 
 
-fn test_roundtrip_nested_tables() raises:
+def test_roundtrip_nested_tables() raises:
     """Test round-trip with nested tables."""
     var original_toml = """
 [database.primary]
@@ -137,7 +137,7 @@ port = 5433
     assert_true(compare_toml_dicts(parsed1, parsed2))
 
 
-fn test_roundtrip_special_floats() raises:
+def test_roundtrip_special_floats() raises:
     """Test round-trip with special float values."""
     var original_toml = """
 pos_infinity = inf
@@ -152,7 +152,7 @@ not_a_number = nan
     assert_true(compare_toml_dicts(parsed1, parsed2))
 
 
-fn test_roundtrip_string_escapes() raises:
+def test_roundtrip_string_escapes() raises:
     """Test round-trip with escaped strings."""
     # Simple newline escape test
     var original_toml = 'message = "Hello\\nWorld"'
@@ -164,7 +164,7 @@ fn test_roundtrip_string_escapes() raises:
     assert_true(compare_toml_dicts(parsed1, parsed2))
 
 
-fn test_roundtrip_nested_arrays() raises:
+def test_roundtrip_nested_arrays() raises:
     """Test round-trip with nested arrays."""
     var original_toml = """
 matrix = [[1, 2], [3, 4], [5, 6]]
@@ -177,7 +177,7 @@ matrix = [[1, 2], [3, 4], [5, 6]]
     assert_true(compare_toml_dicts(parsed1, parsed2))
 
 
-fn test_roundtrip_complex_structure() raises:
+def test_roundtrip_complex_structure() raises:
     """Test round-trip with complex nested structure."""
     var original_toml = """
 title = "Complex App"
@@ -206,7 +206,7 @@ timeout = 45.0
     assert_true(compare_toml_dicts(parsed1, parsed2))
 
 
-fn test_roundtrip_root_tables() raises:
+def test_roundtrip_root_tables() raises:
     """Test round-trip with root-level tables."""
     var config = Dict[String, TomlValue]()
 
@@ -228,7 +228,7 @@ fn test_roundtrip_root_tables() raises:
     assert_true(compare_toml_dicts(config, parsed))
 
 
-fn test_roundtrip_pixi_toml() raises:
+def test_roundtrip_pixi_toml() raises:
     """Test round-trip with the project's own pixi.toml file."""
     # Read pixi.toml
     var content: String

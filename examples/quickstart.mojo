@@ -7,7 +7,7 @@ demonstrating both reading and writing TOML files.
 from toml import parse, to_toml, TomlValue
 
 
-fn main() raises:
+def main() raises:
     print("🔥 mojo-toml - Quickstart Example")
     print("=" * 50)
     print()

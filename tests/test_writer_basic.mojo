@@ -3,12 +3,12 @@
 Tests the serialisation of primitive types, strings, arrays, and simple structures.
 """
 
-from testing import assert_equal, assert_true, TestSuite
+from std.testing import assert_equal, assert_true, TestSuite
 from toml import TomlValue, to_toml
 from std.collections import Dict, List
 
 
-fn test_write_string() raises:
+def test_write_string() raises:
     """Test writing a simple string value."""
     var config = Dict[String, TomlValue]()
     config["name"] = TomlValue("mojo-toml")
@@ -17,7 +17,7 @@ fn test_write_string() raises:
     assert_equal(output, "name = \"mojo-toml\"\n")
 
 
-fn test_write_string_with_escapes() raises:
+def test_write_string_with_escapes() raises:
     """Test writing strings with special characters that need escaping."""
     var config = Dict[String, TomlValue]()
     config["message"] = TomlValue("Hello\nWorld")
@@ -26,7 +26,7 @@ fn test_write_string_with_escapes() raises:
     assert_equal(output, "message = \"Hello\\nWorld\"\n")
 
 
-fn test_write_string_with_quotes() raises:
+def test_write_string_with_quotes() raises:
     """Test writing strings containing quotes."""
     var config = Dict[String, TomlValue]()
     config["quote"] = TomlValue("He said \"hello\"")
@@ -35,7 +35,7 @@ fn test_write_string_with_quotes() raises:
     assert_equal(output, "quote = \"He said \\\"hello\\\"\"\n")
 
 
-fn test_write_string_with_backslash() raises:
+def test_write_string_with_backslash() raises:
     """Test writing strings containing backslashes."""
     var config = Dict[String, TomlValue]()
     config["path"] = TomlValue("C:\\Users\\test")
@@ -44,7 +44,7 @@ fn test_write_string_with_backslash() raises:
     assert_equal(output, "path = \"C:\\\\Users\\\\test\"\n")
 
 
-fn test_write_integer() raises:
+def test_write_integer() raises:
     """Test writing integer values."""
     var config = Dict[String, TomlValue]()
     config["port"] = TomlValue(8080)
@@ -53,7 +53,7 @@ fn test_write_integer() raises:
     assert_equal(output, "port = 8080\n")
 
 
-fn test_write_negative_integer() raises:
+def test_write_negative_integer() raises:
     """Test writing negative integer values."""
     var config = Dict[String, TomlValue]()
     config["temp"] = TomlValue(-42)
@@ -62,7 +62,7 @@ fn test_write_negative_integer() raises:
     assert_equal(output, "temp = -42\n")
 
 
-fn test_write_float() raises:
+def test_write_float() raises:
     """Test writing float values."""
     var config = Dict[String, TomlValue]()
     config["pi"] = TomlValue(3.14159)
@@ -71,7 +71,7 @@ fn test_write_float() raises:
     assert_true(output.startswith("pi = 3.14"))
 
 
-fn test_write_float_inf() raises:
+def test_write_float_inf() raises:
     """Test writing positive infinity."""
     var config = Dict[String, TomlValue]()
     var pos_inf = Float64(1.0) / Float64(0.0)
@@ -81,7 +81,7 @@ fn test_write_float_inf() raises:
     assert_equal(output, "infinity = inf\n")
 
 
-fn test_write_float_neg_inf() raises:
+def test_write_float_neg_inf() raises:
     """Test writing negative infinity."""
     var config = Dict[String, TomlValue]()
     var neg_inf = Float64(-1.0) / Float64(0.0)
@@ -91,7 +91,7 @@ fn test_write_float_neg_inf() raises:
     assert_equal(output, "neg_infinity = -inf\n")
 
 
-fn test_write_float_nan() raises:
+def test_write_float_nan() raises:
     """Test writing NaN."""
     var config = Dict[String, TomlValue]()
     var nan = Float64(0.0) / Float64(0.0)
@@ -101,7 +101,7 @@ fn test_write_float_nan() raises:
     assert_equal(output, "not_a_number = nan\n")
 
 
-fn test_write_boolean_true() raises:
+def test_write_boolean_true() raises:
     """Test writing boolean true value."""
     var config = Dict[String, TomlValue]()
     config["enabled"] = TomlValue(True)
@@ -110,7 +110,7 @@ fn test_write_boolean_true() raises:
     assert_equal(output, "enabled = true\n")
 
 
-fn test_write_boolean_false() raises:
+def test_write_boolean_false() raises:
     """Test writing boolean false value."""
     var config = Dict[String, TomlValue]()
     config["debug"] = TomlValue(False)
@@ -119,7 +119,7 @@ fn test_write_boolean_false() raises:
     assert_equal(output, "debug = false\n")
 
 
-fn test_write_empty_array() raises:
+def test_write_empty_array() raises:
     """Test writing an empty array."""
     var config = Dict[String, TomlValue]()
     var arr = List[TomlValue]()
@@ -129,7 +129,7 @@ fn test_write_empty_array() raises:
     assert_equal(output, "items = []\n")
 
 
-fn test_write_integer_array() raises:
+def test_write_integer_array() raises:
     """Test writing an array of integers."""
     var config = Dict[String, TomlValue]()
     var arr = List[TomlValue]()
@@ -142,7 +142,7 @@ fn test_write_integer_array() raises:
     assert_equal(output, "numbers = [1, 2, 3]\n")
 
 
-fn test_write_string_array() raises:
+def test_write_string_array() raises:
     """Test writing an array of strings."""
     var config = Dict[String, TomlValue]()
     var arr = List[TomlValue]()
@@ -155,7 +155,7 @@ fn test_write_string_array() raises:
     assert_equal(output, "colors = [\"red\", \"green\", \"blue\"]\n")
 
 
-fn test_write_mixed_array() raises:
+def test_write_mixed_array() raises:
     """Test writing an array with mixed types."""
     var config = Dict[String, TomlValue]()
     var arr = List[TomlValue]()
@@ -169,7 +169,7 @@ fn test_write_mixed_array() raises:
     assert_true(output.startswith("mixed = [1, \"two\", 3"))
 
 
-fn test_write_nested_array() raises:
+def test_write_nested_array() raises:
     """Test writing nested arrays."""
     var config = Dict[String, TomlValue]()
 
@@ -191,7 +191,7 @@ fn test_write_nested_array() raises:
     assert_equal(output, "matrix = [[1, 2], [3, 4]]\n")
 
 
-fn test_write_multiple_keys() raises:
+def test_write_multiple_keys() raises:
     """Test writing multiple key-value pairs."""
     var config = Dict[String, TomlValue]()
     config["name"] = TomlValue("test")
@@ -206,7 +206,7 @@ fn test_write_multiple_keys() raises:
     assert_true(output.find("enabled = true") != -1)
 
 
-fn test_write_single_key_table() raises:
+def test_write_single_key_table() raises:
     """Test writing a single-key table (written inline)."""
     var config = Dict[String, TomlValue]()
 
@@ -220,7 +220,7 @@ fn test_write_single_key_table() raises:
     assert_true(output.find("data = { value = 42 }") != -1 or output.find("[data]") != -1)
 
 
-fn test_write_empty_string() raises:
+def test_write_empty_string() raises:
     """Test writing an empty string value."""
     var config = Dict[String, TomlValue]()
     config["empty"] = TomlValue("")

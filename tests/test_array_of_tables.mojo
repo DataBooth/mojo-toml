@@ -4,11 +4,11 @@ Tests the [[section]] array-of-tables feature which allows defining
 arrays of tables in TOML configuration files.
 """
 
-from testing import assert_equal, assert_true, TestSuite
+from std.testing import assert_equal, assert_true, TestSuite
 from toml import parse
 
 
-fn test_simple_array_of_tables() raises:
+def test_simple_array_of_tables() raises:
     """Test basic array of tables syntax."""
     var toml = """
 [[products]]
@@ -29,7 +29,7 @@ sku = 284758393
     assert_equal(products[1].as_table()["sku"].as_int(), 284758393)
 
 
-fn test_empty_array_of_tables() raises:
+def test_empty_array_of_tables() raises:
     """Test array of tables with no keys."""
     var toml = """
 [[empty]]
@@ -45,7 +45,7 @@ fn test_empty_array_of_tables() raises:
     assert_equal(len(empty[1].as_table()), 0)
 
 
-fn test_single_array_element() raises:
+def test_single_array_element() raises:
     """Test array of tables with single element."""
     var toml = """
 [[items]]
@@ -58,7 +58,7 @@ value = 42
     assert_equal(items[0].as_table()["value"].as_int(), 42)
 
 
-fn test_nested_array_of_tables() raises:
+def test_nested_array_of_tables() raises:
     """Test nested array of tables: [[fruit.variety]]."""
     var toml = """
 [[fruit]]
@@ -95,7 +95,7 @@ name = "banana"
     assert_equal(banana_varieties[0].as_table()["name"].as_string(), "plantain")
 
 
-fn test_mixed_tables_and_arrays() raises:
+def test_mixed_tables_and_arrays() raises:
     """Test document with both regular tables and array-of-tables."""
     var toml = """
 [database]
@@ -129,7 +129,7 @@ ttl = 300
     assert_equal(cache["ttl"].as_int(), 300)
 
 
-fn test_dotted_keys_in_array_of_tables() raises:
+def test_dotted_keys_in_array_of_tables() raises:
     """Test dotted keys within array-of-tables entries."""
     var toml = """
 [[configs]]
@@ -145,7 +145,7 @@ server.port = 8080
     assert_equal(server["port"].as_int(), 8080)
 
 
-fn test_array_values_in_array_of_tables() raises:
+def test_array_values_in_array_of_tables() raises:
     """Test arrays as values within array-of-tables."""
     var toml = """
 [[packages]]
@@ -169,7 +169,7 @@ tags = ["cli"]
     assert_equal(bar_tags[0].as_string(), "cli")
 
 
-fn test_inline_table_in_array_of_tables() raises:
+def test_inline_table_in_array_of_tables() raises:
     """Test inline tables within array-of-tables."""
     var toml = """
 [[entries]]
@@ -188,7 +188,7 @@ metadata = { author = "Bob", tags = ["bar"] }
     assert_equal(metadata1["author"].as_string(), "Alice")
 
 
-fn test_multiple_array_of_tables_sections() raises:
+def test_multiple_array_of_tables_sections() raises:
     """Test multiple independent array-of-tables in same document."""
     var toml = """
 [[users]]
@@ -217,7 +217,7 @@ name = "users"
 # Error cases - these should raise errors
 
 
-fn test_error_redefine_array_as_table() raises:
+def test_error_redefine_array_as_table() raises:
     """Test error: cannot redefine array-of-tables as regular table."""
     var toml = """
 [[products]]
@@ -234,7 +234,7 @@ type = "tools"
         pass
 
 
-fn test_error_redefine_table_as_array() raises:
+def test_error_redefine_table_as_array() raises:
     """Test error: cannot redefine regular table as array-of-tables."""
     var toml = """
 [database]
@@ -251,7 +251,7 @@ port = 5432
         pass
 
 
-fn test_error_duplicate_keys_in_array_element() raises:
+def test_error_duplicate_keys_in_array_element() raises:
     """Test error: duplicate keys within same array element."""
     var toml = """
 [[items]]

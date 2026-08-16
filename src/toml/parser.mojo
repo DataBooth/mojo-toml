@@ -26,8 +26,9 @@ This keeps parsing logic separate from tokenisation, making both simpler.
 """
 
 from std.collections import Dict, List
-from math import inf, nan
-from .lexer import Token, TokenKind, Lexer
+from std.memory import alloc
+from std.math import inf, nan
+from .lexer import Token, TokenKind, Lexer, Position
 
 
 struct KeyValuePair(Movable, Copyable):
@@ -35,11 +36,11 @@ struct KeyValuePair(Movable, Copyable):
     var key: String
     var value: TomlValue
 
-    fn __init__(out self, key: String, var value: TomlValue):
+    def __init__(out self, key: String, var value: TomlValue):
         self.key = key
         self.value = value^
 
-    fn copy(self) -> Self:
+    def copy(self) -> Self:
         return KeyValuePair(self.key, self.value.copy())
 
 
@@ -62,158 +63,189 @@ struct TomlValue(Copyable, Movable):
     arrays, and tables (nested dicts).
     """
 
+    comptime ValuePointer = Pointer[TomlValue, MutUntrackedOrigin]
+
     var value_type: Int
     var string_value: String
     var int_value: Int
     var float_value: Float64
     var bool_value: Bool
-    var array_value: List[TomlValue]
-    var table_value: Dict[String, TomlValue]
+    var array_value: List[Self.ValuePointer]
+    var table_value: Dict[String, Self.ValuePointer]
 
-    fn __init__(out self, value: String):
+    @staticmethod
+    def box_value(var value: TomlValue) -> Self.ValuePointer:
+        """Allocate a boxed TomlValue for recursive storage."""
+        var ptr = alloc[TomlValue](1)
+        ptr.unsafe_write(value^)
+        return ptr
+
+    @staticmethod
+    def clone_boxed_value(value_ptr: Self.ValuePointer) -> Self.ValuePointer:
+        """Deep-copy a boxed TomlValue into a new allocation."""
+        var copied = value_ptr[].copy()
+        return Self.box_value(copied^)
+
+    def __init__(out self, value: String):
         """Create string value."""
         self.value_type = TomlValueType.STRING
         self.string_value = value
         self.int_value = 0
         self.float_value = 0.0
         self.bool_value = False
-        self.array_value = List[TomlValue]()
-        self.table_value = Dict[String, TomlValue]()
+        self.array_value = List[Self.ValuePointer]()
+        self.table_value = Dict[String, Self.ValuePointer]()
 
-    fn __init__(out self, value: Int):
+    def __init__(out self, value: Int):
         """Create integer value."""
         self.value_type = TomlValueType.INTEGER
         self.string_value = ""
         self.int_value = value
         self.float_value = 0.0
         self.bool_value = False
-        self.array_value = List[TomlValue]()
-        self.table_value = Dict[String, TomlValue]()
+        self.array_value = List[Self.ValuePointer]()
+        self.table_value = Dict[String, Self.ValuePointer]()
 
-    fn __init__(out self, value: Float64):
+    def __init__(out self, value: Float64):
         """Create float value."""
         self.value_type = TomlValueType.FLOAT
         self.string_value = ""
         self.int_value = 0
         self.float_value = value
         self.bool_value = False
-        self.array_value = List[TomlValue]()
-        self.table_value = Dict[String, TomlValue]()
+        self.array_value = List[Self.ValuePointer]()
+        self.table_value = Dict[String, Self.ValuePointer]()
 
-    fn __init__(out self, value: Bool):
+    def __init__(out self, value: Bool):
         """Create boolean value."""
         self.value_type = TomlValueType.BOOLEAN
         self.string_value = ""
         self.int_value = 0
         self.float_value = 0.0
         self.bool_value = value
-        self.array_value = List[TomlValue]()
-        self.table_value = Dict[String, TomlValue]()
+        self.array_value = List[Self.ValuePointer]()
+        self.table_value = Dict[String, Self.ValuePointer]()
 
-    fn __init__(out self, var value: List[TomlValue]):
+    def __init__(out self, var value: List[TomlValue]):
         """Create array value."""
         self.value_type = TomlValueType.ARRAY
         self.string_value = ""
         self.int_value = 0
         self.float_value = 0.0
         self.bool_value = False
-        self.array_value = value^
-        self.table_value = Dict[String, TomlValue]()
+        self.array_value = List[Self.ValuePointer]()
+        self.table_value = Dict[String, Self.ValuePointer]()
 
-    fn __init__(out self, var value: Dict[String, TomlValue]):
+        for i in range(len(value)):
+            var element_copy = value[i].copy()
+            self.array_value.append(Self.box_value(element_copy^))
+
+    def __init__(out self, var value: Dict[String, TomlValue]):
         """Create table (inline table) value."""
         self.value_type = TomlValueType.TABLE
         self.string_value = ""
         self.int_value = 0
         self.float_value = 0.0
         self.bool_value = False
-        self.array_value = List[TomlValue]()
-        self.table_value = value^
+        self.array_value = List[Self.ValuePointer]()
+        self.table_value = Dict[String, Self.ValuePointer]()
 
-    fn is_string(self) -> Bool:
+        for entry in value.items():
+            var entry_copy = entry.value.copy()
+            self.table_value[entry.key] = Self.box_value(entry_copy^)
+
+    def __init__(out self, *, copy: Self):
+        """Create a deep copy of this value."""
+        self.value_type = copy.value_type
+        self.string_value = copy.string_value
+        self.int_value = copy.int_value
+        self.float_value = copy.float_value
+        self.bool_value = copy.bool_value
+        self.array_value = List[Self.ValuePointer]()
+        self.table_value = Dict[String, Self.ValuePointer]()
+
+        for i in range(len(copy.array_value)):
+            self.array_value.append(Self.clone_boxed_value(copy.array_value[i]))
+
+        for entry in copy.table_value.items():
+            self.table_value[entry.key] = Self.clone_boxed_value(entry.value)
+
+    def __deinit__(deinit self):
+        """Free boxed recursive values owned by this instance."""
+        for i in range(len(self.array_value)):
+            var ptr = self.array_value[i]
+            ptr.unsafe_deinit_pointee()
+            ptr.unsafe_free()
+
+        for entry in self.table_value.items():
+            var ptr = entry.value
+            ptr.unsafe_deinit_pointee()
+            ptr.unsafe_free()
+
+    def is_string(self) -> Bool:
         return self.value_type == TomlValueType.STRING
 
-    fn is_int(self) -> Bool:
+    def is_int(self) -> Bool:
         return self.value_type == TomlValueType.INTEGER
 
-    fn is_float(self) -> Bool:
+    def is_float(self) -> Bool:
         return self.value_type == TomlValueType.FLOAT
 
-    fn is_bool(self) -> Bool:
+    def is_bool(self) -> Bool:
         return self.value_type == TomlValueType.BOOLEAN
 
-    fn is_array(self) -> Bool:
+    def is_array(self) -> Bool:
         return self.value_type == TomlValueType.ARRAY
 
-    fn is_table(self) -> Bool:
+    def is_table(self) -> Bool:
         return self.value_type == TomlValueType.TABLE
 
-    fn copy(self) -> Self:
-        """Create a copy of this value."""
-        if self.value_type == TomlValueType.STRING:
-            return TomlValue(self.string_value)
-        elif self.value_type == TomlValueType.INTEGER:
-            return TomlValue(self.int_value)
-        elif self.value_type == TomlValueType.FLOAT:
-            return TomlValue(self.float_value)
-        elif self.value_type == TomlValueType.BOOLEAN:
-            return TomlValue(self.bool_value)
-        elif self.value_type == TomlValueType.ARRAY:
-            var arr_copy = List[TomlValue]()
-            for i in range(len(self.array_value)):
-                arr_copy.append(self.array_value[i].copy())
-            return TomlValue(arr_copy^)
-        elif self.value_type == TomlValueType.TABLE:
-            var table_copy = Dict[String, TomlValue]()
-            for entry in self.table_value.items():
-                table_copy[entry.key] = entry.value.copy()
-            return TomlValue(table_copy^)
-        else:
-            # Should not reach here
-            return TomlValue("")
+    def copy(self) -> Self:
+        """Create a deep copy of this value."""
+        return Self(copy=self)
 
-    fn as_string(self) raises -> String:
+    def as_string(self) raises -> String:
         """Get string value (raises if not a string)."""
         if not self.is_string():
             raise Error("Value is not a string")
         return self.string_value
 
-    fn as_int(self) raises -> Int:
+    def as_int(self) raises -> Int:
         """Get integer value (raises if not an integer)."""
         if not self.is_int():
             raise Error("Value is not an integer")
         return self.int_value
 
-    fn as_float(self) raises -> Float64:
+    def as_float(self) raises -> Float64:
         """Get float value (raises if not a float)."""
         if not self.is_float():
             raise Error("Value is not a float")
         return self.float_value
 
-    fn as_bool(self) raises -> Bool:
+    def as_bool(self) raises -> Bool:
         """Get boolean value (raises if not a boolean)."""
         if not self.is_bool():
             raise Error("Value is not a boolean")
         return self.bool_value
 
-    fn as_array(self) raises -> List[TomlValue]:
+    def as_array(self) raises -> List[TomlValue]:
         """Get array value (raises if not an array)."""
         if not self.is_array():
             raise Error("Value is not an array")
         # Return a copy since we can't return a reference
         var result = List[TomlValue]()
         for i in range(len(self.array_value)):
-            result.append(self.array_value[i].copy())
+            result.append(self.array_value[i][].copy())
         return result^
 
-    fn as_table(self) raises -> Dict[String, TomlValue]:
+    def as_table(self) raises -> Dict[String, TomlValue]:
         """Get table value (raises if not a table)."""
         if not self.is_table():
             raise Error("Value is not a table")
         # Return a copy of the table
         var result = Dict[String, TomlValue]()
         for entry in self.table_value.items():
-            result[entry.key] = entry.value.copy()
+            result[entry.key] = entry.value[].copy()
         return result^
 
 
@@ -234,7 +266,7 @@ struct Parser:
     var current_table_path: List[String]  # Track current table path for flat key storage
     var is_array_of_tables: Bool  # True if current path is an array of tables [[...]]
 
-    fn __init__(out self, var tokens: List[Token]):
+    def __init__(out self, var tokens: List[Token]):
         """Initialise parser with token stream.
 
         Args:
@@ -245,7 +277,7 @@ struct Parser:
         self.current_table_path = List[String]()
         self.is_array_of_tables = False
 
-    fn reset(mut self, var tokens: List[Token]):
+    def reset(mut self, var tokens: List[Token]):
         """Reset parser state for reuse with new token stream.
 
         Allows reusing the same Parser instance for multiple documents,
@@ -268,7 +300,7 @@ struct Parser:
         self.current_table_path = List[String]()
         self.is_array_of_tables = False
 
-    fn current(self) raises -> Token:
+    def current(self) raises -> Token:
         """Get current token without advancing.
 
         Returns:
@@ -279,7 +311,7 @@ struct Parser:
         # Must copy since we're returning from borrowed self
         return Token(self.tokens[self.pos].kind, self.tokens[self.pos].value, self.tokens[self.pos].pos)
 
-    fn peek(self, offset: Int = 1) raises -> Token:
+    def peek(self, offset: Int = 1) raises -> Token:
         """Look ahead at token.
 
         Args:
@@ -293,7 +325,7 @@ struct Parser:
         # Must copy token explicitly
         return Token(self.tokens[peek_pos].kind, self.tokens[peek_pos].value, self.tokens[peek_pos].pos)
 
-    fn advance(mut self) raises -> Token:
+    def advance(mut self) raises -> Token:
         """Consume and return current token.
 
         Returns:
@@ -303,7 +335,7 @@ struct Parser:
         self.pos += 1
         return tok^
 
-    fn expect(mut self, kind: TokenKind) raises:
+    def expect(mut self, kind: TokenKind) raises:
         """Expect a specific token type and consume it.
 
         Args:
@@ -313,7 +345,7 @@ struct Parser:
         if token.kind != kind:
             raise Error(self.format_error("Expected specific token type but got different type", token.pos))
 
-    fn skip_newlines(mut self):
+    def skip_newlines(mut self):
         """Skip any newline tokens."""
         while self.pos < len(self.tokens):
             try:
@@ -325,7 +357,7 @@ struct Parser:
             except:
                 break
 
-    fn skip_whitespace_and_newlines(mut self):
+    def skip_whitespace_and_newlines(mut self):
         """Skip whitespace and newline tokens (used inside arrays/tables)."""
         while self.pos < len(self.tokens):
             try:
@@ -337,7 +369,7 @@ struct Parser:
             except:
                 break
 
-    fn parse_inline_table(mut self) raises -> TomlValue:
+    def parse_inline_table(mut self) raises -> TomlValue:
         """Parse a TOML inline table {name = "value", port = 8080}.
 
         Returns:
@@ -388,7 +420,7 @@ struct Parser:
 
         return TomlValue(table^)
 
-    fn parse_array(mut self) raises -> TomlValue:
+    def parse_array(mut self) raises -> TomlValue:
         """Parse a TOML array [1, 2, 3].
 
         Returns:
@@ -437,7 +469,7 @@ struct Parser:
 
         return TomlValue(elements^)
 
-    fn parse_value(mut self) raises -> TomlValue:
+    def parse_value(mut self) raises -> TomlValue:
         """Parse a TOML value (string, number, bool, array, or inline table).
 
         Returns:
@@ -488,7 +520,7 @@ struct Parser:
         else:
             raise Error(self.format_error("Unexpected token in value position", token.pos))
 
-    fn parse_integer(self, value_str: String) raises -> Int:
+    def parse_integer(self, value_str: String) raises -> Int:
         """Parse integer string, handling alternative bases.
 
         Supports:
@@ -504,7 +536,7 @@ struct Parser:
         var clean_value = value_str
 
         # Short values cannot have base prefixes; treat as decimal
-        if len(clean_value) <= 2:
+        if clean_value.byte_length() <= 2:
             return atol(clean_value)
 
         # Convert to a list of single-character strings to avoid direct String indexing.
@@ -528,7 +560,7 @@ struct Parser:
         else:
             return atol(clean_value)
 
-    fn parse_hex(self, hex_str: String) raises -> Int:
+    def parse_hex(self, hex_str: String) raises -> Int:
         """Parse hexadecimal string to integer.
 
         Args:
@@ -563,7 +595,7 @@ struct Parser:
 
         return result
 
-    fn parse_octal(self, octal_str: String) raises -> Int:
+    def parse_octal(self, octal_str: String) raises -> Int:
         """Parse octal string to integer.
 
         Args:
@@ -591,7 +623,7 @@ struct Parser:
 
         return result
 
-    fn parse_binary(self, binary_str: String) raises -> Int:
+    def parse_binary(self, binary_str: String) raises -> Int:
         """Parse binary string to integer.
 
         Args:
@@ -619,7 +651,7 @@ struct Parser:
 
         return result
 
-    fn copy_path(self, path: List[String]) -> List[String]:
+    def copy_path(self, path: List[String]) -> List[String]:
         """Create a copy of a path list.
 
         Mojo List does not support implicit copying, so we must manually copy.
@@ -634,7 +666,7 @@ struct Parser:
             result.append(path[i])
         return result^
 
-    fn format_error(self, message: String, pos: Position) -> String:
+    def format_error(self, message: String, pos: Position) -> String:
         """Format an error message with line and column information.
 
         Args:
@@ -645,7 +677,7 @@ struct Parser:
         """
         return message + " at line " + String(pos.line) + ", column " + String(pos.column)
 
-    fn parse_table_header(mut self) raises -> List[String]:
+    def parse_table_header(mut self) raises -> List[String]:
         """Parse a table header [section.name] and return the path.
 
         Returns:
@@ -683,7 +715,7 @@ struct Parser:
 
         return path^
 
-    fn parse_array_of_tables_header(mut self) raises -> List[String]:
+    def parse_array_of_tables_header(mut self) raises -> List[String]:
         """Parse an array of tables header [[section.name]] and return the path.
 
         Returns:
@@ -728,7 +760,7 @@ struct Parser:
 
         return path^
 
-    fn ensure_table_path(mut self, result: Dict[String, TomlValue], path: List[String]) raises -> Dict[String, TomlValue]:
+    def ensure_table_path(mut self, result: Dict[String, TomlValue], path: List[String]) raises -> Dict[String, TomlValue]:
         """Ensure a nested table path exists, creating tables as needed.
 
         Args:
@@ -769,7 +801,7 @@ struct Parser:
 
         return new_result^
 
-    fn ensure_array_of_tables_path(mut self, result: Dict[String, TomlValue], path: List[String]) raises -> Dict[String, TomlValue]:
+    def ensure_array_of_tables_path(mut self, result: Dict[String, TomlValue], path: List[String]) raises -> Dict[String, TomlValue]:
         """Ensure an array of tables path exists, creating or appending as needed.
 
         For [[products]], this creates or appends to the 'products' array.
@@ -893,7 +925,7 @@ struct Parser:
             new_result[first_key] = TomlValue(nested_table^)
             return new_result^
 
-    fn set_table_at_path(mut self, result: Dict[String, TomlValue], path: List[String], var table: Dict[String, TomlValue]) raises -> Dict[String, TomlValue]:
+    def set_table_at_path(mut self, result: Dict[String, TomlValue], path: List[String], var table: Dict[String, TomlValue]) raises -> Dict[String, TomlValue]:
         """Set a table at a specific path (helper for array of tables).
 
         Args:
@@ -923,7 +955,7 @@ struct Parser:
             new_result[first_key] = TomlValue(nested_table^)
             return new_result^
 
-    fn merge_tables(self, existing: Dict[String, TomlValue], var new_table: TomlValue, key: String) raises -> Dict[String, TomlValue]:
+    def merge_tables(self, existing: Dict[String, TomlValue], var new_table: TomlValue, key: String) raises -> Dict[String, TomlValue]:
         """Merge a new table value into existing table, checking for conflicts.
 
         Args:
@@ -958,7 +990,7 @@ struct Parser:
 
         return result^
 
-    fn set_in_table_path(mut self, result: Dict[String, TomlValue], path: List[String], key: String, var value: TomlValue) raises -> Dict[String, TomlValue]:
+    def set_in_table_path(mut self, result: Dict[String, TomlValue], path: List[String], key: String, var value: TomlValue) raises -> Dict[String, TomlValue]:
         """Set a key-value pair at a specific table path with duplicate key detection.
 
         Args:
@@ -1008,7 +1040,7 @@ struct Parser:
                 new_result[path[0]] = TomlValue(table^)
             return new_result^
 
-    fn set_in_array_of_tables_path(mut self, result: Dict[String, TomlValue], path: List[String], key: String, var value: TomlValue) raises -> Dict[String, TomlValue]:
+    def set_in_array_of_tables_path(mut self, result: Dict[String, TomlValue], path: List[String], key: String, var value: TomlValue) raises -> Dict[String, TomlValue]:
         """Set a key-value pair in the last element of an array of tables.
 
         Args:
@@ -1146,7 +1178,7 @@ struct Parser:
                 new_result[first_key] = TomlValue(nested_table^)
                 return new_result^
 
-    fn create_nested_value_from_dotted_key(self, key_parts: List[String], var value: TomlValue) raises -> TomlValue:
+    def create_nested_value_from_dotted_key(self, key_parts: List[String], var value: TomlValue) raises -> TomlValue:
         """Convert dotted key into nested table structure.
 
         For example: a.b.c = value becomes {a: {b: {c: value}}}
@@ -1168,7 +1200,7 @@ struct Parser:
 
         return result^
 
-    fn parse_key_value_pair(mut self) raises -> KeyValuePair:
+    def parse_key_value_pair(mut self) raises -> KeyValuePair:
         """Parse a key = value pair and return the key and value.
 
         Returns:
@@ -1217,7 +1249,7 @@ struct Parser:
             var nested_value = self.create_nested_value_from_dotted_key(key_parts, value^)
             return KeyValuePair(key_parts[0], nested_value^)
 
-    fn parse(mut self) raises -> Dict[String, TomlValue]:
+    def parse(mut self) raises -> Dict[String, TomlValue]:
         """Parse the entire TOML document.
 
         Returns:
@@ -1304,7 +1336,7 @@ struct Parser:
                 raise Error(self.format_error("Unexpected token at top level", token.pos))
 
         return result^
-fn parse(content: String) raises -> Dict[String, TomlValue]:
+def parse(content: String) raises -> Dict[String, TomlValue]:
     """Parse TOML content from a string.
 
     This is the main public API for parsing TOML.
